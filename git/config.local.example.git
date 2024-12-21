@@ -1,0 +1,8 @@
+# --- config.local.example.git ---
+# Local Git configuration template
+[user]
+    name = AUTHORNAME
+    email = AUTHOREMAIL
+
+[github]
+    user = your-github-username

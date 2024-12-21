@@ -1,55 +1,54 @@
-source_if_exists () {
-    if test -r "$1"; then
-        source "$1"
+# Load environment variables
+source_if_exists "$HOME/.env.sh"
+
+# Path configuration
+export PATH="$HOME/bin:/usr/local/bin:$PATH"
+
+# History configuration
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=10000
+SAVEHIST=10000
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_VERIFY
+setopt INC_APPEND_HISTORY
+
+# Completion system
+autoload -Uz compinit
+compinit
+
+# Prompt configuration
+autoload -Uz promptinit
+promptinit
+prompt pure
+
+# Load additional configs
+source_if_exists "$DOTFILES/zsh/aliases.zsh"
+source_if_exists "$DOTFILES/zsh/functions.zsh"
+source_if_exists "$DOTFILES/zsh/keybindings.zsh"
+
+# Check Brewfile status daily
+brew_check() {
+    local BREW_CHECK_FILE="$HOME/.brew_check"
+    local current_date=$(date +%Y-%m-%d)
+    
+    # Check if we've already run today
+    if [ -f "$BREW_CHECK_FILE" ] && [ "$(cat "$BREW_CHECK_FILE")" = "$current_date" ]; then
+        return
     fi
+    
+    echo "🍺 Checking Homebrew bundle status..."
+    if ! brew bundle check --file=$HOME/.Brewfile &>/dev/null; then
+        echo "⚠️  Some Homebrew packages are out of sync with Brewfile"
+        echo "Run 'brew bundle' to install missing packages"
+        echo "Run 'brew bundle cleanup' to remove unlisted packages"
+    fi
+    
+    # Update check date
+    echo "$current_date" > "$BREW_CHECK_FILE"
 }
 
-source_if_exists $HOME/.env.sh
-source_if_exists $DOTFILES/zsh/history.zsh
-source_if_exists $DOTFILES/zsh/git.zsh
-source_if_exists ~/.fzf.zsh
-source_if_exists $DOTFILES/zsh/aliases.zsh
-# source_if_exists $HOME/.asdf/asdf.sh
-source_if_exists /usr/local/etc/profile.d/z.sh
-source_if_exists /opt/homebrew/etc/profile.d/z.sh
-
-if type "direnv" > /dev/null; then
-    eval "$(direnv hook zsh)"
-fi
-
-autoload -U zmv
-autoload -U promptinit && promptinit
-autoload -U colors && colors
-autoload -Uz compinit && compinit
-
-if test -z ${ZSH_HIGHLIGHT_DIR+x}; then
-else
-    source $ZSH_HIGHLIGHT_DIR/zsh-syntax-highlighting.zsh
-fi
-
-precmd() {
-    source $DOTFILES/zsh/aliases.zsh
-}
-
-export VISUAL=nvim
-export EDITOR=nvim
-export PATH="$PATH:/usr/local/sbin:$DOTFILES/bin:$HOME/.local/bin:$DOTFILES/scripts/"
-
-eval "$(starship init zsh)"
-
-# VIM MODE (http://dougblack.io/words/zsh-vi-mode.html) -----------------------
-# bindkey -v
-bindkey '^?' backward-delete-char
-
-# function zle-line-init zle-keymap-select {
-#     VIM_PROMPT="%{$fg[yellow]%}[% NORMAL]% %{$reset_color%}"
-#     RPS1="${${KEYMAP/vicmd/$VIM_PROMPT}/(main|viins)/}"
-#     zle reset-prompt
-# }
-
-# zle -N zle-line-init
-# zle -N zle-keymap-select
-# export KEYTIMEOUT=1
-# END VIM MODE ----------------------------------------------------------------
-
-#eval "$(lua ~/bin/z.lua --init zsh)"
+# Run the check when shell starts
+brew_check
