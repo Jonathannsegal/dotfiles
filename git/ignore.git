@@ -1,0 +1,41 @@
+# --- ignore.git ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+venv/
+ENV/
+
+# Ruby
+*.gem
+*.rbc
+/.bundle/
+/vendor/bundle
+
+# Logs and databases
+*.log
+*.sqlite
