@@ -134,7 +134,7 @@ setup_python() {
             
             if [ "$should_setup_python" == "y" ]; then
                 info 'running python setup script'
-                bash "$DOTFILES/python/install.sh"
+                bash "$DOTFILES/python/install.sh" --no-confirm
                 success 'python environment configured'
             else
                 success 'skipped python setup'
@@ -215,6 +215,29 @@ setup_slack() {
     fi
 }
 
+setup_zotero() {
+    info 'setting up zotero configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/zotero/install.sh" ]; then
+            user 'Do you want to configure Zotero? (y/n)'
+            read -n 1 should_setup_zotero
+            echo ''
+            
+            if [ "$should_setup_zotero" == "y" ]; then
+                info 'running zotero setup script'
+                source "$DOTFILES/zotero/install.sh"
+            else
+                success 'skipped zotero setup'
+            fi
+        else
+            fail 'zotero setup script not found'
+        fi
+    else
+        success 'skipped zotero setup (not on macOS)'
+    fi
+}
+
 setup_macos() {
     info 'configuring macOS settings'
     
@@ -290,9 +313,10 @@ EOF
 # install_dotfiles
 # create_env_file
 # setup_terminal
-# setup_python
+setup_python
 # setup_dotnet
-setup_slack
+# setup_slack
+# setup_zotero
 # setup_vscode
 # setup_macos
 
