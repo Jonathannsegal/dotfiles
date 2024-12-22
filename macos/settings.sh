@@ -15,6 +15,9 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 # Disable the sound effects on boot
 sudo nvram SystemAudioVolume=" "
 
+# Use list view in all Finder windows
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+
 # Expand save panel by default
 defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
 defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
@@ -47,28 +50,38 @@ defaults write NSGlobalDomain InitialKeyRepeat -int 10
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
 ###############################################################################
-# Energy & Display                                                            #
+# Energy & Power Management                                                    #
 ###############################################################################
 
 # Enable lid wakeup
 sudo pmset -a lidwake 1
 
-# Sleep display after 5 minutes
+# Set display sleep to 5 minutes
 sudo pmset -a displaysleep 5
 
-# Set machine sleep to 3 minutes on battery
-sudo pmset -b sleep 3
+# Set system sleep to 20 minutes (must be significantly higher than display sleep)
+sudo pmset -a sleep 20
 
-# Set machine sleep to 3 minutes while charging
-sudo pmset -c sleep 3
+# Disable system sleep separately for power adapter and battery
+sudo pmset -c sleep 0
+sudo pmset -b sleep 0
+
+# System sleep settings
+sudo pmset -a standby 1
+sudo pmset -a womp 1
 
 ###############################################################################
 # Screen & Security                                                           #
 ###############################################################################
 
-# Require password immediately after sleep or screen saver begins
+# Set screen saver to start after 3 minutes of inactivity
+defaults -currentHost write com.apple.screensaver idleTime -int 180
+
+# Require password after screen saver begins or display sleep
 defaults write com.apple.screensaver askForPassword -int 1
-defaults write com.apple.screensaver askForPasswordDelay -int 0
+
+# Set the delay before password is required (5 minutes = 300 seconds)
+defaults write com.apple.screensaver askForPasswordDelay -int 300
 
 # Save screenshots to Desktop and set format to PNG
 defaults write com.apple.screencapture location -string "${HOME}/Desktop"
@@ -133,23 +146,75 @@ defaults write com.apple.dock mouse-over-hilite-stack -bool false
 # Disable magnification
 defaults write com.apple.dock magnification -bool false
 
+###############################################################################
+# Menu Bar & Control Center                                                    #
+###############################################################################
+
+# Show Weather in menu bar
+defaults write com.apple.controlcenter "NSStatusItem Visible Weather" -bool true
+defaults write ~/Library/Preferences/ByHost/com.apple.controlcenter.plist Weather -int 18
+
+# Hide Spotlight from menu bar (but keep it accessible via cmd+space)
+defaults write com.apple.Spotlight "NSStatusItem Visible Item-0" -bool false
+
+# Configure other menu bar items
+defaults write com.apple.controlcenter "NSStatusItem Visible WiFi" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Bluetooth" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Sound" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Battery" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Clock" -bool true
+
+# Show percentage in battery indicator
+defaults write com.apple.menuextra.battery ShowPercent -bool false
+
+# Set clock format to show date and 12-hour time
+defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  h:mm a"
+
+# Control Center modules configuration
+defaults write com.apple.controlcenter "NSStatusItem Preferred Position Battery" -float 100
+defaults write com.apple.controlcenter "NSStatusItem Preferred Position Clock" -float 200
+
+# Automatically hide and show the menu bar in full screen only
+defaults write NSGlobalDomain _HIHideMenuBar -bool false
+defaults write NSGlobalDomain AppleMenuBarVisibleInFullscreen -bool false
+
+# Hide Time Machine and VPN icons if you're not actively using them
+defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.TimeMachine" -bool false
+defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.VPN" -bool false
+
+# Remove unnecessary menu extras
+defaults write com.apple.systemuiserver menuExtras -array \
+  "/System/Library/CoreServices/Menu Extras/Clock.menu" \
+  "/System/Library/CoreServices/Menu Extras/Battery.menu"
+
+killall SystemUIServer
+killall ControlCenter
+
+###############################################################################
+# Launchpad                                                                   #
+###############################################################################
+
+# Set the number of columns in Launchpad
+defaults write com.apple.dock springboard-columns -int 8
+
+# Set the number of rows in Launchpad
+defaults write com.apple.dock springboard-rows -int 7
+
+# Enable automatic alphabetical ordering
+defaults write com.apple.dock ResetLaunchPadOptions -bool true
+defaults write com.apple.dock springboard-sort-alphabetically -bool true
+
+# Reset Launchpad layout
+defaults write com.apple.dock ResetLaunchPad -bool true
+
+# Make icons smaller/larger (0.8 is smaller, 1.0 is default)
+defaults write com.apple.dock springboard-item-size -float 0.8
+
+# Make the Launchpad minimize motion
+defaults write com.apple.dock springboard-minimize-motion -bool true
+
 # Reset Dock for changes to take effect
 killall Dock
-
-###############################################################################
-# Safari & Security                                                           #
-###############################################################################
-
-# Privacy: don't send search queries to Apple
-defaults write com.apple.Safari UniversalSearchEnabled -bool false
-defaults write com.apple.Safari SuppressSearchSuggestions -bool true
-
-# Enable Safari's debug menu
-defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-
-# Enable the Develop menu and the Web Inspector
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
 
 ###############################################################################
 # Terminal                                                                    #

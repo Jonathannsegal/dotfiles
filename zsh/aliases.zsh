@@ -24,6 +24,10 @@ alias reload='source $HOME/.zshrc'
 
 # Homebrew shortcuts
 alias brews='brew bundle dump --force --file=$HOME/.Brewfile' # Manual Brewfile update
-alias brewc='brew bundle check --file=$HOME/.Brewfile'        # Check status
-alias brewi='brew bundle --file=$HOME/.Brewfile'             # Install everything
-alias brewcl='brew bundle cleanup --file=$HOME/.Brewfile'    # Remove unlisted packages
+alias brewc='brew bundle check --file=$HOME/.Brewfile' # Check status
+alias brewi='brew bundle --file=$HOME/.Brewfile' # Install everything
+alias brewcl='brew bundle cleanup --file=$HOME/.Brewfile' # Remove unlisted packages
+
+# Directory stack navigation
+alias d='dirs -v'
+for index ({1..9}) alias "$index"="cd +${index}"; unset index
