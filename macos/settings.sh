@@ -43,8 +43,8 @@ killall Finder
 ###############################################################################
 
 # Set blazingly fast key repeat
-defaults write NSGlobalDomain KeyRepeat -int 1
-defaults write NSGlobalDomain InitialKeyRepeat -int 10
+defaults write NSGlobalDomain KeyRepeat -int 6
+defaults write NSGlobalDomain InitialKeyRepeat -int 25
 
 # Disable press-and-hold for keys in favor of key repeat
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
@@ -83,8 +83,8 @@ defaults write com.apple.screensaver askForPassword -int 1
 # Set the delay before password is required (5 minutes = 300 seconds)
 defaults write com.apple.screensaver askForPasswordDelay -int 300
 
-# Save screenshots to Desktop and set format to PNG
-defaults write com.apple.screencapture location -string "${HOME}/Desktop"
+# Save screenshots to Documents and set format to PNG
+defaults write com.apple.screencapture location -string "${HOME}/Documents"
 defaults write com.apple.screencapture type -string "png"
 
 ###############################################################################
