@@ -1,0 +1,2 @@
+$DOTFILES/terminal/.config/terminal/switch-theme.sh=$HOME/.config/terminal/switch-theme.sh
+$DOTFILES/terminal/settings.sh=$HOME/.config/terminal/settings.sh

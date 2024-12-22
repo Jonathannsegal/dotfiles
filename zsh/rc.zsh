@@ -1,8 +1,15 @@
-# Load environment variables
+# Function to source files if they exist
+source_if_exists() {
+    if [ -f "$1" ]; then
+        source "$1"
+    fi
+}
+
+# Source environment file first to get DOTFILES path
 source_if_exists "$HOME/.env.sh"
 
-# Path configuration
-export PATH="$HOME/bin:/usr/local/bin:$PATH"
+# Load functions after environment is sourced
+source_if_exists "$DOTFILES/zsh/functions.zsh"
 
 # History configuration
 HISTFILE="$HOME/.zsh_history"
@@ -15,40 +22,90 @@ setopt HIST_IGNORE_SPACE
 setopt HIST_VERIFY
 setopt INC_APPEND_HISTORY
 
+# Directory stack configuration
+setopt AUTO_PUSHD
+setopt PUSHD_IGNORE_DUPS
+setopt PUSHD_SILENT
+
+# Path configuration
+export PATH="$HOME/bin:/usr/local/bin:$PATH"
+
+# Initialize pyenv
+if command -v pyenv >/dev/null; then
+    eval "$(pyenv init -)"
+    eval "$(pyenv init --path)"
+fi
+
+# Load aliases
+source_if_exists "$DOTFILES/zsh/aliases.zsh"
+
+# Load dotnet
+source_if_exists "$DOTFILES/dotnet/path.zsh"
+
 # Completion system
 autoload -Uz compinit
 compinit
 
-# Prompt configuration
-autoload -Uz promptinit
-promptinit
-prompt pure
+# Key bindings
+bindkey -e
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+bindkey '^[^[[D' backward-word
+bindkey '^[^[[C' forward-word
+bindkey '^[[H' beginning-of-line
+bindkey '^[[F' end-of-line
 
-# Load additional configs
-source_if_exists "$DOTFILES/zsh/aliases.zsh"
-source_if_exists "$DOTFILES/zsh/functions.zsh"
-source_if_exists "$DOTFILES/zsh/keybindings.zsh"
+# Load colors
+autoload -U colors && colors
 
-# Check Brewfile status daily
-brew_check() {
-    local BREW_CHECK_FILE="$HOME/.brew_check"
-    local current_date=$(date +%Y-%m-%d)
-    
-    # Check if we've already run today
-    if [ -f "$BREW_CHECK_FILE" ] && [ "$(cat "$BREW_CHECK_FILE")" = "$current_date" ]; then
-        return
-    fi
-    
-    echo "🍺 Checking Homebrew bundle status..."
-    if ! brew bundle check --file=$HOME/.Brewfile &>/dev/null; then
-        echo "⚠️  Some Homebrew packages are out of sync with Brewfile"
-        echo "Run 'brew bundle' to install missing packages"
-        echo "Run 'brew bundle cleanup' to remove unlisted packages"
-    fi
-    
-    # Update check date
-    echo "$current_date" > "$BREW_CHECK_FILE"
-}
+# Enable prompt substitution
+setopt PROMPT_SUBST
 
-# Run the check when shell starts
-brew_check
+# Load and configure agnoster theme
+if [ ! -d "${HOME}/.zsh/themes" ]; then
+    mkdir -p "${HOME}/.zsh/themes"
+fi
+
+# Download agnoster theme if not present
+if [ ! -f "${HOME}/.zsh/themes/agnoster.zsh-theme" ]; then
+    curl -o "${HOME}/.zsh/themes/agnoster.zsh-theme" \
+        https://raw.githubusercontent.com/agnoster/agnoster-zsh-theme/master/agnoster.zsh-theme
+fi
+
+# Source agnoster theme
+source "${HOME}/.zsh/themes/agnoster.zsh-theme"
+
+# Configure agnoster theme settings
+AGNOSTER_PROMPT_SEGMENTS=(
+    prompt_status
+    prompt_context
+    prompt_virtualenv
+    prompt_dir
+    prompt_git
+    prompt_end
+)
+
+# Theme settings
+DEFAULT_USER=$USER
+AGNOSTER_PATH_STYLE="full"
+ZSH_THEME="agnoster"
+
+# Initialize plugins directory
+mkdir -p "${HOME}/.zsh/plugins"
+
+# Install and source zsh-syntax-highlighting
+if [ ! -d "${HOME}/.zsh/plugins/zsh-syntax-highlighting" ]; then
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
+        "${HOME}/.zsh/plugins/zsh-syntax-highlighting"
+fi
+source "${HOME}/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+# Configure highlighting colors
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
+typeset -A ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[command]='fg=green'
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=red'
+
+# Run the Brewfile check if it exists
+if typeset -f brew_check > /dev/null; then
+    brew_check
+fi

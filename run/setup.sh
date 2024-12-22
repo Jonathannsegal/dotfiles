@@ -81,6 +81,30 @@ link_file() {
     fi
 }
 
+setup_terminal() {
+    info 'configuring terminal settings'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/terminal/settings.sh" ]; then
+            # Close System Preferences to prevent overriding changes
+            osascript -e 'tell application "System Preferences" to quit'
+            
+            # Source the terminal settings
+            source "$DOTFILES/terminal/settings.sh"
+            
+            # Run the setup functions
+            setup_terminal_profiles
+            setup_theme_switcher
+            
+            success 'terminal settings configured'
+        else
+            fail 'terminal settings script not found'
+        fi
+    else
+        success 'skipped terminal settings (not on macOS)'
+    fi
+}
+
 setup_gitconfig() {
     info 'setting up gitconfig'
     
@@ -96,6 +120,74 @@ setup_gitconfig() {
         success 'generated git config'
     else
         success 'existing git config found'
+    fi
+}
+
+setup_python() {
+    info 'setting up python environment'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/python/install.sh" ]; then
+            user 'Do you want to set up Python environment? (y/n)'
+            read -n 1 should_setup_python
+            echo ''
+            
+            if [ "$should_setup_python" == "y" ]; then
+                info 'running python setup script'
+                bash "$DOTFILES/python/install.sh"
+                success 'python environment configured'
+            else
+                success 'skipped python setup'
+            fi
+        else
+            fail 'python setup script not found'
+        fi
+    else
+        success 'skipped python setup (not on macOS)'
+    fi
+}
+
+setup_vscode() {
+    info 'setting up VSCode configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/vscode/install.sh" ]; then
+            user 'Do you want to configure VSCode settings? (y/n)'
+            read -n 1 should_setup_vscode
+            echo ''
+            
+            if [ "$should_setup_vscode" == "y" ]; then
+                info 'running VSCode setup script'
+                bash "$DOTFILES/vscode/install.sh"
+                success 'VSCode settings configured'
+            else
+                success 'skipped VSCode setup'
+            fi
+        else
+            fail 'VSCode setup script not found'
+        fi
+    else
+        success 'skipped VSCode setup (not on macOS)'
+    fi
+}
+
+setup_dotnet() {
+    info 'setting up dotnet environment'
+    
+    if [ -f "$DOTFILES/dotnet/install.sh" ]; then
+        user 'Do you want to set up .NET environment? (y/n)'
+        read -n 1 should_setup_dotnet
+        echo ''
+        
+        if [ "$should_setup_dotnet" == "y" ]; then
+            info 'running dotnet setup script'
+            bash "$DOTFILES/dotnet/install.sh"
+            success 'dotnet environment configured'
+        else
+            success 'skipped dotnet setup'
+        fi
+    else
+        fail 'dotnet setup script not found'
     fi
 }
 
@@ -173,6 +265,10 @@ EOF
 setup_gitconfig
 install_dotfiles
 create_env_file
+setup_terminal
+setup_python
+setup_dotnet
+setup_vscode
 setup_macos
 
 echo ''

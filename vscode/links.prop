@@ -1,0 +1,2 @@
+# Add this line to your existing links.prop file
+$DOTFILES/vscode/settings.json=$HOME/Library/Application Support/Code/User/settings.json
