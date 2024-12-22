@@ -191,6 +191,30 @@ setup_dotnet() {
     fi
 }
 
+setup_slack() {
+    info 'setting up slack configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/slack/settings.sh" ]; then
+            user 'Do you want to configure Slack settings? (y/n)'
+            read -n 1 should_setup_slack
+            echo ''
+            
+            if [ "$should_setup_slack" == "y" ]; then
+                info 'running slack setup script'
+                bash "$DOTFILES/slack/settings.sh"
+                success 'slack settings configured'
+            else
+                success 'skipped slack setup'
+            fi
+        else
+            fail 'slack setup script not found'
+        fi
+    else
+        success 'skipped slack setup (not on macOS)'
+    fi
+}
+
 setup_macos() {
     info 'configuring macOS settings'
     
@@ -262,14 +286,15 @@ EOF
 }
 
 # Run all the installers
-setup_gitconfig
-install_dotfiles
-create_env_file
-setup_terminal
-setup_python
-setup_dotnet
-setup_vscode
-setup_macos
+# setup_gitconfig
+# install_dotfiles
+# create_env_file
+# setup_terminal
+# setup_python
+# setup_dotnet
+setup_slack
+# setup_vscode
+# setup_macos
 
 echo ''
 success 'All installed!'

@@ -1,0 +1,19 @@
+{
+    "launchOnStartup": false,
+    "notificationSound": "knock_brush",
+    "notificationDuration": 2,
+    "preventDisplaySleep": false,
+    "themeMode": "system",
+    "darkerSidebars": true,
+    "windowGradient": true,
+    "showDownloadFolder": true,
+    "spellingLanguages": ["en-US"],
+    "startMinimized": false,
+    "weblinksOpenInSlack": true,
+    "windowBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 800
+    }
+}
