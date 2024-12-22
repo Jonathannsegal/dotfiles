@@ -1,81 +1,78 @@
 {
-    "git.autofetch": true,
-    "git.enableSmartCommit": true,
-    "explorer.confirmDragAndDrop": false,
-    "explorer.confirmDelete": false,
-    "terminal.integrated.commandsToSkipShell": [
-        "language-julia.interrupt"
-    ],
-    "julia.symbolCacheDownload": true,
-    "julia.enableTelemetry": false,
-    "editor.inlineSuggest.enabled": true,
-    "todo-tree.general.tags": [
-        "BUG",
-        "HACK",
-        "FIXME",
-        "TODO",
-        "XXX",
-        "[ ]",
-        "[x]",
-        "FFF",
-        "WWW",
-        "III",
-        "QQQ"
-    ],
-    "todo-tree.highlights.backgroundColourScheme": [
-        "red",
-        "orange",
-        "yellow",
-        "green",
-        "blue",
-        "indigo",
-        "violet",
-        "grey",
-        "yellow",
-        "red"
-    ],
-    "github.copilot.enable": {
-        "*": true,
-        "plaintext": true,
-        "markdown": true,
-        "scminput": false,
-        "yaml": false
-    },
-    "[typescriptreact]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
-    },
-    "[json]": {
-        "editor.defaultFormatter": "vscode.json-language-features"
-    },
-    "[python]": {
-        "editor.formatOnType": true
-    },
-    "security.workspace.trust.untrustedFiles": "open",
-    "workbench.editorAssociations": {
-        "*.fbx": "3dviewer.viewer"
-    },
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": "never",
-        "source.addMissingImports": "never"
-    },
-    "gitlens.graph.minimap.additionalTypes": [
-        "localBranches",
-        "stashes",
-        "remoteBranches",
-        "tags"
-    ],
-    "workbench.editor.splitInGroupLayout": "vertical",
-    "terminal.integrated.inheritEnv": false,
-    "jupyter.widgetScriptSources": [
-        "jsdelivr.com",
-        "unpkg.com"
-    ],
-    "liveshare.notebooks.allowGuestExecuteCells": true,
-    "githubPullRequests.pullBranch": "never",
-    "typescript.updateImportsOnFileMove.enabled": "never",
-    "window.commandCenter": false,
-    "editor.formatOnSave": true,
-    "github.copilot.editor.enableAutoCompletions": true,
-    "chat.editing.alwaysSaveWithGeneratedChanges": true,
-    "python.defaultInterpreterPath": "/Users/jsegal/.pyenv/versions//bin/python"
+  "git.autofetch": true,
+  "git.enableSmartCommit": true,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.confirmDelete": false,
+  "terminal.integrated.commandsToSkipShell": ["language-julia.interrupt"],
+  "julia.symbolCacheDownload": true,
+  "julia.enableTelemetry": false,
+  "editor.inlineSuggest.enabled": true,
+  "todo-tree.general.tags": [
+    "BUG",
+    "HACK",
+    "FIXME",
+    "TODO",
+    "XXX",
+    "[ ]",
+    "[x]",
+    "FFF",
+    "WWW",
+    "III",
+    "QQQ"
+  ],
+  "todo-tree.highlights.backgroundColourScheme": [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "indigo",
+    "violet",
+    "grey",
+    "yellow",
+    "red"
+  ],
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": true,
+    "markdown": true,
+    "scminput": false,
+    "yaml": false
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[python]": {
+    "editor.formatOnType": true
+  },
+  "security.workspace.trust.untrustedFiles": "open",
+  "workbench.editorAssociations": {
+    "*.fbx": "3dviewer.viewer"
+  },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never",
+    "source.addMissingImports": "never"
+  },
+  "gitlens.graph.minimap.additionalTypes": [
+    "localBranches",
+    "stashes",
+    "remoteBranches",
+    "tags"
+  ],
+  "workbench.editor.splitInGroupLayout": "vertical",
+  "terminal.integrated.inheritEnv": false,
+  "jupyter.widgetScriptSources": ["jsdelivr.com", "unpkg.com"],
+  "liveshare.notebooks.allowGuestExecuteCells": true,
+  "githubPullRequests.pullBranch": "never",
+  "typescript.updateImportsOnFileMove.enabled": "never",
+  "window.commandCenter": false,
+  "editor.formatOnSave": true,
+  "github.copilot.editor.enableAutoCompletions": true,
+  "chat.editing.alwaysSaveWithGeneratedChanges": true,
+  "python.defaultInterpreterPath": "/Users/jsegal/.pyenv/versions//bin/python",
+  "workbench.startupEditor": "none",
+  "python.createEnvironment.trigger": "off"
 }
