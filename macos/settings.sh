@@ -15,6 +15,13 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 # Disable the sound effects on boot
 sudo nvram SystemAudioVolume=" "
 
+# Disable system sound effects
+defaults write "com.apple.sound.uiaudio.enabled" -int 0
+defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -bool false
+
+# Disable volume change feedback sound
+defaults write NSGlobalDomain com.apple.sound.beep.feedback -bool false
+
 # Use list view in all Finder windows
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
