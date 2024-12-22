@@ -1,0 +1,13 @@
+{
+    "autoExport": "immediate",
+    "citeCommand": "cite",
+    "citekeyFormat": "auth.lower+year",
+    "skipFields": [
+        "abstract",
+        "file"
+    ],
+    "autoAbbrev": true,
+    "autoAbbrevStyle": "title",
+    "autoExportDelay": 1,
+    "quickCopyMode": "pandoc"
+}
