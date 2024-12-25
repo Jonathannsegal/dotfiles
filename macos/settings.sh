@@ -9,6 +9,12 @@ sudo -v
 # Keep-alive: update existing `sudo` time stamp until script has finished
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
+# Create Developer folder if it doesn't exist
+if [ ! -d "${HOME}/Developer" ]; then
+    mkdir "${HOME}/Developer"
+    echo "Created Developer folder in home directory"
+fi
+
 ###############################################################################
 # General UI/UX & Performance                                                 #
 ###############################################################################
@@ -57,7 +63,41 @@ defaults write NSGlobalDomain InitialKeyRepeat -int 25
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
 ###############################################################################
-# Energy & Power Management                                                    #
+# Hot Corners                                                                 #
+###############################################################################
+
+# Disable all hot corners
+# Possible values:
+#  0: no-op
+#  2: Mission Control
+#  3: Show application windows
+#  4: Desktop
+#  5: Start screen saver
+#  6: Disable screen saver
+#  7: Dashboard
+# 10: Put display to sleep
+# 11: Launchpad
+# 12: Notification Center
+# 13: Lock Screen
+
+# Top left corner
+defaults write com.apple.dock wvous-tl-corner -int 0
+defaults write com.apple.dock wvous-tl-modifier -int 0
+
+# Top right corner
+defaults write com.apple.dock wvous-tr-corner -int 0
+defaults write com.apple.dock wvous-tr-modifier -int 0
+
+# Bottom left corner
+defaults write com.apple.dock wvous-bl-corner -int 0
+defaults write com.apple.dock wvous-bl-modifier -int 0
+
+# Bottom right corner
+defaults write com.apple.dock wvous-br-corner -int 0
+defaults write com.apple.dock wvous-br-modifier -int 0
+
+###############################################################################
+# Energy & Power Management                                                   #
 ###############################################################################
 
 # Enable lid wakeup
@@ -123,6 +163,9 @@ chflags nohidden ~/Library
 # Dock & Mission Control                                                      #
 ###############################################################################
 
+# Set Dock position to right side
+defaults write com.apple.dock orientation -string right
+
 # Set the icon size of Dock items
 defaults write com.apple.dock tilesize -int 26
 
@@ -152,6 +195,23 @@ defaults write com.apple.dock mouse-over-hilite-stack -bool false
 
 # Disable magnification
 defaults write com.apple.dock magnification -bool false
+
+###############################################################################
+# Dock Applications                                                           #
+###############################################################################
+
+# Remove all apps from Dock
+defaults write com.apple.dock persistent-apps -array
+
+# Add desired apps to Dock
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Slack.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/iTerm.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Visual Studio Code.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Google Chrome.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Notion.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Unity Hub.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Adobe Illustrator 2025/Adobe Illustrator.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
 
 ###############################################################################
 # Menu Bar & Control Center                                                    #

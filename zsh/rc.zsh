@@ -109,3 +109,5 @@ ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=red'
 if typeset -f brew_check > /dev/null; then
     brew_check
 fi
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
