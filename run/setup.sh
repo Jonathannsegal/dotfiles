@@ -238,6 +238,30 @@ setup_zotero() {
     fi
 }
 
+setup_mac_icons() {
+    info 'setting up custom macOS application icons'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/macos/icons/setup.sh" ]; then
+            user 'Do you want to customize application icons? (y/n)'
+            read -n 1 should_setup_icons
+            echo ''
+            
+            if [ "$should_setup_icons" == "y" ]; then
+                info 'running icon setup script'
+                bash "$DOTFILES/macos/icons/setup.sh" --no-prompt
+                success 'application icons customized'
+            else
+                success 'skipped icon customization'
+            fi
+        else
+            fail 'icon setup script not found'
+        fi
+    else
+        success 'skipped icon setup (not on macOS)'
+    fi
+}
+
 setup_macos() {
     info 'configuring macOS settings'
     
@@ -313,11 +337,12 @@ EOF
 # install_dotfiles
 # create_env_file
 # setup_terminal
-setup_python
+# setup_python
 # setup_dotnet
 # setup_slack
 # setup_zotero
 # setup_vscode
+setup_mac_icons
 # setup_macos
 
 echo ''
