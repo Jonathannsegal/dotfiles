@@ -117,5 +117,9 @@ if typeset -f brew_check > /dev/null; then
 fi
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
+# jdk configuration
 export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+
+# pnpm from homebrew
+export PNPM_HOME="/opt/homebrew/bin"
