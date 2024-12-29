@@ -74,6 +74,12 @@ fi
 # Source agnoster theme
 source "${HOME}/.zsh/themes/agnoster.zsh-theme"
 
+# Set default Brewfile location for Homebrew
+export HOMEBREW_BUNDLE_FILE="$HOME/.Brewfile"
+
+# Source environment file first to get DOTFILES path
+source_if_exists "$HOME/.env.sh"
+
 # Configure agnoster theme settings
 AGNOSTER_PROMPT_SEGMENTS=(
     prompt_status
@@ -111,3 +117,5 @@ if typeset -f brew_check > /dev/null; then
 fi
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"

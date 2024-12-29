@@ -11,6 +11,7 @@ brew "jq"
 brew "mas"
 brew "node"
 brew "ollama"
+brew "openjdk"
 brew "pnpm"
 brew "poppler"
 brew "prettier"
@@ -30,7 +31,6 @@ cask "iterm2"
 cask "logi-options+"
 cask "macdroid"
 cask "maxon"
-cask "meetingbar"
 cask "notion"
 cask "optimage"
 cask "postman"
@@ -42,6 +42,7 @@ cask "visual-studio-code"
 cask "zoom"
 cask "zotero"
 mas "Hidden Bar", id: 1452453066
+mas "Meeter", id: 1510445899
 mas "Whisper Transcription", id: 1668083311
 mas "Windows App", id: 1295203466
 mas "Xcode", id: 497799835
