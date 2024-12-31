@@ -74,5 +74,8 @@
   "chat.editing.alwaysSaveWithGeneratedChanges": true,
   "python.defaultInterpreterPath": "/Users/jsegal/.pyenv/versions//bin/python",
   "workbench.startupEditor": "none",
-  "python.createEnvironment.trigger": "off"
+  "python.createEnvironment.trigger": "off",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
