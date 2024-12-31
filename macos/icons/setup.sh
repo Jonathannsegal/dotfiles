@@ -17,8 +17,8 @@ apply_icon() {
     
     if [ -e "$app_path" ] && [ -f "$icon_path" ]; then
         echo "Applying $icon_path to $app_path"
-        # Use sudo for Adobe applications
-        if [[ "$app_path" == *"Adobe"* ]]; then
+        # Use sudo for Adobe applications and System applications
+        if [[ "$app_path" == *"Adobe"* ]] || [[ "$app_path" == "/System/"* ]] || [[ "$app_path" == *"zoom.us.app"* ]]; then
             sudo fileicon set "$app_path" "$icon_path"
         else
             fileicon set "$app_path" "$icon_path"
@@ -37,10 +37,13 @@ apply_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
 apply_icon "/Applications/Slack.app" "$ICONS_DIR/slack.png"
 apply_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"
 apply_icon "/Applications/Visual Studio Code.app" "$ICONS_DIR/vscode.png"
+apply_icon "/Applications/zoom.us.app" "$ICONS_DIR/zoom.png"
 
 # Clear icon cache with sudo
+echo "Clearing icon cache..."
 sudo rm -rf /Library/Caches/com.apple.iconservices.store
-sudo find /private/var/folders/ -name com.apple.iconservices -exec rm -rf {} \;
+sudo find /private/var/folders/ \
+    -name com.apple.iconservices -exec sudo rm -rf {} \; 2>/dev/null
 
 # Restart Finder to refresh icons
 killall Finder

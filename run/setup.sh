@@ -333,17 +333,17 @@ EOF
 }
 
 # Run all the installers
-setup_gitconfig
-install_dotfiles
-create_env_file
-setup_terminal
-setup_python
-setup_dotnet
-setup_slack
-setup_zotero
-setup_vscode
+# setup_gitconfig
+# install_dotfiles
+# create_env_file
+# setup_terminal
+# setup_python
+# setup_dotnet
+# setup_slack
+# setup_zotero
+# setup_vscode
 setup_mac_icons
-setup_macos
+# setup_macos
 
 echo ''
 success 'All installed!'
