@@ -3,7 +3,9 @@
   "git.enableSmartCommit": true,
   "explorer.confirmDragAndDrop": false,
   "explorer.confirmDelete": false,
-  "terminal.integrated.commandsToSkipShell": ["language-julia.interrupt"],
+  "terminal.integrated.commandsToSkipShell": [
+    "language-julia.interrupt"
+  ],
   "julia.symbolCacheDownload": true,
   "julia.enableTelemetry": false,
   "editor.inlineSuggest.enabled": true,
@@ -64,7 +66,10 @@
   ],
   "workbench.editor.splitInGroupLayout": "vertical",
   "terminal.integrated.inheritEnv": false,
-  "jupyter.widgetScriptSources": ["jsdelivr.com", "unpkg.com"],
+  "jupyter.widgetScriptSources": [
+    "jsdelivr.com",
+    "unpkg.com"
+  ],
   "liveshare.notebooks.allowGuestExecuteCells": true,
   "githubPullRequests.pullBranch": "never",
   "typescript.updateImportsOnFileMove.enabled": "never",
@@ -77,5 +82,7 @@
   "python.createEnvironment.trigger": "off",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "notebook.formatOnSave.enabled": true,
+  "explorer.confirmPasteNative": false
 }
