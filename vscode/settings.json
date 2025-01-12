@@ -77,7 +77,7 @@
   "editor.formatOnSave": true,
   "github.copilot.editor.enableAutoCompletions": true,
   "chat.editing.alwaysSaveWithGeneratedChanges": true,
-  "python.defaultInterpreterPath": "/Users/jsegal/.pyenv/versions//bin/python",
+  "python.defaultInterpreterPath": "/Users/jsegal/.pyenv/versions/3.13.1/bin/python",
   "workbench.startupEditor": "none",
   "python.createEnvironment.trigger": "off",
   "[typescript]": {
