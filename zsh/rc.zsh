@@ -31,10 +31,9 @@ setopt PUSHD_SILENT
 export PATH="$HOME/bin:/usr/local/bin:$PATH"
 
 # Initialize pyenv
-if command -v pyenv >/dev/null; then
-    eval "$(pyenv init -)"
-    eval "$(pyenv init --path)"
-fi
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
 
 # Load aliases
 source_if_exists "$DOTFILES/zsh/aliases.zsh"
