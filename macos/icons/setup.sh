@@ -38,6 +38,7 @@ apply_icon "/Applications/Slack.app" "$ICONS_DIR/slack.png"
 apply_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"
 apply_icon "/Applications/Visual Studio Code.app" "$ICONS_DIR/vscode.png"
 apply_icon "/Applications/zoom.us.app" "$ICONS_DIR/zoom.png"
+apply_icon "/Applications/zotero.app" "$ICONS_DIR/zotero.png"
 
 # Clear icon cache with sudo
 echo "Clearing icon cache..."
