@@ -310,6 +310,173 @@ install_dotfiles() {
     done
 }
 
+setup_bat() {
+    info 'setting up bat configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/bat/settings.sh" ]; then
+            user 'Do you want to configure bat settings? (y/n)'
+            read -n 1 should_setup_bat
+            echo ''
+            
+            if [ "$should_setup_bat" == "y" ]; then
+                info 'running bat setup script'
+                
+                # Source and run the bat settings
+                source "$DOTFILES/bat/settings.sh"
+                setup_bat
+                
+                # Add dark mode theme switching
+                echo 'alias cat="bat --theme=\$(defaults read -globalDomain AppleInterfaceStyle &> /dev/null && echo TwoDark || echo GitHub)"' >> "$DOTFILES/bat/zsh/bat.zsh"
+                
+                success 'bat settings configured'
+            else
+                success 'skipped bat setup'
+            fi
+        else
+            fail 'bat setup script not found'
+        fi
+    else
+        success 'skipped bat setup (not on macOS)'
+    fi
+}
+
+setup_tmux() {
+    info 'setting up tmux configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/tmux/settings.sh" ]; then
+            user 'Do you want to configure tmux settings? (y/n)'
+            read -n 1 should_setup_tmux
+            echo ''
+            
+            if [ "$should_setup_tmux" == "y" ]; then
+                info 'running tmux setup script'
+                source "$DOTFILES/tmux/settings.sh"
+                setup_tmux
+                success 'tmux settings configured'
+            else
+                success 'skipped tmux setup'
+            fi
+        else
+            fail 'tmux setup script not found'
+        fi
+    else
+        success 'skipped tmux setup (not on macOS)'
+    fi
+}
+
+setup_alder() {
+    info 'setting up alder configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/alder/settings.sh" ]; then
+            user 'Do you want to configure alder? (y/n)'
+            read -n 1 should_setup_alder
+            echo ''
+            
+            if [ "$should_setup_alder" == "y" ]; then
+                info 'running alder setup script'
+                source "$DOTFILES/alder/settings.sh"
+                setup_alder
+                success 'alder configured'
+            else
+                success 'skipped alder setup'
+            fi
+        else
+            fail 'alder setup script not found'
+        fi
+    else
+        success 'skipped alder setup (not on macOS)'
+    fi
+}
+
+setup_eza() {
+    info 'setting up eza configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/eza/settings.sh" ]; then
+            user 'Do you want to configure eza settings? (y/n)'
+            read -n 1 should_setup_eza
+            echo ''
+            
+            if [ "$should_setup_eza" == "y" ]; then
+                info 'running eza setup script'
+                
+                # Source and run the eza settings
+                source "$DOTFILES/eza/settings.sh"
+                setup_eza
+                
+                success 'eza settings configured'
+            else
+                success 'skipped eza setup'
+            fi
+        else
+            fail 'eza setup script not found'
+        fi
+    else
+        success 'skipped eza setup (not on macOS)'
+    fi
+}
+
+setup_xxh() {
+    info 'setting up xxh configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/xxh/settings.sh" ]; then
+            user 'Do you want to configure xxh settings? (y/n)'
+            read -n 1 should_setup_xxh
+            echo ''
+            
+            if [ "$should_setup_xxh" == "y" ]; then
+                info 'running xxh setup script'
+                
+                # Source and run the xxh settings
+                source "$DOTFILES/xxh/settings.sh"
+                setup_xxh
+                
+                success 'xxh settings configured'
+            else
+                success 'skipped xxh setup'
+            fi
+        else
+            fail 'xxh setup script not found'
+        fi
+    else
+        success 'skipped xxh setup (not on macOS)'
+    fi
+}
+
+setup_iterm2() {
+    info 'setting up iTerm2 configuration'
+    
+    if [ "$(uname -s)" == "Darwin" ]; then
+        if [ -f "$DOTFILES/iterm2/settings.sh" ]; then
+            user 'Do you want to configure iTerm2 settings? (y/n)'
+            read -n 1 should_setup_iterm2
+            echo ''
+            
+            if [ "$should_setup_iterm2" == "y" ]; then
+                info 'running iTerm2 setup script'
+                
+                # Source the iTerm2 settings
+                source "$DOTFILES/iterm2/settings.sh"
+                
+                # Run the setup functions
+                setup_iterm2
+                
+                success 'iTerm2 settings configured'
+            else
+                success 'skipped iTerm2 setup'
+            fi
+        else
+            fail 'iTerm2 setup script not found'
+        fi
+    else
+        success 'skipped iTerm2 setup (not on macOS)'
+    fi
+}
+
 create_env_file() {
     if test -f "$HOME/.env.sh"; then
         success "$HOME/.env.sh file already exists, skipping"
@@ -334,15 +501,21 @@ EOF
 
 # Run all the installers
 # setup_gitconfig
-# install_dotfiles
+install_dotfiles
 # create_env_file
 # setup_terminal
+# setup_eza
+# setup_xxh
+# setup_tmux
+# setup_alder
+# setup_bat
+setup_iterm2
 # setup_python
 # setup_dotnet
 # setup_slack
 # setup_zotero
 # setup_vscode
-setup_mac_icons
+# setup_mac_icons
 # setup_macos
 
 echo ''

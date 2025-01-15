@@ -125,3 +125,15 @@ export PNPM_HOME="/opt/homebrew/bin"
 
 # zoxide
 eval "$(zoxide init --cmd cd zsh)"
+
+source_if_exists "$DOTFILES/iterm2/zsh/iterm2.zsh"
+source_if_exists "$DOTFILES/xxh/zsh/xxh.zsh"
+source_if_exists "$DOTFILES/eza/zsh/eza.zsh"
+source_if_exists "$DOTFILES/tmux/zsh/tmux.zsh"
+source_if_exists "$DOTFILES/alder/zsh/alder.zsh"
+source_if_exists "$DOTFILES/bat/zsh/bat.zsh"
+
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
+export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
+export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
