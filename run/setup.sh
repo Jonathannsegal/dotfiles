@@ -501,7 +501,7 @@ EOF
 
 # Run all the installers
 # setup_gitconfig
-install_dotfiles
+# install_dotfiles
 # create_env_file
 # setup_terminal
 # setup_eza
