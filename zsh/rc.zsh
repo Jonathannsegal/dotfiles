@@ -122,3 +122,6 @@ export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
 
 # pnpm from homebrew
 export PNPM_HOME="/opt/homebrew/bin"
+
+# zoxide
+eval "$(zoxide init --cmd cd zsh)"
