@@ -2,7 +2,8 @@
 export BAT_CONFIG_PATH="$HOME/.config/bat/config"
 
 # Bat aliases and functions
-alias cat='bat --paging=never'
+# Dynamic theme based on system appearance
+alias cat='bat --theme=$(defaults read -globalDomain AppleInterfaceStyle &> /dev/null && echo TwoDark || echo GitHub) --paging=never'
 alias batp='bat --style=plain'
 alias batl='bat --style=numbers'
 alias batll='bat --style=full'
@@ -21,5 +22,4 @@ bathelp() {
 # Show preview of themes
 battheme() {
     bat --list-themes | fzf --preview="bat --theme={} --color=always $1"
-}alias cat="bat --theme=\$(defaults read -globalDomain AppleInterfaceStyle &> /dev/null && echo TwoDark || echo GitHub)"
-alias cat="bat --theme=\$(defaults read -globalDomain AppleInterfaceStyle &> /dev/null && echo TwoDark || echo GitHub)"
+}
