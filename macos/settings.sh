@@ -296,6 +296,9 @@ defaults write com.apple.terminal SecureKeyboardEntry -bool true
 # Don't display the annoying prompt when quitting iTerm
 defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 
+# Turn off automatic brightness adjustments
+defaults write /Library/Preferences/com.apple.iokit.AmbientLightSensor "Automatic Display Enabled" -bool false
+
 ###############################################################################
 # Activity Monitor                                                            #
 ###############################################################################
