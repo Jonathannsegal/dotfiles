@@ -510,12 +510,12 @@ EOF
 # setup_alder
 # setup_bat
 # setup_iterm2
-# setup_python
+setup_python
 # setup_dotnet
 # setup_slack
 # setup_zotero
 # setup_vscode
-setup_mac_icons
+# setup_mac_icons
 # setup_macos
 
 echo ''
