@@ -94,6 +94,7 @@ nest-asyncio==1.6.0
 notebook==7.3.2
 notebook_shim==0.2.4
 numpy==2.2.1
+opencv-python==4.11.0.86
 overrides==7.7.0
 packaging==24.2
 pandas==2.2.3
@@ -138,6 +139,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-json-logger==3.2.1
 python-multipart==0.0.20
+pyttk==0.3.2
 pytz==2024.2
 PyYAML==6.0.2
 pyzmq==26.2.0
@@ -166,6 +168,7 @@ tenacity==9.0.0
 terminado==0.18.1
 threadpoolctl==3.5.0
 tinycss2==1.4.0
+tk==0.1.0
 toml==0.10.2
 tomlkit==0.13.2
 tornado==6.4.2

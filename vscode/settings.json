@@ -74,7 +74,6 @@
   "githubPullRequests.pullBranch": "never",
   "typescript.updateImportsOnFileMove.enabled": "never",
   "window.commandCenter": false,
-  "editor.formatOnSave": true,
   "github.copilot.editor.enableAutoCompletions": true,
   "chat.editing.alwaysSaveWithGeneratedChanges": true,
   "python.defaultInterpreterPath": "/Users/jsegal/.pyenv/versions/3.13.1/bin/python",
@@ -83,6 +82,5 @@
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "notebook.formatOnSave.enabled": true,
   "explorer.confirmPasteNative": false
 }

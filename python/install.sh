@@ -81,6 +81,10 @@ remove_python_safely() {
 }
 
 setup_python_environment() {
+    # Install Tkinter dependencies first
+    print_status "Installing Tkinter dependencies..."
+    brew install tcl-tk
+
     # Get the latest Python version
     PYTHON_VERSION=$(get_latest_python_version)
 
@@ -116,13 +120,16 @@ setup_python_environment() {
         done
     fi
 
-    print_status "Installing Python $PYTHON_VERSION..."
+    print_status "Installing Python $PYTHON_VERSION with Tkinter support..."
 
     if ! pyenv versions | grep -q "$PYTHON_VERSION"; then
-        if CFLAGS="-I$(brew --prefix openssl)/include" \
-           LDFLAGS="-L$(brew --prefix openssl)/lib" \
+        # Set up build environment for Python with Tkinter support
+        export PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I$(brew --prefix tcl-tk)/include' --with-tcltk-libs='-L$(brew --prefix tcl-tk)/lib -ltcl8.6 -ltk8.6'"
+        
+        if CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix tcl-tk)/include" \
+           LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix tcl-tk)/lib" \
            pyenv install "$PYTHON_VERSION" 2>/dev/null; then
-            print_success "Installed Python $PYTHON_VERSION"
+            print_success "Installed Python $PYTHON_VERSION with Tkinter support"
         else
             print_error "Failed to install Python $PYTHON_VERSION"
             exit 1
@@ -133,6 +140,15 @@ setup_python_environment() {
 
     # Set global Python version
     pyenv global $PYTHON_VERSION
+
+    # Verify Tkinter installation
+    print_status "Verifying Tkinter installation..."
+    if python -c "import tkinter; tkinter._test()" &>/dev/null; then
+        print_success "Tkinter installation verified successfully"
+    else
+        print_error "Tkinter installation verification failed"
+        exit 1
+    fi
 
     # Install Python packages
     packages=(
