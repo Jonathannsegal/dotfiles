@@ -137,3 +137,4 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:
 export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
 export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
 export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
+export PATH="/opt/homebrew/anaconda3/bin:$PATH"
