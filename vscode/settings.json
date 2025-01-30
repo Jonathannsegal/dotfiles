@@ -90,5 +90,6 @@
   "editor.tabSize": 4,
   "editor.insertSpaces": true,
   "jupyter.askForKernelRestart": false,
-  "editor.fontFamily": "MesloLGS NF, Regular"
+  "editor.fontFamily": "Fira Code",
+  "editor.fontLigatures": true
 }
