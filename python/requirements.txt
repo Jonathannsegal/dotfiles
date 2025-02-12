@@ -139,6 +139,7 @@ pydeck==0.9.1
 pyflakes==3.2.0
 Pygments==2.18.0
 pylint==3.3.2
+PyMuPDF==1.25.2
 pyparsing==3.2.0
 pypdf==5.1.0
 pyproject_hooks==1.2.0
