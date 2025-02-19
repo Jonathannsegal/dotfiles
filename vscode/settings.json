@@ -51,7 +51,7 @@
     "editor.formatOnType": true,
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
-    "editor.defaultFormatter": "ms-python.python"
+    "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "security.workspace.trust.untrustedFiles": "open",
   "workbench.editorAssociations": {
@@ -91,5 +91,9 @@
   "editor.insertSpaces": true,
   "jupyter.askForKernelRestart": false,
   "editor.fontFamily": "Fira Code",
-  "editor.fontLigatures": true
+  "editor.fontLigatures": true,
+  "cSpell.userWords": [
+    "llava",
+    "ollama"
+  ]
 }
