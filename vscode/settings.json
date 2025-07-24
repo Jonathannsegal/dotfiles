@@ -74,7 +74,7 @@
     "unpkg.com"
   ],
   "liveshare.notebooks.allowGuestExecuteCells": true,
-  "githubPullRequests.pullBranch": "never",
+"githubPullRequests.pullBranch": "never",
   "typescript.updateImportsOnFileMove.enabled": "never",
   "window.commandCenter": false,
   "github.copilot.editor.enableAutoCompletions": true,
@@ -93,7 +93,21 @@
   "editor.fontFamily": "Fira Code",
   "editor.fontLigatures": true,
   "cSpell.userWords": [
+    "levelname",
     "llava",
     "ollama"
-  ]
+  ],
+  "terminal.integrated.allowedLinkSchemes": [
+    "file",
+    "http",
+    "https",
+    "mailto",
+    "vscode",
+    "vscode-insiders",
+    "docker-desktop"
+  ],
+  "workbench.colorTheme": "Visual Studio Dark",
+  "git.ignoreRebaseWarning": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "github.copilot.nextEditSuggestions.enabled": true
 }
