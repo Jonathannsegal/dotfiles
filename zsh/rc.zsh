@@ -90,6 +90,11 @@ ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=red'
 # Run the Brewfile check if it exists
 if typeset -f brew_check > /dev/null; then
     brew_check
+
+    # Also run the cleaner
+    if [ -x "$DOTFILES/run/clean.sh" ]; then
+        "$DOTFILES/run/clean.sh"
+    fi
 fi
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
