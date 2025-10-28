@@ -30,12 +30,15 @@ setopt PUSHD_IGNORE_DUPS
 setopt PUSHD_SILENT
 
 # Path configuration
+# Ensure Homebrew bin comes first on Apple Silicon
+if [ -d "/opt/homebrew/bin" ]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+fi
 export PATH="$HOME/bin:/usr/local/bin:$PATH"
 
-# Initialize pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+# Remove any pyenv initialization (we manage a single Homebrew Python now)
+# Also ensure pyenv paths are stripped from PATH
+PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '$0!~/\.pyenv\/bin/ && $0!~/\.pyenv\/shims/' | sed 's/:$//')
 
 # Load aliases
 source_if_exists "$DOTFILES/zsh/aliases.zsh"
@@ -105,8 +108,10 @@ export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
 # pnpm from homebrew
 export PNPM_HOME="/opt/homebrew/bin"
 
-# zoxide
-eval "$(zoxide init --cmd cd zsh)"
+# zoxide (if installed)
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init --cmd cd zsh)"
+fi
 
 # Show execution time for long-running commands
 REPORTTIME=10
@@ -155,18 +160,5 @@ source_if_exists "$DOTFILES/bat/zsh/bat.zsh"
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/opt/homebrew/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/opt/homebrew/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/opt/homebrew/anaconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/opt/homebrew/anaconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <eval "$(rbenv init - zsh)"
-eval "$(rbenv init -)"
+# Finally, strip any remaining Anaconda paths from PATH (defensive)
+PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '$0!~/anaconda3/' | sed 's/:$//')

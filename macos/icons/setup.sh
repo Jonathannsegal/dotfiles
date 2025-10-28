@@ -30,7 +30,16 @@ apply_icon() {
 
 # Apply icons
 apply_icon "/Applications/Google Chrome.app" "$ICONS_DIR/chrome.png"
-apply_icon "/Applications/Adobe Illustrator 2025/Adobe Illustrator.app" "$ICONS_DIR/illustrator.png"
+
+# Resolve Adobe Illustrator path dynamically (handles different yearly versions)
+shopt -s nullglob
+ILLUSTRATOR_CANDIDATES=(/Applications/Adobe\ Illustrator*/Adobe\ Illustrator*.app)
+shopt -u nullglob
+if [ ${#ILLUSTRATOR_CANDIDATES[@]} -gt 0 ]; then
+    apply_icon "${ILLUSTRATOR_CANDIDATES[0]}" "$ICONS_DIR/illustrator.png"
+else
+    echo "Skipping Adobe Illustrator (app not found)"
+fi
 apply_icon "/Applications/iTerm.app" "$ICONS_DIR/iterm2.png"
 apply_icon "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "$ICONS_DIR/lightroom.png"
 apply_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
@@ -39,7 +48,7 @@ apply_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"
 apply_icon "/Applications/Visual Studio Code.app" "$ICONS_DIR/vscode.png"
 apply_icon "/Applications/zoom.us.app" "$ICONS_DIR/zoom.png"
 apply_icon "/Applications/zotero.app" "$ICONS_DIR/zotero.png"
-apply_icon "/Applications//ATLAS.ti.app" "$ICONS_DIR/atlasti.png"
+apply_icon "/Applications/ATLAS.ti.app" "$ICONS_DIR/atlasti.png"
 
 # Clear icon cache with sudo
 echo "Clearing icon cache..."

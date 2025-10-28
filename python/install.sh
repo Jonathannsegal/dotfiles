@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Function to get latest stable Python version
+# (Deprecated) pyenv-based latest version lookup removed. We will use Homebrew Python only.
 get_latest_python_version() {
-    pyenv install --list | grep -E "^\s*[0-9]+\.[0-9]+\.[0-9]+$" | tail -1 | tr -d '[:space:]'
+    echo "" # unused
 }
 
 print_status() {
@@ -18,12 +18,39 @@ print_warning() {
     printf "\r\033[2K [ \033[00;33mWARN\033[0m ] $1\n"
 }
 
-# Ask for confirmation
-confirm() {
-    read -p " [ ?? ] $1 (y/n) " -n 1 -r
-    echo
-    [[ $REPLY =~ ^[Yy]$ ]]
+# Try to locate Homebrew if it's not in PATH. Sets BREW_CMD if found.
+find_brew() {
+    if command -v brew >/dev/null 2>&1; then
+        BREW_CMD="brew"
+        return 0
+    fi
+
+    # Common Homebrew locations on macOS
+    local candidates=("/opt/homebrew/bin/brew" "/usr/local/bin/brew" "/home/linuxbrew/.linuxbrew/bin/brew")
+    for p in "${candidates[@]}"; do
+        if [ -x "$p" ]; then
+            BREW_CMD="$p"
+            return 0
+        fi
+    done
+
+    # Not found; leave BREW_CMD unset
+    return 1
 }
+
+# pyenv detection removed (we are uninstalling pyenv in this flow)
+
+# No pyenv activation; we are removing pyenv in this setup
+
+# Handle command line arguments (kept for backwards compatibility)
+NO_CONFIRM=false
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --no-confirm) NO_CONFIRM=true; shift ;;
+        --help) echo "Usage: install.sh [--no-confirm]"; exit 0 ;;
+        *) print_error "Unknown parameter: $1"; exit 1 ;;
+    esac
+done
 
 # Store dependencies using a simple array
 DEPS_LIST=()
@@ -31,7 +58,7 @@ get_all_dependencies() {
     local package="$1"
     local deps
     
-    brew deps --installed "$package" 2>/dev/null | while read -r dep; do
+    ${BREW_CMD:-brew} deps --installed "$package" 2>/dev/null | while read -r dep; do
         if [[ ! " ${DEPS_LIST[@]} " =~ " ${dep} " ]]; then
             DEPS_LIST+=("$dep")
             get_all_dependencies "$dep"
@@ -47,7 +74,7 @@ remove_python_safely() {
     print_status "Attempting to remove $formula..."
     
     # Try normal uninstall first
-    if brew uninstall "$formula" 2>/dev/null; then
+    if ${BREW_CMD:-brew} uninstall "$formula" 2>/dev/null; then
         print_success "Removed $formula normally"
         return 0
     fi
@@ -66,7 +93,7 @@ remove_python_safely() {
     fi
     
     if [ "$NO_CONFIRM" = true ] || confirm "Do you want to force remove Python? This won't remove other packages but might temporarily break them"; then
-        if brew uninstall --ignore-dependencies "$formula"; then
+        if ${BREW_CMD:-brew} uninstall --ignore-dependencies "$formula"; then
             print_success "Forcefully removed $formula"
             print_warning "Some packages might need to be rebuilt later"
             return 0
@@ -81,76 +108,155 @@ remove_python_safely() {
 }
 
 setup_python_environment() {
-    # Install Tkinter dependencies first
-    print_status "Installing Tkinter dependencies..."
-    brew install tcl-tk
+    # This function will: completely remove existing Pythons (Homebrew formulas and pyenv versions),
+    # remove streamlit and tcl-tk (Homebrew) if present, then install a clean tcl-tk and a fresh
+    # pyenv Python (latest stable).
 
-    # Get the latest Python version
-    PYTHON_VERSION=$(get_latest_python_version)
-
-    # Clean up existing Python installations
-    print_status "Checking for existing Python installations..."
-
-    # Remove Homebrew Python if installed
-    if brew list | grep -q "python@"; then
-        print_status "Removing Homebrew Python installations..."
-        brew list | grep "python@" | while read formula; do
-            version=$(echo "$formula" | sed 's/python@//')
-            if ! remove_python_safely "$version"; then
-                print_error "Failed to handle Python removal: $formula"
-                if [ "$NO_CONFIRM" = true ] || confirm "Continue anyway?"; then
-                    return 0
-                else
-                    exit 1
+    # Remove any Anaconda/Miniconda installations (we don't want conda)
+    remove_conda() {
+        print_status "Removing Anaconda/Miniconda installations if present..."
+        # Try uninstalling Homebrew anaconda cask if installed
+        if ${BREW_CMD:-brew} list --cask 2>/dev/null | grep -q "^anaconda$"; then
+            ${BREW_CMD:-brew} uninstall --cask anaconda >/dev/null 2>&1 && print_success "Uninstalled Homebrew cask 'anaconda'" || print_warning "Failed to uninstall Homebrew cask 'anaconda'"
+        fi
+        # Known conda locations
+        local conda_paths=("$HOME/anaconda3" "$HOME/miniconda3" "$HOME/miniconda" "$HOME/.conda" "/opt/homebrew/anaconda3" "/usr/local/anaconda3")
+        local removed_any=false
+        for p in "${conda_paths[@]}"; do
+            if [ -d "$p" ]; then
+                # best-effort to clear protection and perms
+                chmod -R u+w "$p" 2>/dev/null || true
+                chmod -RN "$p" 2>/dev/null || true
+                chflags -R nouchg "$p" 2>/dev/null || true
+                rm -rf "$p" && print_success "Removed $p" || print_warning "Failed to remove $p"
+                removed_any=true
+            fi
+        done
+        # Remove conda init lines from common shell profiles
+        local profiles=("$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile")
+        for prof in "${profiles[@]}"; do
+            if [ -f "$prof" ]; then
+                # remove lines added by conda init
+                if grep -q "# >>> conda initialize >>>" "$prof" 2>/dev/null; then
+                    awk '/# >>> conda initialize >>>/{p=1} p && /# <<< conda initialize <<</{p=0; next} !p{print}' "$prof" > "$prof.tmp" && mv "$prof.tmp" "$prof" && print_success "Removed conda init from $prof"
+                fi
+                # strip any lingering anaconda paths from PATH exports
+                if grep -q "anaconda3" "$prof" 2>/dev/null; then
+                    grep -v "anaconda3" "$prof" > "$prof.tmp" && mv "$prof.tmp" "$prof" && print_success "Removed anaconda paths from $prof"
                 fi
             fi
         done
-    fi
+        # Sanitize PATH for this session (remove any anaconda entries)
+        PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '$0!~/anaconda3/' | sed 's/:$//')
+        if [ "$removed_any" = false ]; then
+            print_status "No Anaconda/Miniconda installations found"
+        fi
+    }
 
-    # Remove other pyenv Python versions except the target version
-    print_status "Cleaning up pyenv Python versions..."
-    current_versions=$(pyenv versions --bare | grep -v "$PYTHON_VERSION")
-    if [ ! -z "$current_versions" ]; then
-        echo "$current_versions" | while read -r version; do
-            if pyenv uninstall -f "$version" 2>/dev/null; then
-                print_success "Removed Python $version"
-            else
-                print_error "Failed to remove Python $version"
+    # Remove Homebrew tcl-tk (Tk) and streamlit if installed to ensure a clean reinstall
+    print_status "Cleaning Python-related tooling (conda, pyenv) and any installed streamlit package..."
+
+    # Run conda removal first to ensure no conda exists
+    remove_conda
+
+    # Remove any pyenv installation (brew and ~/.pyenv) and init lines from profiles
+    remove_pyenv() {
+        print_status "Removing pyenv and its Python versions..."
+        # Remove pyenv via Homebrew if installed
+        if ${BREW_CMD:-brew} list --formula | grep -q "^pyenv$"; then
+            ${BREW_CMD:-brew} uninstall pyenv >/dev/null 2>&1 && print_success "Uninstalled Homebrew 'pyenv'" || print_warning "Failed to uninstall Homebrew 'pyenv'"
+        fi
+        # Remove ~/.pyenv directory and make writable if needed
+        if [ -d "$HOME/.pyenv" ]; then
+            chmod -R u+w "$HOME/.pyenv" 2>/dev/null || true
+            chflags -R nouchg "$HOME/.pyenv" 2>/dev/null || true
+            rm -rf "$HOME/.pyenv" && print_success "Removed $HOME/.pyenv" || print_warning "Failed to remove $HOME/.pyenv"
+        fi
+        # Strip pyenv init lines from shell profiles
+        local profiles=("$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile")
+        for prof in "${profiles[@]}"; do
+            if [ -f "$prof" ]; then
+                if grep -q "pyenv init" "$prof" 2>/dev/null; then
+                    # remove any lines containing 'pyenv init'
+                    grep -v "pyenv init" "$prof" > "$prof.tmp" && mv "$prof.tmp" "$prof" && print_success "Removed pyenv init from $prof"
+                fi
+                if grep -q "PYENV_ROOT" "$prof" 2>/dev/null; then
+                    grep -v "PYENV_ROOT" "$prof" > "$prof.tmp" && mv "$prof.tmp" "$prof" && print_success "Removed PYENV_ROOT from $prof"
+                fi
+                if grep -q "\.pyenv/shims" "$prof" 2>/dev/null; then
+                    grep -v "\.pyenv/shims" "$prof" > "$prof.tmp" && mv "$prof.tmp" "$prof" && print_success "Removed pyenv shims from PATH in $prof"
+                fi
             fi
         done
+        # Sanitize PATH for this session
+        PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '$0!~/\.pyenv\/shims/' | sed 's/:$//')
+    }
+    remove_pyenv
+
+    # Note: pyenv is removed in this flow; do not attempt to activate it
+
+    # Skipping any removal or installation of Homebrew 'tcl-tk' per request
+    print_status "Skipping Homebrew 'tcl-tk' operations (user requested no tcl-tk)"
+
+    # Ensure only Homebrew Python remains and is up to date
+    print_status "Preparing Homebrew Python (removing old formulas, installing latest 'python')"
+    # Remove all versioned python formulas first
+    ${BREW_CMD:-brew} list --formula | grep -E '^python@' | while read -r formula; do
+        ${BREW_CMD:-brew} uninstall --ignore-dependencies "$formula" >/dev/null 2>&1 && print_success "Uninstalled $formula" || print_warning "Failed to uninstall $formula"
+    done
+    # Remove generic python to reinstall cleanly
+    if ${BREW_CMD:-brew} list --formula | grep -q '^python$'; then
+        ${BREW_CMD:-brew} uninstall --ignore-dependencies python >/dev/null 2>&1 && print_success "Uninstalled Homebrew 'python'" || print_status "Homebrew 'python' not uninstalled (may not be installed)"
     fi
-
-    print_status "Installing Python $PYTHON_VERSION with Tkinter support..."
-
-    if ! pyenv versions | grep -q "$PYTHON_VERSION"; then
-        # Set up build environment for Python with Tkinter support
-        export PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I$(brew --prefix tcl-tk)/include' --with-tcltk-libs='-L$(brew --prefix tcl-tk)/lib -ltcl8.6 -ltk8.6'"
-        
-        if CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix tcl-tk)/include" \
-           LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix tcl-tk)/lib" \
-           pyenv install "$PYTHON_VERSION" 2>/dev/null; then
-            print_success "Installed Python $PYTHON_VERSION with Tkinter support"
-        else
-            print_error "Failed to install Python $PYTHON_VERSION"
-            exit 1
-        fi
+    # Install latest python
+    if ${BREW_CMD:-brew} install python >/dev/null 2>&1 || ${BREW_CMD:-brew} upgrade python >/dev/null 2>&1; then
+        print_success "Installed/Upgraded Homebrew 'python'"
     else
-        print_success "Python $PYTHON_VERSION already installed"
-    fi
-
-    # Set global Python version
-    pyenv global $PYTHON_VERSION
-
-    # Verify Tkinter installation
-    print_status "Verifying Tkinter installation..."
-    if python -c "import tkinter; tkinter._test()" &>/dev/null; then
-        print_success "Tkinter installation verified successfully"
-    else
-        print_error "Tkinter installation verification failed"
+        print_error "Failed to install/upgrade Homebrew 'python'"
         exit 1
     fi
+    # Resolve python3 path
+    PYTHON_BIN=$(command -v python3 || echo "")
+    if [ -z "$PYTHON_BIN" ]; then
+        # Try Homebrew prefix
+        PYTHON_BIN="$(${BREW_CMD:-brew} --prefix 2>/dev/null)/bin/python3"
+    fi
+    if [ ! -x "$PYTHON_BIN" ]; then
+        print_error "python3 not found after Homebrew install"
+        exit 1
+    fi
+    print_success "Using $("$PYTHON_BIN" --version 2>&1) at $PYTHON_BIN"
 
-    # Install Python packages
+    # Determine pip flags for Homebrew's externally managed environment
+    PIP_FLAGS=""
+    BREW_PREFIX="$(${BREW_CMD:-brew} --prefix 2>/dev/null)"
+    case "$PYTHON_BIN" in
+        "$BREW_PREFIX"*/bin/python3|/opt/homebrew/bin/python3|/usr/local/bin/python3)
+            # Homebrew Python enforces externally-managed site-packages
+            PIP_FLAGS="--break-system-packages"
+            ;;
+    esac
+
+    # Best-effort removal of streamlit if present (user requested it's removed)
+    if "$PYTHON_BIN" -m pip show streamlit >/dev/null 2>&1; then
+        if "$PYTHON_BIN" -m pip uninstall -y streamlit $PIP_FLAGS >/dev/null 2>&1; then
+            print_success "Uninstalled pip package 'streamlit'"
+        else
+            print_warning "Failed to uninstall 'streamlit' (may not be present or permission denied)"
+        fi
+    fi
+
+    # Remove all Homebrew python formulas (python, python@X.Y)
+    # No additional removal here; handled above
+
+    # pyenv already removed above
+
+    # Brew Python ready; no pyenv global needed
+
+    # Skipping Tkinter verification as requested; do not fail if tkinter is unavailable
+    print_status "Skipping Tkinter import verification (per request)"
+
+    # Install Python packages (streamlit removed intentionally)
     packages=(
         "pip"
         "setuptools"
@@ -171,19 +277,19 @@ setup_python_environment() {
         "scipy"
         "requests"
         "pylint"
-        "streamlit"
     )
     failed_packages=()
     total=${#packages[@]}
     current=0
 
-    # Upgrade pip first
-    python -m pip install --upgrade pip
+    # Upgrade pip first using brew python (respect externally-managed policy)
+    "$PYTHON_BIN" -m ensurepip --upgrade >/dev/null 2>&1 || true
+    "$PYTHON_BIN" -m pip install --upgrade pip $PIP_FLAGS >/dev/null 2>&1 || true
 
     for package in "${packages[@]}"; do
         ((current++))
         print_status "($current/$total) Installing $package..."
-        if python -m pip install "$package" &>/dev/null; then
+        if "$PYTHON_BIN" -m pip install $PIP_FLAGS "$package" &>/dev/null; then
             print_success "($current/$total) Installed $package"
         else
             print_error "($current/$total) Failed to install $package"
@@ -209,28 +315,5 @@ setup_python_environment() {
     fi
 }
 
-# Check if pyenv is installed
-if ! command -v pyenv >/dev/null; then
-    print_error "pyenv is not installed. Please install it first using Homebrew."
-    exit 1
-fi
-
-# Handle command line arguments
-NO_CONFIRM=false
-while [[ "$#" -gt 0 ]]; do
-    case $1 in
-        --no-confirm) NO_CONFIRM=true; shift ;;
-        *) print_error "Unknown parameter: $1"; exit 1 ;;
-    esac
-done
-
-# Only show prompts and info messages if running standalone
-if [ "$NO_CONFIRM" = false ]; then
-    print_status "setting up python environment"
-    if ! confirm "Do you want to set up Python environment?"; then
-        exit 0
-    fi
-    print_status "running python setup script"
-fi
-
+find_brew || true
 setup_python_environment

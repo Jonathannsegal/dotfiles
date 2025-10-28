@@ -79,7 +79,7 @@
   "window.commandCenter": false,
   "github.copilot.editor.enableAutoCompletions": true,
   "chat.editing.alwaysSaveWithGeneratedChanges": true,
-  "python.defaultInterpreterPath": "/Users/jsegal/.pyenv/versions/3.13.1/bin/python",
+  "python.defaultInterpreterPath": "/opt/homebrew/bin/python3",
   "workbench.startupEditor": "none",
   "python.createEnvironment.trigger": "off",
   "[typescript]": {
@@ -93,9 +93,11 @@
   "editor.fontFamily": "Fira Code",
   "editor.fontLigatures": true,
   "cSpell.userWords": [
+    "amiodarone",
     "levelname",
     "llava",
-    "ollama"
+    "ollama",
+    "Segal"
   ],
   "terminal.integrated.allowedLinkSchemes": [
     "file",
@@ -126,5 +128,24 @@
   },
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "diffEditor.renderSideBySide": false,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "window.autoDetectColorScheme": true,
+  "workbench.preferredLightColorTheme": "Visual Studio Dark",
+  "[dockercompose]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "git.openRepositoryInParentFolders": "always"
 }
