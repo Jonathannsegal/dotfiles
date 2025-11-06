@@ -97,6 +97,7 @@
     "levelname",
     "llava",
     "ollama",
+    "QWEN",
     "Segal"
   ],
   "terminal.integrated.allowedLinkSchemes": [

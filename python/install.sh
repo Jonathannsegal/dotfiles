@@ -128,12 +128,30 @@ setup_python_environment() {
                 chmod -R u+w "$p" 2>/dev/null || true
                 chmod -RN "$p" 2>/dev/null || true
                 chflags -R nouchg "$p" 2>/dev/null || true
-                rm -rf "$p" && print_success "Removed $p" || print_warning "Failed to remove $p"
+                if rm -rf "$p" 2>/dev/null; then
+                    print_success "Removed $p"
+                else
+                    print_warning "Failed to remove $p without privileges; attempting with sudo"
+                    # Pre-authenticate once if possible
+                    if command -v sudo >/dev/null 2>&1; then
+                        sudo -v 2>/dev/null || true
+                        sudo chmod -R u+w "$p" 2>/dev/null || true
+                        sudo chmod -RN "$p" 2>/dev/null || true
+                        sudo chflags -R nouchg "$p" 2>/dev/null || true
+                        if sudo rm -rf "$p" 2>/dev/null; then
+                            print_success "Removed $p with sudo"
+                        else
+                            print_warning "Failed to remove $p even with sudo"
+                        fi
+                    else
+                        print_warning "sudo not available; cannot remove $p"
+                    fi
+                fi
                 removed_any=true
             fi
         done
-        # Remove conda init lines from common shell profiles
-        local profiles=("$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile")
+    # Remove conda init lines from common shell profiles (include .zprofile)
+    local profiles=("$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile")
         for prof in "${profiles[@]}"; do
             if [ -f "$prof" ]; then
                 # remove lines added by conda init
@@ -172,8 +190,8 @@ setup_python_environment() {
             chflags -R nouchg "$HOME/.pyenv" 2>/dev/null || true
             rm -rf "$HOME/.pyenv" && print_success "Removed $HOME/.pyenv" || print_warning "Failed to remove $HOME/.pyenv"
         fi
-        # Strip pyenv init lines from shell profiles
-        local profiles=("$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile")
+    # Strip pyenv init lines from shell profiles (include .zprofile)
+    local profiles=("$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile")
         for prof in "${profiles[@]}"; do
             if [ -f "$prof" ]; then
                 if grep -q "pyenv init" "$prof" 2>/dev/null; then
@@ -215,6 +233,37 @@ setup_python_environment() {
         print_error "Failed to install/upgrade Homebrew 'python'"
         exit 1
     fi
+    # Ensure Homebrew bin directory is in PATH for this session and persistently
+    BREW_PREFIX="$(${BREW_CMD:-brew} --prefix 2>/dev/null)"
+    BREW_BIN="$BREW_PREFIX/bin"
+    case ":$PATH:" in
+        *":$BREW_BIN:"*) : ;; # already present
+        *)
+            export PATH="$BREW_BIN:$PATH"
+            print_status "Added $BREW_BIN to PATH for this session"
+            # Persist to ~/.zshrc if not present
+            if [ -n "$HOME" ] && [ -w "$HOME" ]; then
+                ZSHRC="$HOME/.zshrc"
+                if [ -f "$ZSHRC" ]; then
+                    if ! grep -q "# >>> dotfiles python PATH >>>" "$ZSHRC" 2>/dev/null; then
+                        {
+                            echo "# >>> dotfiles python PATH >>>"
+                            echo "export PATH=\"$BREW_BIN:\$PATH\""
+                            echo "# <<< dotfiles python PATH <<<"
+                        } >> "$ZSHRC"
+                        print_success "Persisted PATH update to $ZSHRC"
+                    fi
+                else
+                    {
+                        echo "# >>> dotfiles python PATH >>>"
+                        echo "export PATH=\"$BREW_BIN:\$PATH\""
+                        echo "# <<< dotfiles python PATH <<<"
+                    } >> "$ZSHRC"
+                    print_success "Created $ZSHRC with PATH update"
+                fi
+            fi
+            ;;
+    esac
     # Resolve python3 path
     PYTHON_BIN=$(command -v python3 || echo "")
     if [ -z "$PYTHON_BIN" ]; then
