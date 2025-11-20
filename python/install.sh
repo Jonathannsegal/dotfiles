@@ -236,45 +236,38 @@ setup_python_environment() {
     # Ensure Homebrew bin directory is in PATH for this session and persistently
     BREW_PREFIX="$(${BREW_CMD:-brew} --prefix 2>/dev/null)"
     BREW_BIN="$BREW_PREFIX/bin"
-    case ":$PATH:" in
-        *":$BREW_BIN:"*) : ;; # already present
-        *)
-            export PATH="$BREW_BIN:$PATH"
-            print_status "Added $BREW_BIN to PATH for this session"
-            # Persist to ~/.zshrc if not present
-            if [ -n "$HOME" ] && [ -w "$HOME" ]; then
-                ZSHRC="$HOME/.zshrc"
-                if [ -f "$ZSHRC" ]; then
-                    if ! grep -q "# >>> dotfiles python PATH >>>" "$ZSHRC" 2>/dev/null; then
-                        {
-                            echo "# >>> dotfiles python PATH >>>"
-                            echo "export PATH=\"$BREW_BIN:\$PATH\""
-                            echo "# <<< dotfiles python PATH <<<"
-                        } >> "$ZSHRC"
-                        print_success "Persisted PATH update to $ZSHRC"
-                    fi
-                else
-                    {
-                        echo "# >>> dotfiles python PATH >>>"
-                        echo "export PATH=\"$BREW_BIN:\$PATH\""
-                        echo "# <<< dotfiles python PATH <<<"
-                    } >> "$ZSHRC"
-                    print_success "Created $ZSHRC with PATH update"
-                fi
-            fi
-            ;;
-    esac
-    # Resolve python3 path
-    PYTHON_BIN=$(command -v python3 || echo "")
-    if [ -z "$PYTHON_BIN" ]; then
-        # Try Homebrew prefix
-        PYTHON_BIN="$(${BREW_CMD:-brew} --prefix 2>/dev/null)/bin/python3"
-    fi
+    
+    # Export PATH for current session, prioritizing Homebrew
+    export PATH="$BREW_BIN:$PATH"
+    
+    # Create Python zsh configuration file
+    DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+    mkdir -p "$DOTFILES/python/zsh"
+    cat > "$DOTFILES/python/zsh/python.zsh" << 'EOF'
+# Python environment configuration
+# Prioritize Homebrew Python over system Python
+
+# Get Homebrew prefix (works for both Intel and Apple Silicon Macs)
+if command -v brew >/dev/null 2>&1; then
+    BREW_PREFIX="$(brew --prefix)"
+    
+    # Put Homebrew bin at the front of PATH
+    export PATH="$BREW_PREFIX/bin:$PATH"
+    
+    # Ensure python3 and pip3 from Homebrew are used
+    alias python="$BREW_PREFIX/bin/python3"
+    alias pip="$BREW_PREFIX/bin/pip3"
+fi
+EOF
+    print_success "Created Python zsh configuration at $DOTFILES/python/zsh/python.zsh"
+    # Resolve python3 path - force Homebrew Python
+    PYTHON_BIN="$BREW_PREFIX/bin/python3"
     if [ ! -x "$PYTHON_BIN" ]; then
-        print_error "python3 not found after Homebrew install"
+        print_error "Homebrew python3 not found at $PYTHON_BIN"
         exit 1
     fi
     print_success "Using $("$PYTHON_BIN" --version 2>&1) at $PYTHON_BIN"
+    print_status "This is your primary Python - all pip packages will install here"
 
     # Determine pip flags for Homebrew's externally managed environment
     PIP_FLAGS=""
@@ -348,6 +341,28 @@ setup_python_environment() {
 
     if [ ${#failed_packages[@]} -eq 0 ]; then
         print_success "Python development environment configured successfully!"
+        echo ""
+        print_status "=== Python Installation Summary ==="
+        print_success "Python location: $PYTHON_BIN"
+        print_success "Python version: $("$PYTHON_BIN" --version 2>&1)"
+        print_success "Pip location: $("$PYTHON_BIN" -m pip --version | awk '{print $NF}' | sed 's/[()]//g')"
+        echo ""
+        
+        # Create symlinks for python and pip (without the '3' suffix)
+        print_status "Creating 'python' and 'pip' symlinks..."
+        if [ -w "$BREW_PREFIX/bin" ]; then
+            ln -sf "$BREW_PREFIX/bin/python3" "$BREW_PREFIX/bin/python" 2>/dev/null && print_success "Created symlink: python -> python3"
+            ln -sf "$BREW_PREFIX/bin/pip3" "$BREW_PREFIX/bin/pip" 2>/dev/null && print_success "Created symlink: pip -> pip3"
+        else
+            sudo ln -sf "$BREW_PREFIX/bin/python3" "$BREW_PREFIX/bin/python" && print_success "Created symlink: python -> python3"
+            sudo ln -sf "$BREW_PREFIX/bin/pip3" "$BREW_PREFIX/bin/pip" && print_success "Created symlink: pip -> pip3"
+        fi
+        
+        echo ""
+        print_status "All pip packages will install to this single Python installation."
+        print_status "You can now use 'python' and 'pip' commands directly (no need for 'python3' or 'pip3')."
+        echo ""
+        
         if [ -f "$DOTFILES/brew/rebuild.sh" ]; then
             print_status "Rebuilding affected Homebrew packages..."
             bash "$DOTFILES/brew/rebuild.sh"

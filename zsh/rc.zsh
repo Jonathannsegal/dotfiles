@@ -151,6 +151,7 @@ setup_eza() {
 }
 
 source_if_exists "$DOTFILES/iterm2/zsh/iterm2.zsh"
+source_if_exists "$DOTFILES/python/zsh/python.zsh"
 source_if_exists "$DOTFILES/xxh/zsh/xxh.zsh"
 source_if_exists "$DOTFILES/eza/zsh/eza.zsh"
 source_if_exists "$DOTFILES/tmux/zsh/tmux.zsh"
