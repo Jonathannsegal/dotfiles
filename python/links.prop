@@ -1,2 +1,2 @@
 $DOTFILES/python/pip.conf=$HOME/.config/pip/pip.conf
-$DOTFILES/python/.python-version=$HOME/.python-version
+$DOTFILES/python/zsh/python.zsh=$HOME/.zsh/python.zsh
