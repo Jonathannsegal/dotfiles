@@ -18,7 +18,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import Any, Callable, Literal, TypeVar
+from typing import Any, Callable, Literal, TypeVar, Union
 
 
 @dataclass(frozen=True)
@@ -332,24 +332,24 @@ class NonemptyInbox:
         )
 
 
-ErrorType = (
-    AreaDifferentFromJDex
-    | AreaNotInJDex
-    | CategoryDifferentFromJDex
-    | CategoryInWrongArea
-    | CategoryNotInJDex
-    | DuplicateArea
-    | DuplicateCategory
-    | DuplicateId
-    | FileOutsideId
-    | IdDifferentFromJDex
-    | IdInWrongCategory
-    | IdNotInJDex
-    | InvalidAreaName
-    | InvalidCategoryName
-    | InvalidIDName
-    | NonemptyInbox
-)
+ErrorType = Union[
+    AreaDifferentFromJDex,
+    AreaNotInJDex,
+    CategoryDifferentFromJDex,
+    CategoryInWrongArea,
+    CategoryNotInJDex,
+    DuplicateArea,
+    DuplicateCategory,
+    DuplicateId,
+    FileOutsideId,
+    IdDifferentFromJDex,
+    IdInWrongCategory,
+    IdNotInJDex,
+    InvalidAreaName,
+    InvalidCategoryName,
+    InvalidIDName,
+    NonemptyInbox,
+]
 
 
 @dataclass(frozen=True)
@@ -589,20 +589,20 @@ class JDexInvalidIDName:
         )
 
 
-JDexErrorType = (
-    JDexAreaHeaderDifferentFromArea
-    | JDexAreaHeaderWithoutArea
-    | JDexCategoryInWrongArea
-    | JDexDuplicateArea
-    | JDexDuplicateAreaHeader
-    | JDexDuplicateCategory
-    | JDexDuplicateId
-    | JDexFileOutsideCategory
-    | JDexIdInWrongCategory
-    | JDexInvalidAreaName
-    | JDexInvalidCategoryName
-    | JDexInvalidIDName
-)
+JDexErrorType = Union[
+    JDexAreaHeaderDifferentFromArea,
+    JDexAreaHeaderWithoutArea,
+    JDexCategoryInWrongArea,
+    JDexDuplicateArea,
+    JDexDuplicateAreaHeader,
+    JDexDuplicateCategory,
+    JDexDuplicateId,
+    JDexFileOutsideCategory,
+    JDexIdInWrongCategory,
+    JDexInvalidAreaName,
+    JDexInvalidCategoryName,
+    JDexInvalidIDName,
+]
 
 
 @dataclass(frozen=True)
