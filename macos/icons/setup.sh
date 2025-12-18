@@ -17,8 +17,8 @@ apply_icon() {
     
     if [ -e "$app_path" ] && [ -f "$icon_path" ]; then
         echo "Applying $icon_path to $app_path"
-        # Use sudo for Adobe applications and System applications
-        if [[ "$app_path" == *"Adobe"* ]] || [[ "$app_path" == "/System/"* ]] || [[ "$app_path" == *"zoom.us.app"* ]]; then
+        # Use sudo for Adobe applications, System applications, and Xcode
+        if [[ "$app_path" == *"Adobe"* ]] || [[ "$app_path" == "/System/"* ]] || [[ "$app_path" == *"zoom.us.app"* ]] || [[ "$app_path" == *"Xcode.app"* ]]; then
             sudo fileicon set "$app_path" "$icon_path"
         else
             fileicon set "$app_path" "$icon_path"
@@ -42,13 +42,16 @@ else
 fi
 apply_icon "/Applications/iTerm.app" "$ICONS_DIR/iterm2.png"
 apply_icon "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "$ICONS_DIR/lightroom.png"
-apply_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
+# apply_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
 apply_icon "/Applications/Slack.app" "$ICONS_DIR/slack.png"
 apply_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"
 apply_icon "/Applications/Visual Studio Code.app" "$ICONS_DIR/vscode.png"
 apply_icon "/Applications/zoom.us.app" "$ICONS_DIR/zoom.png"
 apply_icon "/Applications/zotero.app" "$ICONS_DIR/zotero.png"
 apply_icon "/Applications/ATLAS.ti.app" "$ICONS_DIR/atlasti.png"
+apply_icon "/Applications/Blender.app" "$ICONS_DIR/blender.png"
+apply_icon "/Applications/Lens Studio.app" "$ICONS_DIR/lense.png"
+apply_icon "/Applications/Xcode.app" "$ICONS_DIR/xcode.png"
 
 # Clear icon cache with sudo
 echo "Clearing icon cache..."
