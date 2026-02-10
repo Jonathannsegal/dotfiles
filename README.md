@@ -1,18 +1,39 @@
 # Dotfiles
 
-## Install
+My personal dotfiles for macOS. Managed with a custom bash script.
 
+## Structure
+
+- **zsh**: Shell configuration, aliases, and functions.
+- **brew**: Homebrew Bundle (Brewfile) and installation scripts.
+- **macos**: macOS defaults and preferences.
+- **python**, **dotnet**, **jdk**, **vscode**: Language and tool-specific configurations.
+- **terminal**: Terminal profiles (Dark/Light).
+
+## Installation
+
+```bash
+git clone https://github.com/Jonathannsegal/dotfiles.git
+cd dotfiles
+./run/setup.sh
 ```
-git clone <this-repo>
-cd <this-repo>
-./install/bootstrap.sh
+
+The setup script is interactive and will guide you through:
+1. Linking config files.
+2. Installing Homebrew packages.
+3. Setting up macOS defaults.
+4. Configuring language environments (Python, etc.).
+
+## Customization
+
+For machine-specific configurations that shouldn't be committed to the repo (API keys, path overrides), create a `~/.env.sh` file:
+
+```bash
+# ~/.env.sh
+export SECRET_KEY="value"
 ```
 
-## Local ZSH Config
-
-If there's customization you want ZSH to load on startup that is specific to 
-this machine (stuff you don't want to commit into the repo), create `~/.env.sh`
-and put it in there. It will be loaded near the top of `.zshrc`.
+This file is sourced automatically by `.zshrc`.
 
 ## TODO
 
