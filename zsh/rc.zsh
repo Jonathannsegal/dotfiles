@@ -94,9 +94,9 @@ ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=red'
 if typeset -f brew_check > /dev/null; then
     brew_check
 
-    # Also run the cleaner
+    # Also run the Johnny.Decimal checker (quiet mode to skip cleanup prompt)
     if [ -x "$DOTFILES/run/clean.sh" ]; then
-        "$DOTFILES/run/clean.sh"
+        "$DOTFILES/run/clean.sh" --quiet
     fi
 fi
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
