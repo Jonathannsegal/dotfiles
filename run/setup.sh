@@ -249,7 +249,7 @@ setup_mac_icons() {
             
             if [ "$should_setup_icons" == "y" ]; then
                 info 'running icon setup script'
-                bash "$DOTFILES/macos/icons/setup.sh" --no-prompt
+                bash "$DOTFILES/macos/icons/setup.sh"
                 success 'application icons customized'
             else
                 success 'skipped icon customization'

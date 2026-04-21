@@ -1,5 +1,38 @@
 #!/bin/bash
 
+set -euo pipefail
+
+AUTO_MODE=false
+SKIP_PRIVILEGED=false
+CLEAR_CACHE=true
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --auto)
+            AUTO_MODE=true
+            SKIP_PRIVILEGED=true
+            CLEAR_CACHE=false
+            shift
+            ;;
+        --skip-privileged)
+            SKIP_PRIVILEGED=true
+            shift
+            ;;
+        --no-cache-clear)
+            CLEAR_CACHE=false
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: setup.sh [--auto] [--skip-privileged] [--no-cache-clear]"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # Install fileicon if not present
 if ! command -v fileicon &> /dev/null; then
     echo "Installing fileicon..."
@@ -17,9 +50,13 @@ apply_icon() {
     
     if [ -e "$app_path" ] && [ -f "$icon_path" ]; then
         echo "Applying $icon_path to $app_path"
-        # Use sudo for Adobe applications, System applications, and Xcode
+        # Privileged apps may require elevated permissions.
         if [[ "$app_path" == *"Adobe"* ]] || [[ "$app_path" == "/System/"* ]] || [[ "$app_path" == *"zoom.us.app"* ]] || [[ "$app_path" == *"Xcode.app"* ]]; then
-            sudo fileicon set "$app_path" "$icon_path"
+            if [[ "$SKIP_PRIVILEGED" == true ]]; then
+                echo "Skipping privileged app in auto mode: $app_path"
+            else
+                sudo fileicon set "$app_path" "$icon_path"
+            fi
         else
             fileicon set "$app_path" "$icon_path"
         fi
@@ -53,13 +90,17 @@ apply_icon "/Applications/Blender.app" "$ICONS_DIR/blender.png"
 apply_icon "/Applications/Lens Studio.app" "$ICONS_DIR/lense.png"
 apply_icon "/Applications/Xcode.app" "$ICONS_DIR/xcode.png"
 
-# Clear icon cache with sudo
-echo "Clearing icon cache..."
-sudo rm -rf /Library/Caches/com.apple.iconservices.store
-sudo find /private/var/folders/ \
-    -name com.apple.iconservices -exec sudo rm -rf {} \; 2>/dev/null
+if [[ "$CLEAR_CACHE" == true ]]; then
+    # Clear icon cache with sudo
+    echo "Clearing icon cache..."
+    sudo rm -rf /Library/Caches/com.apple.iconservices.store
+    sudo find /private/var/folders/ \
+        -name com.apple.iconservices -exec sudo rm -rf {} \; 2>/dev/null
 
-# Restart Finder to refresh icons
-killall Finder
+    # Restart Finder to refresh icons
+    killall Finder
+else
+    echo "Skipping cache clear in auto mode"
+fi
 
 echo "Icon setup complete!"
