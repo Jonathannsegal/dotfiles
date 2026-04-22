@@ -21,7 +21,7 @@ CacheControl==0.14.3
 cachetools==6.2.4
 -e git+ssh://git@github.com/Sam-Belliveau/CaptureGraph-March-2026.git@551f954a17c8885b1dd0da7c019c4ec679970c34#egg=capturegraph_lib&subdirectory=capturegraph-lib
 cattrs==26.1.0
-certifi==2026.2.25
+certifi==2025.10.5
 cffi==2.0.0
 charset-normalizer==3.4.4
 cleo==2.1.0
@@ -141,8 +141,8 @@ pure_eval==0.2.3
 pyarrow==23.0.0
 pycodestyle==2.14.0
 pycparser==2.23
-pydantic==2.12.5
-pydantic_core==2.41.5
+pydantic==2.13.2
+pydantic_core==2.46.2
 pydeck==0.9.1
 pyflakes==3.4.0
 pygame==2.6.1
