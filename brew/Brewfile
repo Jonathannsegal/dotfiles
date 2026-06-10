@@ -2,75 +2,144 @@ tap "codeforreal1/tap"
 tap "daniyalmaster693/casks"
 tap "heroku/brew"
 tap "homebrew/bundle"
+# Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Dependency manager for Cocoa projects
 brew "cocoapods"
+# .NET Core
 brew "dotnet"
+# Perl lib for reading and writing EXIF metadata
 brew "exiftool"
+# Modern, maintained replacement for ls
 brew "eza"
+# Play, record, convert, and stream select audio and video codecs
 brew "ffmpeg"
+# macOS CLI for managing custom icons for files and folders
 brew "fileicon"
+# Command-line fuzzy finder written in Go
 brew "fzf"
+# GitHub command-line tool
 brew "gh"
+# Interpreter for PostScript and PDF
+brew "ghostscript"
+# Distributed revision control system
 brew "git"
+# Quickly rewrite git repository history
 brew "git-filter-repo"
+# Git extension for versioning large files
 brew "git-lfs"
+# Audit git repos for secrets
 brew "gitleaks"
+# Open-source, cross-platform JavaScript runtime environment
 brew "node"
+# CLI for Heroku
 brew "heroku"
+# Interpreted, interactive, object-oriented programming language
 brew "python@3.14"
+# Client library for huggingface.co hub
 brew "hf"
+# Improved top (interactive process viewer)
 brew "htop"
+# Lightweight and flexible command-line JSON processor
 brew "jq"
+# Mac App Store command-line interface
 brew "mas"
+# Create, run, and share large language models (LLMs)
 brew "ollama"
+# Development kit for the Java programming language
 brew "openjdk"
+# Swiss-army knife of markup format conversion
 brew "pandoc"
+# Fast, disk space efficient package manager
 brew "pnpm"
+# PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
+# Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
 brew "prettier"
+# Data validation using Python type hints
 brew "pydantic"
+# Tool Command Language
 brew "tcl-tk"
+# Python interface to Tcl/Tk
 brew "python-tk@3.13"
+# Ruby version manager
 brew "rbenv"
+# Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Cross-shell prompt for astronauts
 brew "starship"
+# Simplified and community-driven man pages
 brew "tldr"
+# Terminal multiplexer
 brew "tmux"
+# Watch files and take action when they change
 brew "watchman"
+# Bring your favorite shell wherever you go through the ssh
 brew "xxh"
+# JavaScript package manager
 brew "yarn"
+# Shell extension to navigate your filesystem faster
 brew "zoxide"
+# Collection of apps and services for photography, design, video, web, and UX
 cask "adobe-creative-cloud"
+# Image editing and design software
 cask "affinity"
+# Agent orchestration platform
 cask "antigravity"
+# 3D creation suite
 cask "blender"
+# Client for the Box cloud storage service
 cask "box-drive"
+# Automated testing of webapps for Google Chrome
 cask "chromedriver"
+# Write, edit, and chat about your code with AI
 cask "cursor"
+# Voice and text chat software
 cask "discord"
+# App to build and share containerised applications and microservices
 cask "docker-desktop"
+# Annotation tool for audio and video recordings
 cask "elan"
 cask "font-lexend"
+# Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Cross-platform Git credential storage for multiple hosting providers
 cask "git-credential-manager"
+# Web browser
 cask "google-chrome"
+# Client for the Google Drive storage service
 cask "google-drive"
+# Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
+# Software for Logitech devices
 cask "logi-options+"
+# Connect to your Android devices
 cask "macdroid"
-cask "daniyalmaster693/casks/menuscores"
+# Provides updates to various Microsoft products
 cask "microsoft-auto-update"
+# Presentation software
 cask "microsoft-powerpoint"
+# Meet, chat, call, and collaborate in just one place
 cask "microsoft-teams"
+# Image optimisation tool
 cask "optimage"
+# Collaboration platform for API development
 cask "postman"
+# Team communication and collaboration software
 cask "slack"
+# Video game digital distribution service
 cask "steam"
+# Mesh VPN based on WireGuard
 cask "tailscale-app"
+# Unpacks archive files
 cask "the-unarchiver"
+# Management tool for Unity
 cask "unity-hub"
+# Open-source code editor
 cask "visual-studio-code"
+# Video communication and virtual meeting platform
 cask "zoom"
+# Collect, organise, cite, and share research sources
 cask "zotero"
 mas "Developer", id: 640199958
 mas "Hidden Bar", id: 1452453066
@@ -78,6 +147,7 @@ mas "WhatsApp", id: 310633997
 mas "Whisper Transcription", id: 1668083311
 mas "Windows App", id: 1295203466
 mas "Xcode", id: 497799835
+vscode "anthropic.claude-code"
 vscode "bradlc.vscode-tailwindcss"
 vscode "csharpier.csharpier-vscode"
 vscode "davidanson.vscode-markdownlint"
@@ -88,7 +158,6 @@ vscode "donjayamanne.python-environment-manager"
 vscode "esbenp.prettier-vscode"
 vscode "expo.vscode-expo-tools"
 vscode "george-alisson.html-preview-vscode"
-vscode "github.copilot-chat"
 vscode "github.github-vscode-theme"
 vscode "github.vscode-github-actions"
 vscode "github.vscode-pull-request-github"
@@ -144,3 +213,13 @@ vscode "vscjava.vscode-java-pack"
 vscode "vscjava.vscode-java-test"
 vscode "vscjava.vscode-java-upgrade"
 vscode "vscjava.vscode-maven"
+npm "@anthropic-ai/claude-code"
+npm "@aweary/alder"
+npm "@react-native-community/cli"
+npm "expo-cli"
+npm "nodemon"
+npm "npm-check-updates"
+npm "pug-cli"
+npm "ts-node"
+npm "typescript"
+npm "vercel"

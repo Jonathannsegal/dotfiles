@@ -22,6 +22,7 @@
     "III",
     "QQQ"
   ],
+  "todo-tree.ripgrep.ripgrep": "/opt/homebrew/bin/rg",
   "todo-tree.highlights.backgroundColourScheme": [
     "red",
     "orange",
