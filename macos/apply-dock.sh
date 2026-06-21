@@ -18,6 +18,7 @@ if [[ ! -f "$DOCK_ITEMS_FILE" ]]; then
 fi
 
 defaults write com.apple.dock persistent-apps -array
+defaults write com.apple.dock persistent-others -array
 
 while IFS= read -r app_path || [[ -n "$app_path" ]]; do
   [[ -z "$app_path" || "$app_path" =~ ^[[:space:]]*# ]] && continue

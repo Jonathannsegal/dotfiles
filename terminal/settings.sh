@@ -26,11 +26,8 @@ setup_terminal_profiles() {
     defaults write com.apple.Terminal "Default Window Settings" -string "Dark"
     defaults write com.apple.Terminal "Startup Window Settings" -string "Dark"
     
-    # Kill Terminal to apply changes
-    echo "Restarting Terminal to apply changes..."
-    killall Terminal &>/dev/null || true
-    
     echo "Terminal profiles configured successfully"
+    echo "Open a new Terminal window or tab for profile changes to take effect."
 }
 
 setup_theme_switcher() {

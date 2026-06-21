@@ -12,7 +12,8 @@ components that already match the repo are skipped.
 
 It installs Homebrew when missing, configures Homebrew in `~/.zprofile`, installs
 missing Brewfile dependencies, links dotfiles, installs shell plugins, installs VS Code
-extensions, imports Terminal.app profiles, runs the Python package installer,
+extensions, installs or updates Lens Studio from Snap's official Apple Silicon
+download, imports Terminal.app profiles, runs the Python package installer,
 refreshes custom app icons, and installs the LaunchAgents that keep icons
 reapplied and unmanaged installers blocked.
 
@@ -38,6 +39,10 @@ Common usage:
 ./run/setup.sh --macos
 ./run/setup.sh --hard
 ```
+
+Lens Studio is not a Homebrew cask; `macos/lens-studio.sh` installs the latest
+Apple Silicon build directly from Snap's official download API and is called by
+setup unless `--no-lens-studio` is passed.
 
 ### `standards.sh`
 

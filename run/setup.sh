@@ -15,6 +15,7 @@ ASK_MACOS=true
 RUN_TERMINAL=true
 RUN_PYTHON=true
 RUN_VSCODE=true
+RUN_LENS_STUDIO=true
 RUN_ICONS=true
 RUN_SHELL_PLUGINS=true
 RUN_JDK=true
@@ -60,6 +61,7 @@ Options:
   --python          Run the Python package installer. This is the default.
   --no-python       Skip the Python package installer.
   --no-vscode       Skip VS Code extension installation.
+  --no-lens-studio  Skip Snap Lens Studio install/update.
   --no-shell-plugins
                     Skip zsh plugin installation/update.
   --no-jdk          Skip the Homebrew OpenJDK system link.
@@ -85,6 +87,7 @@ while [[ $# -gt 0 ]]; do
         --python) RUN_PYTHON=true ;;
         --no-python) RUN_PYTHON=false ;;
         --no-vscode) RUN_VSCODE=false ;;
+        --no-lens-studio) RUN_LENS_STUDIO=false ;;
         --no-shell-plugins) RUN_SHELL_PLUGINS=false ;;
         --no-jdk) RUN_JDK=false ;;
         --no-installer-guard) RUN_INSTALLER_GUARD=false ;;
@@ -460,6 +463,25 @@ setup_vscode() {
     fi
 }
 
+setup_lens_studio() {
+    [[ "$RUN_LENS_STUDIO" == true ]] || {
+        success "Skipped Lens Studio"
+        return 0
+    }
+
+    is_macos || {
+        success "Skipped Lens Studio outside macOS"
+        return 0
+    }
+
+    local lens_args=()
+    if [[ "$HARD_SETUP" == true ]]; then
+        lens_args+=(--force)
+    fi
+
+    bash "$DOTFILES/macos/lens-studio.sh" "${lens_args[@]}"
+}
+
 setup_icons() {
     [[ "$RUN_ICONS" == true ]] || {
         success "Skipped custom icons"
@@ -540,6 +562,7 @@ main() {
     create_env_file
     install_dotfiles
     install_brew_bundle
+    setup_lens_studio
     setup_shell_plugins
     setup_jdk
     setup_vscode

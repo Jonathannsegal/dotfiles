@@ -7,6 +7,7 @@ Adobe Lightroom Classic/Adobe Lightroom Classic.app
 Adobe Photoshop */Adobe Photoshop *.app
 Box.app
 Google Drive.app
+Lens Studio.app
 Microsoft PowerPoint.app
 Microsoft Teams.app
 Tailscale.app

@@ -49,7 +49,7 @@ defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 defaults write com.apple.finder CreateDesktop false
 
 # Restart Finder to apply changes
-killall Finder
+killall Finder >/dev/null 2>&1 || true
 
 ###############################################################################
 # Trackpad, Mouse, & Input                                                    #
@@ -277,8 +277,8 @@ defaults write com.apple.systemuiserver menuExtras -array \
   "/System/Library/CoreServices/Menu Extras/Clock.menu" \
   "/System/Library/CoreServices/Menu Extras/Battery.menu"
 
-killall SystemUIServer
-killall ControlCenter
+killall SystemUIServer >/dev/null 2>&1 || true
+killall ControlCenter >/dev/null 2>&1 || true
 
 ###############################################################################
 # Launchpad                                                                   #
@@ -304,7 +304,7 @@ defaults write com.apple.dock springboard-item-size -float 0.8
 defaults write com.apple.dock springboard-minimize-motion -bool true
 
 # Reset Dock for changes to take effect
-killall Dock
+killall Dock >/dev/null 2>&1 || true
 
 ###############################################################################
 # Terminal                                                                    #
@@ -358,8 +358,9 @@ defaults -currentHost write com.apple.ImageCapture disableHotPlug -bool true
 # Kill affected applications                                                  #
 ###############################################################################
 
-for app in "Activity Monitor" "Dock" "Finder" "Photos" "Safari" "SystemUIServer" "Terminal"; do
-    killall "${app}" &> /dev/null
+# Do not kill Terminal here; this script is commonly run from Terminal.
+for app in "Activity Monitor" "Dock" "Finder" "Photos" "Safari" "SystemUIServer"; do
+    killall "${app}" >/dev/null 2>&1 || true
 done
 
-echo "Done! Note that some of these changes require a logout/restart to take effect."
+echo "Done! Open a new Terminal tab/window for Terminal profile changes; some settings require logout/restart."

@@ -16,13 +16,14 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 1. Create or update `~/.env.sh` with `DOTFILES`.
 2. Symlink config files from this repo, backing up conflicting files to `~/.dotfiles_backup`.
 3. Install Homebrew if needed, configure Homebrew in `~/.zprofile`, and install missing Homebrew bundle dependencies.
-4. Install missing zsh plugins outside shell startup.
-5. Link Homebrew OpenJDK for macOS tools when approved and not already linked.
-6. Install missing VS Code extensions from the Brewfile when VS Code is available.
-7. Import Terminal.app profiles and run the Python package installer.
-8. Ask whether to apply macOS defaults from `macos/settings.sh`.
-9. Install a LaunchAgent that blocks unmanaged installers in `~/Downloads` and `~/Desktop`.
-10. Apply custom app icons and install the LaunchAgent that reapplies them at login, every 6 hours, and when `/Applications` changes.
+4. Install or update Snap Lens Studio for Apple Silicon from Snap's official download API.
+5. Install missing zsh plugins outside shell startup.
+6. Link Homebrew OpenJDK for macOS tools when approved and not already linked.
+7. Install missing VS Code extensions from the Brewfile when VS Code is available.
+8. Import Terminal.app profiles and run the Python package installer.
+9. Ask whether to apply macOS defaults from `macos/settings.sh`.
+10. Install a LaunchAgent that blocks unmanaged installers in `~/Downloads` and `~/Desktop`.
+11. Apply custom app icons and install the LaunchAgent that reapplies them at login, every 6 hours, and when `/Applications` changes.
 
 ## Useful Options
 
@@ -30,6 +31,7 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 ./run/setup.sh --yes          # non-interactive where possible
 ./run/setup.sh --no-brew      # skip Homebrew bundle
 ./run/setup.sh --no-icons     # skip icon refresh
+./run/setup.sh --no-lens-studio # skip Lens Studio install/update
 ./run/setup.sh --macos        # apply macOS defaults without prompting
 ./run/setup.sh --no-macos     # skip macOS defaults
 ./run/setup.sh --no-terminal  # skip Terminal.app profiles
