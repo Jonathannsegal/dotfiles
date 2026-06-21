@@ -8,6 +8,7 @@ HARD_SETUP="${DOTFILES_HARD_SETUP:-false}"
 SUDO_KEEPALIVE_PID=""
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+export NODE_NO_WARNINGS="${NODE_NO_WARNINGS:-1}"
 
 stop_sudo_keepalive() {
     if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then

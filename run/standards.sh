@@ -98,11 +98,11 @@ installed_casks() {
 }
 
 installed_vscode() {
-  code --list-extensions 2>/dev/null | sort || true
+  NODE_NO_WARNINGS=1 code --list-extensions 2>/dev/null | sort || true
 }
 
 installed_npm() {
-  npm list -g --depth=0 --parseable 2>/dev/null |
+  NODE_NO_WARNINGS=1 npm list -g --depth=0 --parseable 2>/dev/null |
     sed '1d; s#.*/node_modules/##' |
     sed '/^npm$/d' |
     sort || true

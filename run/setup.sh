@@ -5,6 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 DOTFILES="$(pwd -P)"
 export DOTFILES
+export NODE_NO_WARNINGS="${NODE_NO_WARNINGS:-1}"
 
 BACKUP_DIR="$HOME/.dotfiles_backup/$(date +%Y%m%d_%H%M%S)"
 BREWFILE="$DOTFILES/brew/Brewfile"

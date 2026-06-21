@@ -51,7 +51,9 @@ if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
 fi
 
 mkdir -p "$DOTFILES/python/zsh"
-cat > "$DOTFILES/python/zsh/python.zsh" <<'EOF'
+python_zsh="$DOTFILES/python/zsh/python.zsh"
+python_zsh_tmp="$(mktemp)"
+cat > "$python_zsh_tmp" <<'EOF'
 # Python environment configuration
 if command -v brew >/dev/null 2>&1; then
     BREW_PREFIX="$(brew --prefix)"
@@ -66,6 +68,12 @@ if command -v brew >/dev/null 2>&1; then
     fi
 fi
 EOF
+
+if [[ -f "$python_zsh" ]] && cmp -s "$python_zsh_tmp" "$python_zsh"; then
+    rm -f "$python_zsh_tmp"
+else
+    mv "$python_zsh_tmp" "$python_zsh"
+fi
 
 PIP_FLAGS=()
 if "$PYTHON_BIN" -m pip --version >/dev/null 2>&1; then
@@ -111,10 +119,13 @@ for package in "${packages[@]}"; do
         pip_args=(install)
     fi
 
-    if "$PYTHON_BIN" -m pip "${pip_args[@]}" "${PIP_FLAGS[@]}" "$package" >/dev/null 2>&1; then
+    log_file="$(mktemp "${TMPDIR:-/tmp}/dotfiles-pip-${package//[^A-Za-z0-9_.-]/_}.XXXXXX.log")"
+    if "$PYTHON_BIN" -m pip "${pip_args[@]}" "${PIP_FLAGS[@]}" "$package" >"$log_file" 2>&1; then
+        rm -f "$log_file"
         print_success "$package is installed"
     else
-        print_warning "Failed to install $package"
+        print_warning "Failed to install $package; log: $log_file"
+        tail -n 20 "$log_file" >&2 || true
         failed_packages+=("$package")
     fi
 done

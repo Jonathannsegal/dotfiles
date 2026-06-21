@@ -16,6 +16,9 @@ if [ -z "${DOTFILES:-}" ]; then
     fi
 fi
 
+# Suppress noisy Node runtime deprecation warnings from managed CLIs.
+export NODE_NO_WARNINGS="${NODE_NO_WARNINGS:-1}"
+
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init zsh)"
 fi

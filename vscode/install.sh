@@ -18,6 +18,10 @@ print_warning() {
     printf "\r\033[2K [ \033[00;33mWARN\033[0m ] %s\n" "$1"
 }
 
+code_cli() {
+    NODE_NO_WARNINGS=1 "$CODE_CMD" "$@"
+}
+
 find_code() {
     if command -v code >/dev/null 2>&1; then
         CODE_CMD="code"
@@ -45,7 +49,7 @@ fi
 
 print_status "Installing VS Code extensions from Brewfile"
 
-installed_extensions="$("$CODE_CMD" --list-extensions | sort)"
+installed_extensions="$(code_cli --list-extensions | sort)"
 
 while IFS= read -r extension; do
     [[ -n "$extension" ]] || continue
@@ -57,7 +61,7 @@ while IFS= read -r extension; do
             install_args+=(--force)
         fi
 
-        "$CODE_CMD" "${install_args[@]}" >/dev/null
+        code_cli "${install_args[@]}" >/dev/null
         print_success "Installed $extension"
     fi
 done < <(sed -n 's/^vscode "\([^"]*\)".*/\1/p' "$BREWFILE")
