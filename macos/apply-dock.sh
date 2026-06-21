@@ -7,9 +7,10 @@ DOCK_ITEMS_FILE="${1:-$DOTFILES/macos/dock-items.txt}"
 
 add_dock_app() {
   local app_path="$1"
+  local file_url="file://${app_path%/}/"
 
   defaults write com.apple.dock persistent-apps -array-add \
-    "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>${app_path}</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>"
+    "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>${file_url}</string><key>_CFURLStringType</key><integer>15</integer></dict></dict></dict>"
 }
 
 if [[ ! -f "$DOCK_ITEMS_FILE" ]]; then

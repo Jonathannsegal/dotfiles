@@ -6,6 +6,7 @@ APP_PATH="/Applications/Lens Studio.app"
 DOWNLOAD_PAGE="https://ar.snap.com/download"
 DOWNLOAD_API="https://ar-web-api.snapchat.com/api/ls-download/"
 PLATFORM="MAC_OS_ARM"
+CACHE_DIR="${HOME}/Library/Caches/dotfiles/lens-studio"
 
 info() {
     printf "\r [ \033[00;34m..\033[0m ] %s\n" "$1"
@@ -128,12 +129,14 @@ download_url_for_version() {
 install_lens_studio() {
     local version="$1"
     local url="$2"
-    local tmp_dir dmg_path mount_dir source_app
+    local tmp_dir dmg_path cached_dmg mount_dir source_app
 
     tmp_dir="$(mktemp -d)"
     dmg_path="$tmp_dir/lens-studio.dmg"
+    cached_dmg="$CACHE_DIR/Lens_Studio_${version}_mac_arm64.dmg"
     mount_dir="$tmp_dir/mount"
     mkdir -p "$mount_dir"
+    mkdir -p "$CACHE_DIR"
 
     cleanup() {
         if mount | grep -Fq "$mount_dir"; then
@@ -143,8 +146,12 @@ install_lens_studio() {
     }
     trap cleanup EXIT
 
-    info "Downloading Lens Studio $version"
-    curl -fL "$url" -o "$dmg_path"
+    info "Downloading Lens Studio $version (about 1 GB; resumable)"
+    curl --fail --location --continue-at - \
+        --retry 5 --retry-delay 5 --retry-all-errors \
+        --connect-timeout 30 \
+        "$url" -o "$cached_dmg"
+    cp "$cached_dmg" "$dmg_path"
 
     info "Mounting Lens Studio installer"
     hdiutil attach "$dmg_path" -nobrowse -readonly -mountpoint "$mount_dir" -quiet

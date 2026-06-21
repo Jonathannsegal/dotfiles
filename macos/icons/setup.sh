@@ -185,8 +185,11 @@ if [[ "$CLEAR_CACHE" == true && "$APPLIED_ANY" == true ]]; then
 
     # Restart Finder to refresh icons
     killall Finder
+    killall Dock >/dev/null 2>&1 || true
 else
     echo "Skipping cache clear"
 fi
+
+killall Dock >/dev/null 2>&1 || true
 
 echo "Icon setup complete!"

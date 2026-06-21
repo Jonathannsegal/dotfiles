@@ -30,6 +30,10 @@ defaults write NSGlobalDomain com.apple.sound.beep.feedback -bool false
 
 # Use list view in all Finder windows
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+defaults write com.apple.finder FXPreferredSearchViewStyle -string "Nlsv"
+defaults write com.apple.finder SearchRecentsSavedViewStyle -string "Nlsv"
+defaults write com.apple.finder FXPreferredSearchViewStyleVersion -string "%00%00%00%01"
+defaults write com.apple.finder SearchRecentsSavedViewStyleVersion -string "%00%00%00%01"
 
 # Expand save panel by default
 defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
@@ -167,6 +171,10 @@ defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
 
 # Use list view in all Finder windows
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+defaults write com.apple.finder FXPreferredSearchViewStyle -string "Nlsv"
+defaults write com.apple.finder SearchRecentsSavedViewStyle -string "Nlsv"
+defaults write com.apple.finder FXPreferredSearchViewStyleVersion -string "%00%00%00%01"
+defaults write com.apple.finder SearchRecentsSavedViewStyleVersion -string "%00%00%00%01"
 
 # Open folders in tabs instead of new windows and use the current Finder target.
 defaults write com.apple.finder FinderSpawnTab -bool true

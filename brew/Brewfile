@@ -91,8 +91,6 @@ cask "microsoft-teams"
 cask "slack"
 # Mesh VPN based on WireGuard
 cask "tailscale-app"
-# Unpacks archive files
-cask "the-unarchiver"
 # Management tool for Unity
 cask "unity-hub"
 # Open-source code editor
@@ -102,7 +100,6 @@ cask "zoom"
 # Collect, organise, cite, and share research sources
 cask "zotero"
 mas "Developer", id: 640199958
-mas "Hidden Bar", id: 1452453066
 mas "WhatsApp", id: 310633997
 mas "Whisper Transcription", id: 1668083311
 mas "Windows App", id: 1295203466

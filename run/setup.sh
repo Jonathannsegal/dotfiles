@@ -584,13 +584,14 @@ setup_standards() {
 setup_terminal() {
     [[ "$RUN_TERMINAL" == true ]] || return 0
     is_macos || {
-        success "Skipped Terminal.app settings outside macOS"
+        success "Skipped terminal settings outside macOS"
         return 0
     }
 
     # shellcheck source=/dev/null
     source "$DOTFILES/terminal/settings.sh"
     setup_terminal_profiles
+    setup_iterm_preferences
     setup_theme_switcher
 }
 

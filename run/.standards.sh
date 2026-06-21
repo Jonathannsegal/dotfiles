@@ -374,6 +374,10 @@ settings_audit() {
   check_default com.apple.screencapture type string png || failures=$((failures + 1))
 
   check_default com.apple.finder FXPreferredViewStyle string Nlsv || failures=$((failures + 1))
+  check_default com.apple.finder FXPreferredSearchViewStyle string Nlsv || failures=$((failures + 1))
+  check_default com.apple.finder SearchRecentsSavedViewStyle string Nlsv || failures=$((failures + 1))
+  check_default com.apple.finder FXPreferredSearchViewStyleVersion string "%00%00%00%01" || failures=$((failures + 1))
+  check_default com.apple.finder SearchRecentsSavedViewStyleVersion string "%00%00%00%01" || failures=$((failures + 1))
   check_default com.apple.finder CreateDesktop bool false || failures=$((failures + 1))
   check_default com.apple.finder ShowPathbar bool true || failures=$((failures + 1))
   check_default com.apple.finder ShowStatusBar bool true || failures=$((failures + 1))
