@@ -516,12 +516,11 @@ setup_lens_studio() {
         return 0
     }
 
-    local lens_args=()
     if [[ "$HARD_SETUP" == true ]]; then
-        lens_args+=(--force)
+        bash "$DOTFILES/macos/lens-studio.sh" --force
+    else
+        bash "$DOTFILES/macos/lens-studio.sh"
     fi
-
-    bash "$DOTFILES/macos/lens-studio.sh" "${lens_args[@]}"
 }
 
 setup_icons() {
