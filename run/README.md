@@ -54,6 +54,10 @@ Creative Cloud is installed through Homebrew. Setup also hides Adobe's helper,
 diagnostics, installer, and uninstaller app bundles so app search stays focused
 on the user-facing Creative Cloud app.
 
+Tailscale is installed through Homebrew. Setup configures Tailscale at the app
+preference level to start at login and hide its Dock icon, then launches it in
+the background when the app is present.
+
 Standards commands are available through `setup.sh`:
 
 - `standards audit`: full read-only strict audit.

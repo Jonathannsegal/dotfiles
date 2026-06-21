@@ -170,8 +170,12 @@ install_lens_studio() {
     fi
 
     info "Installing Lens Studio $version"
+    if [[ -e "$APP_PATH" ]]; then
+        run_sudo chflags -R nouchg "$APP_PATH" 2>/dev/null || true
+    fi
     run_sudo rm -rf "$APP_PATH"
     run_sudo ditto "$source_app" "$APP_PATH"
+    run_sudo chown -R root:admin "$APP_PATH" 2>/dev/null || true
     success "Lens Studio $version installed"
 }
 

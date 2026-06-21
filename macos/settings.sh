@@ -317,10 +317,19 @@ killall ControlCenter >/dev/null 2>&1 || true
 
 # Make Safari the default browser for web links and HTML documents.
 if command -v duti >/dev/null 2>&1; then
-  duti -s com.apple.Safari http || true
-  duti -s com.apple.Safari https || true
-  duti -s com.apple.Safari public.html all || true
-  duti -s com.apple.Safari public.xhtml all || true
+  set_default_handler() {
+    local role="$1"
+    local identifier="$2"
+
+    if ! duti -s com.apple.Safari "$identifier" "$role" >/dev/null 2>&1; then
+      echo "warning: could not set Safari as handler for ${identifier}; continuing"
+    fi
+  }
+
+  set_default_handler all http
+  set_default_handler all https
+  set_default_handler all public.html
+  set_default_handler all public.xhtml
 fi
 
 # Keep browser downloads in the same inbox as screenshots and temporary files.

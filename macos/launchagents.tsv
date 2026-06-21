@@ -20,6 +20,7 @@ keep	com.user.terminal-theme	Dotfiles Terminal theme switcher
 keep	com.box.desktop.launch	Box Drive login item
 keep	com.box.desktop.helper	Box Drive helper
 keep	com.box.desktop.autoupdater	Box Drive updater
+keep	io.tailscale.ipn.macsys.login-item-helper	Tailscale login item
 disable	com.docker.socket	Docker helper
 disable	com.docker.vmnetd	Docker network helper
 disable	com.github.facebook.watchman	Watchman service

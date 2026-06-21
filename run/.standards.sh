@@ -460,6 +460,12 @@ settings_audit() {
   check_default com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey bool true || failures=$((failures + 1))
   check_default NSGlobalDomain WebKitDeveloperExtras bool true || failures=$((failures + 1))
 
+  check_default io.tailscale.ipn.macsys HideDockIcon bool true || failures=$((failures + 1))
+  check_default io.tailscale.ipn.macsys TailscaleStartOnLogin bool true || failures=$((failures + 1))
+  check_default io.tailscale.ipn.macsys AppIntroShown bool true || failures=$((failures + 1))
+  check_default io.tailscale.ipn.macsys OnboardingFlow string hide || failures=$((failures + 1))
+  check_default io.tailscale.ipn.macsys OccludedIconAlertSuppressed bool true || failures=$((failures + 1))
+
   check_default com.apple.ActivityMonitor ShowCategory int 0 || failures=$((failures + 1))
   check_default com.apple.ActivityMonitor SortColumn string CPUUsage || failures=$((failures + 1))
   check_default com.apple.ActivityMonitor SortDirection int 0 || failures=$((failures + 1))

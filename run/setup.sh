@@ -557,6 +557,27 @@ setup_lens_studio() {
     fi
 }
 
+setup_tailscale_app() {
+    is_macos || {
+        success "Skipped Tailscale app settings outside macOS"
+        return 0
+    }
+
+    if [[ ! -d "/Applications/Tailscale.app" ]]; then
+        success "Skipped Tailscale app settings"
+        return 0
+    fi
+
+    defaults write io.tailscale.ipn.macsys HideDockIcon -bool true
+    defaults write io.tailscale.ipn.macsys TailscaleStartOnLogin -bool true
+    defaults write io.tailscale.ipn.macsys AppIntroShown -bool true
+    defaults write io.tailscale.ipn.macsys OnboardingFlow -string hide
+    defaults write io.tailscale.ipn.macsys OccludedIconAlertSuppressed -bool true
+
+    open -gj -a Tailscale >/dev/null 2>&1 || true
+    success "Tailscale app settings configured"
+}
+
 setup_icons() {
     [[ "$RUN_ICONS" == true ]] || {
         success "Skipped custom icons"
@@ -659,6 +680,7 @@ main() {
     install_brew_bundle
     setup_creative_cloud
     setup_lens_studio
+    setup_tailscale_app
     setup_shell_plugins
     setup_jdk
     setup_vscode

@@ -123,7 +123,16 @@ apply_icon() {
                 APPLIED_ANY=true
             fi
         else
-            fileicon set "$app_path" "$icon_path"
+            if ! fileicon set "$app_path" "$icon_path"; then
+                if [[ "$SKIP_PRIVILEGED" == true ]]; then
+                    echo "Skipping app that needs elevated icon permissions in auto mode: $app_path"
+                    return 0
+                fi
+
+                echo "Retrying with administrator permissions: $app_path"
+                ensure_sudo_keepalive
+                sudo fileicon set "$app_path" "$icon_path"
+            fi
             APPLIED_ANY=true
         fi
     else
