@@ -15,6 +15,23 @@ git_cleanup() {
     git branch --merged | grep -v '\*\|master\|main\|dev' | xargs -n 1 git branch -d
 }
 
+# Keep new clones in ~/Developer by default.
+git() {
+    if (( ! $+commands[git] )); then
+        echo "git is not installed"
+        return 127
+    fi
+
+    if [[ "$1" == "clone" && "$#" -eq 2 && "$PWD" != "$HOME/Developer" && "$PWD" != "$HOME/Developer/"* ]]; then
+        mkdir -p "$HOME/Developer"
+        echo "Cloning into ~/Developer"
+        command git -C "$HOME/Developer" "$@"
+        return $?
+    fi
+
+    command git "$@"
+}
+
 # Extract various archive types
 extract() {
     if [ -f $1 ]; then
@@ -39,6 +56,11 @@ extract() {
 
 # Wrap brew command to auto-sync Brewfile
 brew() {
+    if (( ! $+commands[brew] )); then
+        echo "brew is not installed"
+        return 127
+    fi
+
     # Execute the original brew command
     command brew "$@"
     # Get the exit status of brew command
@@ -59,6 +81,11 @@ brew() {
 
 # Wrap mas command to auto-sync Brewfile
 mas() {
+    if (( ! $+commands[mas] )); then
+        echo "mas is not installed"
+        return 127
+    fi
+
     # Execute the original mas command
     command mas "$@"
     # Get the exit status of mas command
@@ -97,6 +124,11 @@ brew_check() {
 
 # Wrap pip command to auto-sync requirements.txt
 pip() {
+    if (( ! $+commands[pip] )); then
+        echo "pip is not installed"
+        return 127
+    fi
+
     # Store the path to requirements.txt
     local requirements_file="$DOTFILES/python/requirements.txt"
     
@@ -164,20 +196,15 @@ fj() {
     cd "$(find . -type d | fzf)"
 }
 
-# Python configuration
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-if command -v pyenv 1>/dev/null 2>&1; then
-    eval "$(pyenv init -)"
-fi
-
 # Virtual environments directory
 export WORKON_HOME=$HOME/.virtualenvs
-export PROJECT_HOME=$HOME/Projects
+export PROJECT_HOME=$HOME/Developer
 
-# Poetry configuration
+# Poetry configuration. Homebrew installs poetry into the normal brew prefix.
 export POETRY_HOME="$HOME/.poetry"
-export PATH="$POETRY_HOME/bin:$PATH"
+if [ -d "$POETRY_HOME/bin" ]; then
+    export PATH="$POETRY_HOME/bin:$PATH"
+fi
 
 # Pip configuration
 export PIP_REQUIRE_VIRTUALENV=false

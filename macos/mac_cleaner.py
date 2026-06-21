@@ -166,7 +166,7 @@ def find_leftover_files(installed_apps_info):
 
 
     # Common development tools/commands to check for if folder matches
-    CLI_TOOLS_TO_CHECK = {"node", "npm", "pnpm", "yarn", "python", "pip", "git", "docker", "cargo", "go", "code", "nvm"}
+    CLI_TOOLS_TO_CHECK = {"node", "npm", "pnpm", "python", "pip", "git", "cargo", "go", "code", "nvm"}
 
     for lib_dir in LIBRARY_SCAN_DIRS:
         if not os.path.exists(lib_dir): continue
@@ -193,8 +193,6 @@ def find_leftover_files(installed_apps_info):
                 
                 if "adobe" in name_lower:
                     if any("adobe" in n for n in installed_names): is_vendor_safe = True
-                elif "steam" in name_lower or "valve" in name_lower:
-                    if any("steam" in n for n in installed_names): is_vendor_safe = True
                 elif "unity" in name_lower:
                     if any("unity" in n for n in installed_names): is_vendor_safe = True
                     # Check common manual install paths for Unity
@@ -273,8 +271,7 @@ def find_large_files():
             if not os.path.exists(p): continue
             
             # Filter out system paths usually not touchable
-            if p.startswith("/System") or "/Library/Containers/com.docker" in p: 
-                # Docker containers are huge files, handled by Docker cleanups usually
+            if p.startswith("/System"):
                 continue 
 
             # Filter out Cloud Storage placeholders (Box, Dropbox, OneDrive, Drive, iCloud)
@@ -378,21 +375,7 @@ def find_system_junk():
                 'info': "Old Device Backups (Check before deleting)"
             })
 
-    # 4. Docker
-    # Check if docker is running or substantial
-    docker_containers = Path.home() / "Library/Containers/com.docker.docker"
-    if os.path.exists(docker_containers):
-         size = get_directory_size(docker_containers)
-         if size > 2 * 1024 * 1024 * 1024: # > 2GB
-             # We don't delete the folder, but we warn the user
-             junk_items.append({
-                'path': "(Manual Action Required)",
-                'name': "Docker VM Disk",
-                'size': size,
-                'info': "Run 'docker system prune' or 'docker system prune -a'"
-             })
-             
-    # 5. Adobe Media Cache (Common culprit for huge System Data)
+    # 4. Adobe Media Cache (Common culprit for huge System Data)
     adobe_common = Path.home() / "Library/Application Support/Adobe/Common"
     if os.path.exists(adobe_common):
         # Scan subdirs specifically
@@ -408,7 +391,7 @@ def find_system_junk():
                         'info': "Video editing cache. Safe to delete."
                     })
 
-    # 6. Package Manager Caches (Homebrew, Yarn, npm, pip, pnpm)
+    # 6. Package Manager Caches (Homebrew, npm, pip, pnpm)
     # Homebrew
     brew_cache = Path.home() / "Library/Caches/Homebrew"
     if os.path.exists(brew_cache):
@@ -421,11 +404,10 @@ def find_system_junk():
                  'info': "Run 'brew cleanup -s' in terminal"
              })
 
-    # pnpm / npm / yarn
+    # pnpm / npm
     pkg_caches = [
         (Path.home() / "Library/Caches/pnpm", "pnpm store"),
         (Path.home() / ".npm/_cacache", "npm cache"),
-        (Path.home() / "Library/Caches/Yarn", "Yarn cache"),
         (Path.home() / ".gradle/caches", "Gradle cache"),
         (Path.home() / ".m2/repository", "Maven repo"),
         (Path.home() / "Library/Caches/pip", "pip cache"),
@@ -676,7 +658,7 @@ def analyze_library_bloat():
     # Deduplication logic
     # If we have:
     # 1. ~/Library/Application Support (5GB)
-    # 2. ~/Library/Application Support/Steam (4GB)
+    # 2. ~/Library/Application Support/SomeApp (4GB)
     # The parent (1) includes the child (2). 
     # We prefer seeing the specific child (2) if it explains most of the parent's size.
     # But seeing both confusingly implies 9GB total.

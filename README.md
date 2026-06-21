@@ -1,45 +1,97 @@
 # Dotfiles
 
-My personal dotfiles for macOS. Managed with a custom bash script.
+Personal macOS dotfiles.
 
-## Structure
-
-- **zsh**: Shell configuration, aliases, and functions.
-- **brew**: Homebrew Bundle (Brewfile) and installation scripts.
-- **macos**: macOS defaults and preferences.
-- **python**, **dotnet**, **jdk**, **vscode**: Language and tool-specific configurations.
-- **terminal**: Terminal profiles (Dark/Light).
-
-## Installation
+## Install
 
 ```bash
-git clone https://github.com/Jonathannsegal/dotfiles.git
-cd dotfiles
+git clone https://github.com/Jonathannsegal/dotfiles.git ~/Developer/dotfiles
+cd ~/Developer/dotfiles
 ./run/setup.sh
 ```
 
-The setup script is interactive and will guide you through:
-1. Linking config files.
-2. Installing Homebrew packages.
-3. Setting up macOS defaults.
-4. Configuring language environments (Python, etc.).
+The default setup is safe to rerun. It will:
 
-## Customization
+1. Create or update `~/.env.sh` with `DOTFILES`.
+2. Symlink config files from this repo, backing up conflicting files to `~/.dotfiles_backup`.
+3. Install or update the Homebrew bundle.
+4. Install/update zsh plugins outside shell startup.
+5. Link Homebrew OpenJDK for macOS tools when approved.
+6. Install/update VS Code extensions from the Brewfile when VS Code is available.
+7. Apply custom app icons.
+8. Install a LaunchAgent that reapplies icons at login, every 6 hours, and when `/Applications` changes.
+9. Install a LaunchAgent that blocks unmanaged installers in `~/Downloads` and `~/Desktop`.
 
-For machine-specific configurations that shouldn't be committed to the repo (API keys, path overrides), create a `~/.env.sh` file:
+## Useful Options
 
 ```bash
-# ~/.env.sh
-export SECRET_KEY="value"
+./run/setup.sh --yes          # non-interactive where possible
+./run/setup.sh --no-brew      # skip Homebrew bundle
+./run/setup.sh --no-icons     # skip icon refresh
+./run/setup.sh --macos        # apply macOS defaults
+./run/setup.sh --terminal     # import Terminal.app profiles
+./run/setup.sh --python       # run the Python package installer
+./run/setup.sh --no-jdk       # skip the system OpenJDK symlink
+./run/setup.sh --no-installer-guard # skip unmanaged installer blocking
 ```
 
-This file is sourced automatically by `.zshrc`.
+`--macos`, `--terminal`, and `--python` are opt-in because they change system preferences, open GUI apps, or rebuild Python packages.
 
-## TODO
+## Maintenance
 
-1. https://it.cornell.edu/cuvpn
-2. atlas ti
-3. https://www.psychologie.hhu.de/arbeitsgruppen/allgemeine-psychologie-und-arbeitspsychologie/gpower
-4. Login Items
-5. Finder Settings
-6. iterm2
+See `run/README.md` for the full script map. The common commands are:
+
+```bash
+./run/cleanup.sh audit
+./run/cleanup.sh targets
+./run/cleanup.sh move --dry-run --include chrome,dev-caches
+./run/cleanup.sh reports
+./run/cleanup.sh lint-personal
+./run/export-messages-attachments.sh --dry-run
+./run/standards.sh audit
+./run/standards.sh apps
+./run/standards.sh settings
+./run/standards.sh home --dry-run
+./run/standards.sh launchagents audit
+./run/standards.sh purge-unwanted --dry-run
+```
+
+Cleanup moves are reversible by default when run with `--mode staging`; files are moved under `~/CleanupStaging` instead of deleted.
+
+Dock items are managed in `macos/dock-items.txt`. Startup/background items are audited against `macos/launchagents.tsv`; only entries marked `disable` are changed by `./run/standards.sh launchagents apply`.
+
+`./run/standards.sh apps` is the quickest way to see what is installed locally but no longer part of the repo-managed setup. After reviewing its output, `brew bundle cleanup --file=brew/Brewfile` can remove Homebrew-managed extras.
+
+`./run/standards.sh purge-unwanted` purges explicitly banned app families: Maxon, Logitech Options, Docker Desktop, Steam, and Watchman. Run it from Terminal when `./run/standards.sh audit` reports protected `/Applications` or `/Library` leftovers so macOS can show the administrator prompt.
+
+## Clean Computer Standard
+
+This repo is the source of truth for the machine. The standard is intentionally strict:
+
+- Install apps, CLIs, npm globals, and VS Code extensions only through `brew/Brewfile`.
+- Do not run downloaded `.dmg`, `.pkg`, `.mpkg`, or `.app` installers directly. The installer guard moves them to `~/CleanupStaging/blocked-installers` and tells you to install via Homebrew.
+- Keep active code in `~/Developer`; interactive `git clone <url>` is wrapped to clone there by default.
+- Keep personal files in `~/Personal`, school/research files in `~/School`, photos/Lightroom in `~/Pictures`, screenshots and temporary downloads in `~/Downloads`, and Zotero data in `~/Zotero`.
+- Keep Desktop empty except macOS metadata files.
+- Treat Downloads as an inbox; review files older than 14 days.
+- Manage Dock order through `macos/dock-items.txt`.
+- Manage startup/background items through `macos/launchagents.tsv`; any `review` or unmanaged item fails the strict audit until it is classified.
+- Manage macOS preferences through `macos/settings.sh`; unapplied differences fail the strict audit.
+- Keep Maxon, Logitech Options, Docker Desktop, Steam, and Watchman off the machine unless they are intentionally added back to `brew/Brewfile`.
+
+Run `./run/standards.sh audit` when you want the full cleanliness check.
+
+## Local Data Layout
+
+- `~/Developer`: active programming projects and this dotfiles repo.
+- `~/Personal`: personal files.
+- `~/School`: school/research files.
+- `~/Pictures`: photo libraries and Lightroom projects.
+- `~/Downloads`: screenshots and temporary downloads.
+- `~/Zotero`: Zotero library data.
+
+Interactive `git clone <url>` commands are wrapped by the shell config so new repositories land in `~/Developer` by default.
+
+## Zotero
+
+Zotero is installed by `brew/Brewfile` with `cask "zotero"`. The old source-build setup was removed because it cloned and built Zotero plus stale extensions instead of configuring the installed app reliably.

@@ -106,8 +106,7 @@
     "https",
     "mailto",
     "vscode",
-    "vscode-insiders",
-    "docker-desktop"
+    "vscode-insiders"
   ],
   "workbench.colorTheme": "Visual Studio Dark",
   "git.ignoreRebaseWarning": true,
@@ -134,23 +133,11 @@
   "diffEditor.ignoreTrimWhitespace": false,
   "window.autoDetectColorScheme": true,
   "workbench.preferredLightColorTheme": "Visual Studio Dark",
-  "[dockercompose]": {
-    "editor.insertSpaces": true,
-    "editor.tabSize": 2,
-    "editor.autoIndent": "advanced",
-    "editor.quickSuggestions": {
-      "other": true,
-      "comments": false,
-      "strings": true
-    },
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "git.openRepositoryInParentFolders": "always",
   "chat.mcp.gallery.enabled": true,
   "gitlens.ai.model": "vscode",
-  "gitlens.ai.vscode.model": "copilot:gpt-4.1",
-  "docker.extension.enableComposeLanguageServer": false
+  "gitlens.ai.vscode.model": "copilot:gpt-4.1"
 }

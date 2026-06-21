@@ -5,10 +5,20 @@ source_if_exists() {
     fi
 }
 
-eval "$(starship init zsh)"
-
 # Source environment file first to get DOTFILES path
 source_if_exists "$HOME/.env.sh"
+
+if [ -z "${DOTFILES:-}" ]; then
+    if [ -d "$HOME/Developer/dotfiles" ]; then
+        export DOTFILES="$HOME/Developer/dotfiles"
+    else
+        export DOTFILES="$HOME/.dotfiles"
+    fi
+fi
+
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init zsh)"
+fi
 
 # Load functions after environment is sourced
 source_if_exists "$DOTFILES/zsh/functions.zsh"
@@ -67,22 +77,9 @@ setopt PROMPT_SUBST
 # Set default Brewfile location for Homebrew
 export HOMEBREW_BUNDLE_FILE="$HOME/.Brewfile"
 
-# Source environment file first to get DOTFILES path
-source_if_exists "$HOME/.env.sh"
-
-# Install and source zsh-syntax-highlighting
-if [ ! -d "${HOME}/.zsh/plugins/zsh-syntax-highlighting" ]; then
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
-        "${HOME}/.zsh/plugins/zsh-syntax-highlighting"
-fi
-source "${HOME}/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-
-# Install zsh-autosuggestions
-if [ ! -d "${HOME}/.zsh/plugins/zsh-autosuggestions" ]; then
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git \
-        "${HOME}/.zsh/plugins/zsh-autosuggestions"
-fi
-source "${HOME}/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+# Source zsh plugins installed by run/setup.sh
+source_if_exists "${HOME}/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+source_if_exists "${HOME}/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 # Configure highlighting colors
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
@@ -90,15 +87,6 @@ typeset -A ZSH_HIGHLIGHT_STYLES
 ZSH_HIGHLIGHT_STYLES[command]='fg=green'
 ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=red'
 
-# Run the Brewfile check if it exists
-if typeset -f brew_check > /dev/null; then
-    brew_check
-
-    # Also run the Johnny.Decimal checker (quiet mode to skip cleanup prompt)
-    if [ -x "$DOTFILES/run/clean.sh" ]; then
-        "$DOTFILES/run/clean.sh" --quiet
-    fi
-fi
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # jdk configuration
@@ -130,26 +118,6 @@ command_not_found_handler() {
     return 127
 }
 
-setup_eza() {
-    # Install shell completions if not already installed
-    local COMPLETIONS_DIR="$HOME/.zsh/completions"
-    mkdir -p "$COMPLETIONS_DIR"
-    
-    if [ ! -f "$COMPLETIONS_DIR/_eza" ]; then
-        echo "Installing eza completions..."
-        curl -L https://raw.githubusercontent.com/eza-community/eza/main/completions/zsh/_eza \
-            -o "$COMPLETIONS_DIR/_eza"
-    fi
-    
-    # Ensure completions directory is in FPATH
-    if [[ ! "$FPATH" == *"$COMPLETIONS_DIR"* ]]; then
-        echo "Adding completions to FPATH..."
-        echo "export FPATH=\"$COMPLETIONS_DIR:\$FPATH\"" >> "$HOME/.zshrc"
-    fi
-    
-    success "eza configured successfully"
-}
-
 source_if_exists "$DOTFILES/iterm2/zsh/iterm2.zsh"
 source_if_exists "$DOTFILES/python/zsh/python.zsh"
 source_if_exists "$DOTFILES/xxh/zsh/xxh.zsh"
@@ -159,7 +127,9 @@ source_if_exists "$DOTFILES/alder/zsh/alder.zsh"
 source_if_exists "$DOTFILES/bat/zsh/bat.zsh"
 
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
-export FPATH="/Users/jsegal/.zsh/completions:$FPATH"
+if [ -d "$HOME/.zsh/completions" ]; then
+    export FPATH="$HOME/.zsh/completions:$FPATH"
+fi
 
 # Finally, strip any remaining Anaconda paths from PATH (defensive)
 PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '$0!~/anaconda3/' | sed 's/:$//')

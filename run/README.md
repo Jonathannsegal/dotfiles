@@ -1,0 +1,82 @@
+# Run Scripts
+
+`run/` is intentionally small. Most machine-audit and enforcement behavior lives
+behind `standards.sh` subcommands so there are fewer entry points to remember.
+
+## Primary Commands
+
+### `setup.sh`
+
+Repeatable bootstrap for a new or existing Mac.
+
+It installs Homebrew when missing, runs `brew bundle`, links dotfiles, installs
+shell plugins, installs VS Code extensions, refreshes custom app icons, and
+installs the LaunchAgents that keep icons reapplied and unmanaged installers
+blocked.
+
+Common usage:
+
+```bash
+./run/setup.sh
+./run/setup.sh --yes
+./run/setup.sh --macos
+```
+
+### `standards.sh`
+
+The source-of-truth audit and enforcement command for keeping the Mac clean.
+
+Subcommands:
+
+- `audit`: full read-only strict audit.
+- `apps`: compare Homebrew formulae, casks, VS Code extensions, and npm globals
+  against `brew/Brewfile`.
+- `settings`: compare live macOS defaults against the managed settings.
+- `home --dry-run`: report top-level home folder drift.
+- `home --apply`: move top-level git repositories into `~/Developer`.
+- `launchagents audit`: compare startup/background items to
+  `macos/launchagents.tsv`.
+- `launchagents apply`: disable entries marked `disable`.
+- `purge-unwanted --dry-run`: preview removal of banned app families.
+- `purge-unwanted`: remove banned app families and helpers. This may ask for an
+  administrator password.
+
+The banned app families are Maxon, Logitech Options, Docker Desktop, Steam, and
+Watchman.
+
+### `cleanup.sh`
+
+Storage cleanup and organization utility. It is reversible by default because
+`move` sends files to `~/CleanupStaging` unless `--mode trash` is selected.
+
+Subcommands:
+
+- `audit`: read-only storage overview.
+- `targets`: list cleanup target groups.
+- `move --dry-run`: preview cleanup moves.
+- `move --apply`: move selected cleanup targets.
+- `reports`: generate duplicate/app/media review reports.
+- `lint-personal`: lint `~/Personal` organization.
+
+### `export-messages-attachments.sh`
+
+Exports Messages attachments without modifying the Messages database. The
+default is a dry-run, flat, media-only export for photo review workflows.
+
+Common usage:
+
+```bash
+./run/export-messages-attachments.sh --dry-run
+./run/export-messages-attachments.sh --apply --dest ~/CleanupStaging/messages
+```
+
+## Removed Entry Points
+
+The old one-off audit scripts were folded into `standards.sh`:
+
+- `apps.sh` -> `standards.sh apps`
+- `audit-settings.sh` -> `standards.sh settings`
+- `organize-home.sh` -> `standards.sh home`
+- `launchagents.sh` -> `standards.sh launchagents`
+- `remove-unwanted-apps.sh` -> `standards.sh purge-unwanted`
+- `reset.sh` -> replaced by `cleanup.sh`

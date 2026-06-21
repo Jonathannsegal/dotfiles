@@ -1,21 +1,27 @@
 # Navigation
 alias ..='cd ..'
 alias ...='cd ../..'
-# Replace ls with eza
-alias ls='eza --icons --git'
-alias l='eza -l --icons --git'
-alias ll='eza -l --icons --git'
-alias la='eza -la --icons --git'
-alias lt='eza --tree --icons'
-alias llt='eza -l --tree --icons --git'
+if command -v eza >/dev/null 2>&1; then
+    # Replace ls with eza
+    alias ls='eza --icons --git'
+    alias l='eza -l --icons --git'
+    alias ll='eza -l --icons --git'
+    alias la='eza -la --icons --git'
+    alias lt='eza --tree --icons'
+    alias llt='eza -l --tree --icons --git'
 
-# More detailed views
-alias lg='eza -l --icons --git-ignore --git'  # List and show git status, ignoring .gitignored files
-alias lh='eza -l --icons --git --header'      # List with header
-alias laa='eza -la --icons --git --header'    # List all with header
-alias lm='eza -l --icons --git --sort=modified' # List by modified date
-alias lk='eza -l --icons --git --sort=size'    # List by size
-alias lr='eza -lR --icons --git'              # Recursive list
+    # More detailed views
+    alias lg='eza -l --icons --git-ignore --git'
+    alias lh='eza -l --icons --git --header'
+    alias laa='eza -la --icons --git --header'
+    alias lm='eza -l --icons --git --sort=modified'
+    alias lk='eza -l --icons --git --sort=size'
+    alias lr='eza -lR --icons --git'
+else
+    alias l='ls -la'
+    alias ll='ls -l'
+    alias la='ls -la'
+fi
 
 # Git shortcuts
 alias g='git'
@@ -28,7 +34,7 @@ alias gs='git status'
 
 # Directory shortcuts
 alias dotfiles='cd $DOTFILES'
-alias projects='cd $HOME/Projects'
+alias projects='cd $HOME/Developer'
 
 # Common operations
 alias zshrc='$EDITOR $DOTFILES/zsh/rc.zsh'

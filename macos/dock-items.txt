@@ -1,0 +1,12 @@
+# One app path per line, in Dock order.
+/Applications/Slack.app
+/Applications/Zotero.app
+/Applications/iTerm.app
+/Applications/Visual Studio Code.app
+/Applications/Blender.app
+/Applications/Google Chrome.app
+/Applications/Unity Hub.app
+/Applications/Lens Studio.app
+/Applications/Xcode.app
+/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app
+/Applications/Adobe Illustrator 2026/Adobe Illustrator.app

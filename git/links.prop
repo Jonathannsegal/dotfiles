@@ -1,1 +1,3 @@
-$DOTFILES/git/gitignore=$HOME/.gitignore
+$DOTFILES/git/ignore.git=$HOME/.gitignore
+$DOTFILES/git/config.git=$HOME/.gitconfig
+$DOTFILES/git/hooks/pre-commit=$HOME/.config/git/hooks/pre-commit

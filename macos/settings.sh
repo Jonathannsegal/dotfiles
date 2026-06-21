@@ -62,6 +62,18 @@ defaults write NSGlobalDomain InitialKeyRepeat -int 25
 # Disable press-and-hold for keys in favor of key repeat
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
+# Trackpad behavior
+defaults write com.apple.AppleMultitouchTrackpad Clicking -bool false
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool false
+defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 0
+defaults write com.apple.AppleMultitouchTrackpad TrackpadRightClick -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightClick -bool true
+defaults write com.apple.AppleMultitouchTrackpad TrackpadCornerSecondaryClick -bool false
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadCornerSecondaryClick -bool false
+defaults write NSGlobalDomain com.apple.trackpad.forceClick -bool true
+defaults write com.apple.AppleMultitouchTrackpad ForceSuppressed -bool false
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad ForceSuppressed -bool false
+
 ###############################################################################
 # Hot Corners                                                                 #
 ###############################################################################
@@ -130,8 +142,8 @@ defaults write com.apple.screensaver askForPassword -int 1
 # Set the delay before password is required (5 minutes = 300 seconds)
 defaults write com.apple.screensaver askForPasswordDelay -int 300
 
-# Save screenshots to Documents and set format to PNG
-defaults write com.apple.screencapture location -string "${HOME}/Documents"
+# Save screenshots to Downloads and set format to PNG
+defaults write com.apple.screencapture location -string "${HOME}/Downloads"
 defaults write com.apple.screencapture type -string "png"
 
 ###############################################################################
@@ -156,8 +168,23 @@ defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
 # Use list view in all Finder windows
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
+# Open folders in tabs instead of new windows and use the current Finder target.
+defaults write com.apple.finder FinderSpawnTab -bool true
+defaults write com.apple.finder NewWindowTarget -string "PfAF"
+
 # Show the ~/Library folder
 chflags nohidden ~/Library
+
+# Finder sidebar layout
+defaults write com.apple.finder ShowRecentTags -bool true
+defaults write com.apple.finder SidebarWidth -int 132
+defaults write com.apple.finder SidebarWidth2 -int 160
+defaults write com.apple.finder SidebarDevicesSectionDisclosedState -bool true
+defaults write com.apple.finder SidebarMediaBrowserSectionDisclosedState -bool true
+defaults write com.apple.finder SidebarPlacesSectionDisclosedState -bool true
+defaults write com.apple.finder SidebariCloudDriveSectionDisclosedState -bool false
+defaults write com.apple.finder SidebarShowingSignedIntoiCloud -bool true
+defaults write com.apple.finder SidebarShowingiCloudDesktop -bool false
 
 ###############################################################################
 # Dock & Mission Control                                                      #
@@ -200,18 +227,8 @@ defaults write com.apple.dock magnification -bool false
 # Dock Applications                                                           #
 ###############################################################################
 
-# Remove all apps from Dock
-defaults write com.apple.dock persistent-apps -array
-
-# Add desired apps to Dock
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Slack.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/iTerm.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Visual Studio Code.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Google Chrome.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Notion.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Unity Hub.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
-defaults write com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Adobe Illustrator 2026/Adobe Illustrator 2026.app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>'
+# Add desired apps to Dock from the repo-managed list.
+"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apply-dock.sh"
 
 ###############################################################################
 # Menu Bar & Control Center                                                    #
@@ -238,8 +255,12 @@ defaults write com.apple.menuextra.battery ShowPercent -bool false
 defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  h:mm a"
 
 # Control Center modules configuration
-defaults write com.apple.controlcenter "NSStatusItem Preferred Position Battery" -float 100
+defaults write com.apple.controlcenter "NSStatusItem Preferred Position Battery" -float 195
 defaults write com.apple.controlcenter "NSStatusItem Preferred Position Clock" -float 200
+
+# Automatically switch between light and dark appearances.
+defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
+defaults write NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically -bool true
 
 # Automatically hide and show the menu bar in full screen only
 defaults write NSGlobalDomain _HIHideMenuBar -bool false

@@ -1,0 +1,36 @@
+# action	label	note
+# Actions:
+#   keep    repo-approved background item
+#   review  show in audit, do not change on apply
+#   disable disable when run/standards.sh launchagents apply is used
+keep	com.adobe.AdobeCreativeCloud	Adobe Creative Cloud
+keep	com.adobe.AdobeDesktopService	Adobe desktop service
+keep	com.adobe.GC.Scheduler-1.0	Adobe genuine client
+keep	com.adobe.ccxprocess	Adobe Creative Cloud experience
+keep	Adobe_Genuine_Software_Integrity_Service	Adobe genuine service
+keep	com.adobe.acc.installer.v2	Adobe installer helper
+keep	com.google.GoogleUpdater.wake	Google updater
+keep	com.google.GoogleUpdater.wake.system	Google updater system
+keep	com.google.keystone.agent.plist	Google updater legacy agent
+keep	com.google.keystone.xpcservice.plist	Google updater legacy XPC
+keep	com.google.keystone.daemon.plist	Google updater legacy daemon
+keep	com.jsegal.dotfiles-icons-reapply	Dotfiles custom icon reapply
+keep	com.jsegal.dotfiles-installer-guard	Dotfiles unmanaged installer guard
+keep	com.user.terminal-theme	Dotfiles Terminal theme switcher
+keep	com.box.desktop.launch	Box Drive login item
+keep	com.box.desktop.helper	Box Drive helper
+keep	com.box.desktop.autoupdater	Box Drive updater
+disable	com.docker.socket	Docker helper
+disable	com.docker.vmnetd	Docker network helper
+disable	com.github.facebook.watchman	Watchman service
+disable	com.logi.cp-dev-mgr	Logitech Options agent
+disable	com.logitech.LogiRightSight.Agent	Logitech webcam agent
+disable	com.logi.optionsplus.updater	Logitech updater
+keep	com.microsoft.update.agent	Microsoft update agent
+keep	com.microsoft.autoupdate.helper	Microsoft AutoUpdate helper
+keep	com.microsoft.office.licensingV2.helper	Microsoft Office licensing
+disable	net.maxon.deployservice	Maxon deploy service
+disable	com.valvesoftware.steamclean	Steam cleanup
+keep	us.zoom.updater.login.check	Zoom updater login check
+keep	us.zoom.updater	Zoom updater
+keep	us.zoom.ZoomDaemon	Zoom daemon

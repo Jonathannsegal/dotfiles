@@ -1,522 +1,399 @@
 #!/usr/bin/env bash
 
-# Move to dotfiles directory
+set -euo pipefail
+
 cd "$(dirname "$0")/.."
-DOTFILES=$(pwd -P)
+DOTFILES="$(pwd -P)"
+export DOTFILES
+
 BACKUP_DIR="$HOME/.dotfiles_backup/$(date +%Y%m%d_%H%M%S)"
+BREWFILE="$DOTFILES/brew/Brewfile"
+RUN_BREW=true
+RUN_MACOS=false
+RUN_TERMINAL=false
+RUN_PYTHON=false
+RUN_VSCODE=true
+RUN_ICONS=true
+RUN_SHELL_PLUGINS=true
+RUN_JDK=true
+RUN_INSTALLER_GUARD=true
+INSTALL_ICON_AGENT=true
+ASSUME_YES=false
+BACKUP_EXISTING=true
 
-set -e
-
-# Status indicators with colors
 info() {
-    printf "\r [ \033[00;34m..\033[0m ] $1\n"
-}
-
-user() {
-    printf "\r [ \033[0;33m??\033[0m ] $1\n"
+    printf "\r [ \033[00;34m..\033[0m ] %s\n" "$1"
 }
 
 success() {
-    printf "\r\033[2K [ \033[00;32mOK\033[0m ] $1\n"
+    printf "\r\033[2K [ \033[00;32mOK\033[0m ] %s\n" "$1"
+}
+
+warn() {
+    printf "\r\033[2K [ \033[00;33mWARN\033[0m ] %s\n" "$1"
 }
 
 fail() {
-    printf "\r\033[2K [\033[0;31mFAIL\033[0m] $1\n"
-    echo ''
+    printf "\r\033[2K [\033[0;31mFAIL\033[0m] %s\n" "$1"
     exit 1
 }
 
+usage() {
+    cat <<EOF
+Usage: ./run/setup.sh [options]
+
+Repeatable macOS bootstrap for this dotfiles repo.
+
+Options:
+  --yes             Run non-interactively where possible.
+  --no-brew         Skip Homebrew installation and brew bundle.
+  --no-icons        Skip custom application icons.
+  --no-icon-agent   Do not install the LaunchAgent that reapplies icons.
+  --macos           Apply macOS defaults. This can change system preferences.
+  --terminal        Import Terminal.app profiles.
+  --python          Run the Python package installer. This is intentionally opt-in.
+  --no-vscode       Skip VS Code extension installation.
+  --no-shell-plugins
+                    Skip zsh plugin installation/update.
+  --no-jdk          Skip the Homebrew OpenJDK system link.
+  --no-installer-guard
+                    Skip the LaunchAgent that blocks unmanaged installers.
+  --no-backup       Replace conflicting dotfiles instead of backing them up.
+  -h, --help        Show this help.
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --yes|-y) ASSUME_YES=true ;;
+        --no-brew) RUN_BREW=false ;;
+        --no-icons) RUN_ICONS=false ;;
+        --no-icon-agent) INSTALL_ICON_AGENT=false ;;
+        --macos) RUN_MACOS=true ;;
+        --terminal) RUN_TERMINAL=true ;;
+        --python) RUN_PYTHON=true ;;
+        --no-vscode) RUN_VSCODE=false ;;
+        --no-shell-plugins) RUN_SHELL_PLUGINS=false ;;
+        --no-jdk) RUN_JDK=false ;;
+        --no-installer-guard) RUN_INSTALLER_GUARD=false ;;
+        --no-backup) BACKUP_EXISTING=false ;;
+        --help|-h) usage; exit 0 ;;
+        *) fail "Unknown option: $1" ;;
+    esac
+    shift
+done
+
+is_macos() {
+    [[ "$(uname -s)" == "Darwin" ]]
+}
+
+confirm() {
+    local prompt="$1"
+
+    if [[ "$ASSUME_YES" == true ]]; then
+        return 0
+    fi
+
+    printf "\r [ \033[0;33m??\033[0m ] %s [y/N] " "$prompt"
+    read -r reply < /dev/tty
+    [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+strip_quotes() {
+    local value="$1"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    value="${value%\"}"
+    value="${value#\"}"
+    printf "%s" "$value"
+}
+
+expand_path() {
+    local value
+    value="$(strip_quotes "$1")"
+    value="${value//\$DOTFILES/$DOTFILES}"
+    value="${value//\$HOME/$HOME}"
+    value="${value/#\~/$HOME}"
+    printf "%s" "$value"
+}
+
 link_file() {
-    local src=$1 dst=$2
-    local overwrite= backup= skip=
-    local action=
+    local src="$1"
+    local dst="$2"
 
-    if [ -f "$dst" ] || [ -d "$dst" ] || [ -L "$dst" ]; then
-        if [ "$overwrite_all" == "false" ] && [ "$backup_all" == "false" ] && [ "$skip_all" == "false" ]; then
-            # Check if it's already the correct symlink
-            local currentSrc="$(readlink "$dst")"
-            if [ "$currentSrc" == "$src" ]; then
-                skip=true
-                success "Already linked $src to $dst"
-            else
-                user "File already exists: $dst ($(basename "$src")), what do you want to do?
- [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
-                read -n 1 action < /dev/tty
-                case "$action" in
-                    o ) overwrite=true;;
-                    O ) overwrite_all=true;;
-                    b ) backup=true;;
-                    B ) backup_all=true;;
-                    s ) skip=true;;
-                    S ) skip_all=true;;
-                    * ) ;;
-                esac
-            fi
+    if [[ ! -e "$src" && ! -L "$src" ]]; then
+        warn "Skipping missing source: $src"
+        return 0
+    fi
+
+    mkdir -p "$(dirname "$dst")"
+
+    if [[ -L "$dst" ]]; then
+        local current
+        current="$(readlink "$dst")"
+        if [[ "$current" == "$src" ]]; then
+            success "Already linked $dst"
+            return 0
         fi
+    fi
 
-        overwrite=${overwrite:-$overwrite_all}
-        backup=${backup:-$backup_all}
-        skip=${skip:-$skip_all}
-
-        if [ "$overwrite" == "true" ]; then
+    if [[ -e "$dst" || -L "$dst" ]]; then
+        if [[ "$BACKUP_EXISTING" == true ]]; then
+            local backup_path="$BACKUP_DIR${dst#$HOME}"
+            mkdir -p "$(dirname "$backup_path")"
+            mv "$dst" "$backup_path"
+            success "Backed up $dst"
+        else
             rm -rf "$dst"
-            success "removed $dst"
-        fi
-
-        if [ "$backup" == "true" ]; then
-            mkdir -p "$BACKUP_DIR"
-            mv "$dst" "$BACKUP_DIR/$(basename "$dst")"
-            success "moved $dst to $BACKUP_DIR/$(basename "$dst")"
-        fi
-
-        if [ "$skip" == "true" ]; then
-            success "skipped $src"
+            success "Removed existing $dst"
         fi
     fi
 
-    if [ "$skip" != "true" ]; then
-        mkdir -p "$(dirname "$dst")"
-        ln -s "$src" "$dst"
-        success "linked $src to $dst"
-    fi
-}
-
-setup_terminal() {
-    info 'configuring terminal settings'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/terminal/settings.sh" ]; then
-            # Close System Preferences to prevent overriding changes
-            osascript -e 'tell application "System Preferences" to quit'
-            
-            # Source the terminal settings
-            source "$DOTFILES/terminal/settings.sh"
-            
-            # Run the setup functions
-            setup_terminal_profiles
-            setup_theme_switcher
-            
-            success 'terminal settings configured'
-        else
-            fail 'terminal settings script not found'
-        fi
-    else
-        success 'skipped terminal settings (not on macOS)'
-    fi
-}
-
-setup_gitconfig() {
-    info 'setting up gitconfig'
-    
-    if [ ! -f "$DOTFILES/git/config.local.git" ]; then
-        user ' - What is your git author name?'
-        read -r git_authorname
-        user ' - What is your git author email?'
-        read -r git_authoremail
-        
-        sed -e "s/AUTHORNAME/$git_authorname/g" -e "s/AUTHOREMAIL/$git_authoremail/g" \
-            "$DOTFILES/git/config.local.example.git" > "$DOTFILES/git/config.local.git"
-        
-        success 'generated git config'
-    else
-        success 'existing git config found'
-    fi
-}
-
-setup_python() {
-    info 'setting up python environment'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/python/install.sh" ]; then
-            user 'Do you want to set up Python environment? (y/n)'
-            read -n 1 should_setup_python
-            echo ''
-            
-            if [ "$should_setup_python" == "y" ]; then
-                info 'running python setup script'
-                bash "$DOTFILES/python/install.sh" --no-confirm
-                success 'python environment configured'
-            else
-                success 'skipped python setup'
-            fi
-        else
-            fail 'python setup script not found'
-        fi
-    else
-        success 'skipped python setup (not on macOS)'
-    fi
-}
-
-setup_vscode() {
-    info 'setting up VSCode configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/vscode/install.sh" ]; then
-            user 'Do you want to configure VSCode settings? (y/n)'
-            read -n 1 should_setup_vscode
-            echo ''
-            
-            if [ "$should_setup_vscode" == "y" ]; then
-                info 'running VSCode setup script'
-                bash "$DOTFILES/vscode/install.sh"
-                success 'VSCode settings configured'
-            else
-                success 'skipped VSCode setup'
-            fi
-        else
-            fail 'VSCode setup script not found'
-        fi
-    else
-        success 'skipped VSCode setup (not on macOS)'
-    fi
-}
-
-setup_dotnet() {
-    info 'setting up dotnet environment'
-    
-    if [ -f "$DOTFILES/dotnet/install.sh" ]; then
-        user 'Do you want to set up .NET environment? (y/n)'
-        read -n 1 should_setup_dotnet
-        echo ''
-        
-        if [ "$should_setup_dotnet" == "y" ]; then
-            info 'running dotnet setup script'
-            bash "$DOTFILES/dotnet/install.sh"
-            success 'dotnet environment configured'
-        else
-            success 'skipped dotnet setup'
-        fi
-    else
-        fail 'dotnet setup script not found'
-    fi
-}
-
-setup_slack() {
-    info 'setting up slack configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/slack/settings.sh" ]; then
-            user 'Do you want to configure Slack settings? (y/n)'
-            read -n 1 should_setup_slack
-            echo ''
-            
-            if [ "$should_setup_slack" == "y" ]; then
-                info 'running slack setup script'
-                bash "$DOTFILES/slack/settings.sh"
-                success 'slack settings configured'
-            else
-                success 'skipped slack setup'
-            fi
-        else
-            fail 'slack setup script not found'
-        fi
-    else
-        success 'skipped slack setup (not on macOS)'
-    fi
-}
-
-setup_zotero() {
-    info 'setting up zotero configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/zotero/install.sh" ]; then
-            user 'Do you want to configure Zotero? (y/n)'
-            read -n 1 should_setup_zotero
-            echo ''
-            
-            if [ "$should_setup_zotero" == "y" ]; then
-                info 'running zotero setup script'
-                source "$DOTFILES/zotero/install.sh"
-            else
-                success 'skipped zotero setup'
-            fi
-        else
-            fail 'zotero setup script not found'
-        fi
-    else
-        success 'skipped zotero setup (not on macOS)'
-    fi
-}
-
-setup_mac_icons() {
-    info 'setting up custom macOS application icons'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/macos/icons/setup.sh" ]; then
-            user 'Do you want to customize application icons? (y/n)'
-            read -n 1 should_setup_icons
-            echo ''
-            
-            if [ "$should_setup_icons" == "y" ]; then
-                info 'running icon setup script'
-                bash "$DOTFILES/macos/icons/setup.sh"
-                success 'application icons customized'
-            else
-                success 'skipped icon customization'
-            fi
-        else
-            fail 'icon setup script not found'
-        fi
-    else
-        success 'skipped icon setup (not on macOS)'
-    fi
-}
-
-setup_macos() {
-    info 'configuring macOS settings'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/macos/settings.sh" ]; then
-            user 'Do you want to configure macOS settings? (y/n)'
-            read -n 1 should_setup_macos
-            echo ''
-            
-            if [ "$should_setup_macos" == "y" ]; then
-                info 'running macOS settings script'
-                bash "$DOTFILES/macos/settings.sh"
-                success 'macOS settings configured'
-            else
-                success 'skipped macOS settings'
-            fi
-        else
-            warn 'macOS settings script not found'
-        fi
-    else
-        success 'skipped macOS settings (not on macOS)'
-    fi
+    ln -s "$src" "$dst"
+    success "Linked $dst"
 }
 
 install_dotfiles() {
-    info 'installing dotfiles'
-    local overwrite_all=false backup_all=false skip_all=false
+    info "Linking dotfiles"
 
-    # Find all links.prop files, excluding .git directory
-    find -H "$DOTFILES" -maxdepth 2 -name 'links.prop' -not -path '*.git*' | while read -r linkfile; do
-        info "Processing $(basename $(dirname "$linkfile"))"
-        
-        # Process each line in the links.prop file
-        while read -r line || [ -n "$line" ]; do
-            # Skip empty lines and comments
-            if [[ -z "$line" || "$line" =~ ^# ]]; then
+    while IFS= read -r linkfile; do
+        info "Processing $(basename "$(dirname "$linkfile")") links"
+
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+            [[ "$line" != *"="* ]] && {
+                warn "Ignoring invalid link line in $linkfile: $line"
                 continue
-            fi
-            
+            }
+
+            local src_raw="${line%%=*}"
+            local dst_raw="${line#*=}"
             local src dst
-            src=$(eval echo "$line" | cut -d '=' -f 1)
-            dst=$(eval echo "$line" | cut -d '=' -f 2)
-            
+            src="$(expand_path "$src_raw")"
+            dst="$(expand_path "$dst_raw")"
             link_file "$src" "$dst"
         done < "$linkfile"
-    done
-}
-
-setup_bat() {
-    info 'setting up bat configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/bat/settings.sh" ]; then
-            user 'Do you want to configure bat settings? (y/n)'
-            read -n 1 should_setup_bat
-            echo ''
-            
-            if [ "$should_setup_bat" == "y" ]; then
-                info 'running bat setup script'
-                
-                # Source and run the bat settings
-                source "$DOTFILES/bat/settings.sh"
-                setup_bat
-                
-                # Add dark mode theme switching
-                echo 'alias cat="bat --theme=\$(defaults read -globalDomain AppleInterfaceStyle &> /dev/null && echo TwoDark || echo GitHub)"' >> "$DOTFILES/bat/zsh/bat.zsh"
-                
-                success 'bat settings configured'
-            else
-                success 'skipped bat setup'
-            fi
-        else
-            fail 'bat setup script not found'
-        fi
-    else
-        success 'skipped bat setup (not on macOS)'
-    fi
-}
-
-setup_tmux() {
-    info 'setting up tmux configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/tmux/settings.sh" ]; then
-            user 'Do you want to configure tmux settings? (y/n)'
-            read -n 1 should_setup_tmux
-            echo ''
-            
-            if [ "$should_setup_tmux" == "y" ]; then
-                info 'running tmux setup script'
-                source "$DOTFILES/tmux/settings.sh"
-                setup_tmux
-                success 'tmux settings configured'
-            else
-                success 'skipped tmux setup'
-            fi
-        else
-            fail 'tmux setup script not found'
-        fi
-    else
-        success 'skipped tmux setup (not on macOS)'
-    fi
-}
-
-setup_alder() {
-    info 'setting up alder configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/alder/settings.sh" ]; then
-            user 'Do you want to configure alder? (y/n)'
-            read -n 1 should_setup_alder
-            echo ''
-            
-            if [ "$should_setup_alder" == "y" ]; then
-                info 'running alder setup script'
-                source "$DOTFILES/alder/settings.sh"
-                setup_alder
-                success 'alder configured'
-            else
-                success 'skipped alder setup'
-            fi
-        else
-            fail 'alder setup script not found'
-        fi
-    else
-        success 'skipped alder setup (not on macOS)'
-    fi
-}
-
-setup_eza() {
-    info 'setting up eza configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/eza/settings.sh" ]; then
-            user 'Do you want to configure eza settings? (y/n)'
-            read -n 1 should_setup_eza
-            echo ''
-            
-            if [ "$should_setup_eza" == "y" ]; then
-                info 'running eza setup script'
-                
-                # Source and run the eza settings
-                source "$DOTFILES/eza/settings.sh"
-                setup_eza
-                
-                success 'eza settings configured'
-            else
-                success 'skipped eza setup'
-            fi
-        else
-            fail 'eza setup script not found'
-        fi
-    else
-        success 'skipped eza setup (not on macOS)'
-    fi
-}
-
-setup_xxh() {
-    info 'setting up xxh configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/xxh/settings.sh" ]; then
-            user 'Do you want to configure xxh settings? (y/n)'
-            read -n 1 should_setup_xxh
-            echo ''
-            
-            if [ "$should_setup_xxh" == "y" ]; then
-                info 'running xxh setup script'
-                
-                # Source and run the xxh settings
-                source "$DOTFILES/xxh/settings.sh"
-                setup_xxh
-                
-                success 'xxh settings configured'
-            else
-                success 'skipped xxh setup'
-            fi
-        else
-            fail 'xxh setup script not found'
-        fi
-    else
-        success 'skipped xxh setup (not on macOS)'
-    fi
-}
-
-setup_iterm2() {
-    info 'setting up iTerm2 configuration'
-    
-    if [ "$(uname -s)" == "Darwin" ]; then
-        if [ -f "$DOTFILES/iterm2/settings.sh" ]; then
-            user 'Do you want to configure iTerm2 settings? (y/n)'
-            read -n 1 should_setup_iterm2
-            echo ''
-            
-            if [ "$should_setup_iterm2" == "y" ]; then
-                info 'running iTerm2 setup script'
-                
-                # Source the iTerm2 settings
-                source "$DOTFILES/iterm2/settings.sh"
-                
-                # Run the setup functions
-                setup_iterm2
-                
-                success 'iTerm2 settings configured'
-            else
-                success 'skipped iTerm2 setup'
-            fi
-        else
-            fail 'iTerm2 setup script not found'
-        fi
-    else
-        success 'skipped iTerm2 setup (not on macOS)'
-    fi
+    done < <(find -H "$DOTFILES" -maxdepth 2 -name "links.prop" -not -path "*/.git/*" | sort)
 }
 
 create_env_file() {
-    if test -f "$HOME/.env.sh"; then
-        success "$HOME/.env.sh file already exists, skipping"
-    else
-        cat > "$HOME/.env.sh" << EOF
+    if [[ -f "$HOME/.env.sh" ]]; then
+        local tmp
+        tmp="$(mktemp)"
+        awk -v dotfiles="$DOTFILES" '
+            BEGIN { updated = 0 }
+            /^export DOTFILES=/ {
+                print "export DOTFILES=\"" dotfiles "\""
+                updated = 1
+                next
+            }
+            { print }
+            END {
+                if (updated == 0) {
+                    print ""
+                    print "export DOTFILES=\"" dotfiles "\""
+                }
+            }
+        ' "$HOME/.env.sh" > "$tmp"
+        mv "$tmp" "$HOME/.env.sh"
+        success "Updated ~/.env.sh"
+        return 0
+    fi
+
+    cat > "$HOME/.env.sh" <<EOF
 # Environment variables for dotfiles
-export DOTFILES=$DOTFILES
+export DOTFILES="$DOTFILES"
 
-# Add your machine-specific configuration below
-# Example: export PATH=\$PATH:/usr/local/bin
+# Add machine-specific configuration below.
 
-# Source helper function for optional includes
 source_if_exists() {
     if test -r "\$1"; then
         source "\$1"
     fi
 }
 EOF
-        success 'created ~/.env.sh'
+    success "Created ~/.env.sh"
+}
+
+ensure_homebrew() {
+    export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+    if command -v brew >/dev/null 2>&1; then
+        success "Homebrew is installed"
+        return 0
+    fi
+
+    if ! is_macos; then
+        fail "Homebrew is not installed and this setup only bootstraps Homebrew on macOS"
+    fi
+
+    if [[ "$(uname -m)" != "arm64" ]]; then
+        warn "This Mac is not reporting Apple Silicon arm64. No Rosetta setup will be attempted."
+    fi
+
+    info "Installing Homebrew"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    if [[ -x "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x "/usr/local/bin/brew" ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+
+    command -v brew >/dev/null 2>&1 || fail "Homebrew installation did not put brew on PATH"
+    success "Homebrew installed"
+}
+
+install_brew_bundle() {
+    [[ "$RUN_BREW" == true ]] || {
+        success "Skipped Homebrew"
+        return 0
+    }
+
+    ensure_homebrew
+    [[ -f "$BREWFILE" ]] || fail "Missing Brewfile: $BREWFILE"
+
+    info "Installing/updating Homebrew bundle"
+    brew bundle --file="$BREWFILE"
+    success "Homebrew bundle is up to date"
+}
+
+setup_shell_plugins() {
+    [[ "$RUN_SHELL_PLUGINS" == true ]] || {
+        success "Skipped shell plugins"
+        return 0
+    }
+
+    local plugin_dir="$HOME/.zsh/plugins"
+    mkdir -p "$plugin_dir"
+
+    if [[ ! -d "$plugin_dir/zsh-syntax-highlighting/.git" ]]; then
+        info "Installing zsh-syntax-highlighting"
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$plugin_dir/zsh-syntax-highlighting"
+    else
+        git -C "$plugin_dir/zsh-syntax-highlighting" pull --ff-only >/dev/null 2>&1 || warn "Could not update zsh-syntax-highlighting"
+    fi
+
+    if [[ ! -d "$plugin_dir/zsh-autosuggestions/.git" ]]; then
+        info "Installing zsh-autosuggestions"
+        git clone https://github.com/zsh-users/zsh-autosuggestions.git "$plugin_dir/zsh-autosuggestions"
+    else
+        git -C "$plugin_dir/zsh-autosuggestions" pull --ff-only >/dev/null 2>&1 || warn "Could not update zsh-autosuggestions"
+    fi
+
+    success "Shell plugins are installed"
+}
+
+setup_jdk() {
+    [[ "$RUN_JDK" == true ]] || {
+        success "Skipped OpenJDK system link"
+        return 0
+    }
+
+    if ! is_macos || [[ ! -d "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk" ]]; then
+        return 0
+    fi
+
+    local target="/Library/Java/JavaVirtualMachines/openjdk.jdk"
+    if [[ -L "$target" && "$(readlink "$target")" == "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk" ]]; then
+        success "OpenJDK is linked"
+        return 0
+    fi
+
+    if confirm "Link Homebrew OpenJDK into /Library/Java/JavaVirtualMachines?"; then
+        sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk "$target"
+        success "OpenJDK linked"
+    else
+        warn "Skipped OpenJDK system link"
     fi
 }
 
-# Run all the installers
-# setup_gitconfig
-# install_dotfiles
-# create_env_file
-# setup_terminal
-# setup_eza
-# setup_xxh
-# setup_tmux
-# setup_alder
-# setup_bat
-# setup_iterm2
-# setup_python
-# setup_dotnet
-# setup_slack
-# setup_zotero
-# setup_vscode
-setup_mac_icons
-# setup_macos
+setup_vscode() {
+    [[ "$RUN_VSCODE" == true ]] || {
+        success "Skipped VS Code extensions"
+        return 0
+    }
 
-echo ''
-success 'All installed!'
+    if [[ -x "$DOTFILES/vscode/install.sh" ]]; then
+        bash "$DOTFILES/vscode/install.sh"
+    else
+        warn "VS Code installer not executable or missing"
+    fi
+}
+
+setup_icons() {
+    [[ "$RUN_ICONS" == true ]] || {
+        success "Skipped custom icons"
+        return 0
+    }
+
+    if ! is_macos; then
+        success "Skipped custom icons outside macOS"
+        return 0
+    fi
+
+    bash "$DOTFILES/macos/icons/setup.sh"
+
+    if [[ "$INSTALL_ICON_AGENT" == true ]]; then
+        bash "$DOTFILES/macos/icons/install_auto_reapply.sh"
+    fi
+}
+
+setup_installer_guard() {
+    [[ "$RUN_INSTALLER_GUARD" == true ]] || {
+        success "Skipped installer guard"
+        return 0
+    }
+
+    if ! is_macos; then
+        success "Skipped installer guard outside macOS"
+        return 0
+    fi
+
+    bash "$DOTFILES/macos/installer-guard.sh" install
+    success "Installer guard configured"
+}
+
+setup_terminal() {
+    [[ "$RUN_TERMINAL" == true ]] || return 0
+    is_macos || {
+        success "Skipped Terminal.app settings outside macOS"
+        return 0
+    }
+
+    # shellcheck source=/dev/null
+    source "$DOTFILES/terminal/settings.sh"
+    setup_terminal_profiles
+    setup_theme_switcher
+}
+
+setup_python() {
+    [[ "$RUN_PYTHON" == true ]] || return 0
+    bash "$DOTFILES/python/install.sh" --no-confirm
+}
+
+setup_macos() {
+    [[ "$RUN_MACOS" == true ]] || return 0
+    is_macos || {
+        success "Skipped macOS defaults outside macOS"
+        return 0
+    }
+    bash "$DOTFILES/macos/settings.sh"
+}
+
+main() {
+    create_env_file
+    install_dotfiles
+    install_brew_bundle
+    setup_shell_plugins
+    setup_jdk
+    setup_vscode
+    setup_terminal
+    setup_python
+    setup_macos
+    setup_installer_guard
+    setup_icons
+    success "Setup complete"
+}
+
+main "$@"

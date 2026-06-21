@@ -6,6 +6,7 @@
 [core]
     editor = vscode
     excludesfile = ~/.gitignore
+    hooksPath = ~/.config/git/hooks
     autocrlf = input
     whitespace = trailing-space,space-before-tab
 
