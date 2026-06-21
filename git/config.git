@@ -1,7 +1,7 @@
 # config.git - Main Git configuration
 [user]
-    name = Jonathan Segal
-    email = jonathannsegal@gmail.com
+	name = Jonathan Segal
+	email = jonathannsegal@gmail.com
 
 [core]
     editor = vscode
@@ -44,3 +44,9 @@
 	helper = /usr/local/share/gcm-core/git-credential-manager
 [credential "https://dev.azure.com"]
 	useHttpPath = true
+[commit]
+	gpgsign = true
+[tag]
+	gpgSign = true
+[gpg]
+	program = /opt/homebrew/bin/gpg
