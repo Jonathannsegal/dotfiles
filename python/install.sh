@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+HARD_SETUP="${DOTFILES_HARD_SETUP:-false}"
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 print_status() {
@@ -28,11 +29,11 @@ fi
 
 print_status "Ensuring Homebrew Python is installed"
 if brew list --formula python@3.14 >/dev/null 2>&1; then
-    brew upgrade python@3.14 >/dev/null 2>&1 || true
+    print_success "python@3.14 is already installed"
 elif brew install python@3.14 >/dev/null 2>&1; then
     :
 elif brew list --formula python >/dev/null 2>&1; then
-    brew upgrade python >/dev/null 2>&1 || true
+    print_success "python is already installed"
 else
     brew install python >/dev/null
 fi
@@ -97,8 +98,20 @@ packages=(
 
 failed_packages=()
 for package in "${packages[@]}"; do
-    print_status "Installing/updating $package"
-    if "$PYTHON_BIN" -m pip install --upgrade "${PIP_FLAGS[@]}" "$package" >/dev/null 2>&1; then
+    if [[ "$HARD_SETUP" == false ]] && "$PYTHON_BIN" -m pip show "$package" >/dev/null 2>&1; then
+        print_success "$package is already installed"
+        continue
+    fi
+
+    if [[ "$HARD_SETUP" == true ]]; then
+        print_status "Repairing $package"
+        pip_args=(install --upgrade)
+    else
+        print_status "Installing $package"
+        pip_args=(install)
+    fi
+
+    if "$PYTHON_BIN" -m pip "${pip_args[@]}" "${PIP_FLAGS[@]}" "$package" >/dev/null 2>&1; then
         print_success "$package is installed"
     else
         print_warning "Failed to install $package"

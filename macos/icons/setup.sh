@@ -7,6 +7,8 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PAT
 AUTO_MODE=false
 SKIP_PRIVILEGED=false
 CLEAR_CACHE=true
+APPLIED_ANY=false
+FORCE_ICON_APPLY=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -24,8 +26,12 @@ while [[ $# -gt 0 ]]; do
             CLEAR_CACHE=false
             shift
             ;;
+        --force)
+            FORCE_ICON_APPLY=true
+            shift
+            ;;
         --help|-h)
-            echo "Usage: setup.sh [--auto] [--skip-privileged] [--no-cache-clear]"
+            echo "Usage: setup.sh [--auto] [--skip-privileged] [--no-cache-clear] [--force]"
             exit 0
             ;;
         *)
@@ -65,6 +71,11 @@ apply_icon() {
     local icon_path="$2"
     
     if [ -e "$app_path" ] && [ -f "$icon_path" ]; then
+        if [[ "$FORCE_ICON_APPLY" == false ]] && fileicon test "$app_path" >/dev/null 2>&1; then
+            echo "Skipping $app_path (custom icon already set)"
+            return 0
+        fi
+
         echo "Applying $icon_path to $app_path"
         # Privileged apps may require elevated permissions.
         if [[ "$app_path" == *"Adobe"* ]] || [[ "$app_path" == "/System/"* ]] || [[ "$app_path" == *"zoom.us.app"* ]] || [[ "$app_path" == *"Xcode.app"* ]]; then
@@ -72,9 +83,11 @@ apply_icon() {
                 echo "Skipping privileged app in auto mode: $app_path"
             else
                 sudo fileicon set "$app_path" "$icon_path"
+                APPLIED_ANY=true
             fi
         else
             fileicon set "$app_path" "$icon_path"
+            APPLIED_ANY=true
         fi
     else
         echo "Skipping $app_path (app or icon not found)"
@@ -125,7 +138,7 @@ apply_first_found "$ICONS_DIR/mail.png" "/System/Applications/Mail.app" "/Applic
 apply_first_found "$ICONS_DIR/photos.png" "/System/Applications/Photos.app" "/Applications/Photos.app"
 apply_first_found "$ICONS_DIR/facetime.png" "/System/Applications/FaceTime.app" "/Applications/FaceTime.app"
 
-if [[ "$CLEAR_CACHE" == true ]]; then
+if [[ "$CLEAR_CACHE" == true && "$APPLIED_ANY" == true ]]; then
     # Clear icon cache with sudo
     echo "Clearing icon cache..."
     sudo rm -rf /Library/Caches/com.apple.iconservices.store
@@ -135,7 +148,7 @@ if [[ "$CLEAR_CACHE" == true ]]; then
     # Restart Finder to refresh icons
     killall Finder
 else
-    echo "Skipping cache clear in auto mode"
+    echo "Skipping cache clear"
 fi
 
 echo "Icon setup complete!"

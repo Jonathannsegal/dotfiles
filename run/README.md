@@ -7,16 +7,24 @@ behind `standards.sh` subcommands so there are fewer entry points to remember.
 
 ### `setup.sh`
 
-Repeatable bootstrap for a new or existing Mac.
+Repeatable bootstrap for a new or existing Mac. It is designed to be rerun:
+components that already match the repo are skipped.
 
-It installs Homebrew when missing, runs `brew bundle`, links dotfiles, installs
-shell plugins, installs VS Code extensions, imports Terminal.app profiles, runs
-the Python package installer, refreshes custom app icons, and installs the
-LaunchAgents that keep icons reapplied and unmanaged installers blocked.
+It installs Homebrew when missing, configures Homebrew in `~/.zprofile`, installs
+missing Brewfile dependencies, links dotfiles, installs shell plugins, installs VS Code
+extensions, imports Terminal.app profiles, runs the Python package installer,
+refreshes custom app icons, and installs the LaunchAgents that keep icons
+reapplied and unmanaged installers blocked.
 
 Plain `./run/setup.sh` is the full setup path. In interactive mode it asks
 before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
 `--yes` applies those defaults without prompting.
+
+Use `--hard` as the repair path when a setup was interrupted or a managed config
+looks partially applied. It assumes yes, replaces managed dotfile links instead
+of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads
+managed LaunchAgents, forces VS Code extension installs, updates shell plugins,
+repairs Python packages, and reapplies custom icons.
 
 Common usage:
 
@@ -24,6 +32,7 @@ Common usage:
 ./run/setup.sh
 ./run/setup.sh --yes
 ./run/setup.sh --macos
+./run/setup.sh --hard
 ```
 
 ### `standards.sh`

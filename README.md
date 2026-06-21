@@ -11,14 +11,14 @@ cd ~/Developer/dotfiles
 ./run/setup.sh
 ```
 
-The default setup is safe to rerun. It will:
+The default setup is safe to rerun. It converges the machine toward this repo and skips components that are already correctly configured. It will:
 
 1. Create or update `~/.env.sh` with `DOTFILES`.
 2. Symlink config files from this repo, backing up conflicting files to `~/.dotfiles_backup`.
-3. Install or update the Homebrew bundle.
-4. Install/update zsh plugins outside shell startup.
-5. Link Homebrew OpenJDK for macOS tools when approved.
-6. Install/update VS Code extensions from the Brewfile when VS Code is available.
+3. Install Homebrew if needed, configure Homebrew in `~/.zprofile`, and install missing Homebrew bundle dependencies.
+4. Install missing zsh plugins outside shell startup.
+5. Link Homebrew OpenJDK for macOS tools when approved and not already linked.
+6. Install missing VS Code extensions from the Brewfile when VS Code is available.
 7. Import Terminal.app profiles and run the Python package installer.
 8. Ask whether to apply macOS defaults from `macos/settings.sh`.
 9. Install a LaunchAgent that blocks unmanaged installers in `~/Downloads` and `~/Desktop`.
@@ -36,9 +36,12 @@ The default setup is safe to rerun. It will:
 ./run/setup.sh --no-python    # skip the Python package installer
 ./run/setup.sh --no-jdk       # skip the system OpenJDK symlink
 ./run/setup.sh --no-installer-guard # skip unmanaged installer blocking
+./run/setup.sh --hard         # repair mode: overwrite/reapply managed setup
 ```
 
 Plain `./run/setup.sh` is the normal full setup. In interactive mode it asks before applying macOS defaults; pressing Enter accepts. `--yes` accepts that prompt automatically.
+
+Use `./run/setup.sh --hard` when a new-machine setup was interrupted or a managed config looks partially applied. Hard mode assumes yes, replaces managed dotfile links instead of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads managed LaunchAgents, forces VS Code extension installs, updates shell plugins, repairs Python packages, and reapplies custom icons. It is scoped to repo-managed setup surfaces; it is not a general disk wipe.
 
 ## Maintenance
 

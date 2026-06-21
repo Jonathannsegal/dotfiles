@@ -8,6 +8,7 @@ DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPT_PATH="${DOTFILES}/macos/installer-guard.sh"
 BLOCK_DIR="${HOME}/CleanupStaging/blocked-installers"
 LOG_FILE="${HOME}/Library/Logs/${LABEL}.log"
+HARD_SETUP="${DOTFILES_HARD_SETUP:-false}"
 
 usage() {
   cat <<EOF
@@ -83,9 +84,12 @@ scan_installers() {
 }
 
 install_agent() {
+  local tmp
+
   mkdir -p "$HOME/Library/LaunchAgents" "$(dirname "$LOG_FILE")"
 
-  cat > "$PLIST_PATH" <<EOF
+  tmp="$(mktemp)"
+  cat > "$tmp" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -120,6 +124,17 @@ install_agent() {
 </plist>
 EOF
 
+  if [[ "$HARD_SETUP" == false && -f "$PLIST_PATH" ]] && cmp -s "$tmp" "$PLIST_PATH" &&
+     launchctl print "gui/$(id -u)/${LABEL}" >/dev/null 2>&1; then
+    rm -f "$tmp"
+    echo "Already installed and started: ${LABEL}"
+    echo "Plist: ${PLIST_PATH}"
+    echo "Blocked installers: ${BLOCK_DIR}"
+    echo "Log: ${LOG_FILE}"
+    return 0
+  fi
+
+  mv "$tmp" "$PLIST_PATH"
   launchctl bootout "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true
   launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
   launchctl kickstart -k "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true

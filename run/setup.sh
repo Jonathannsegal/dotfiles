@@ -21,6 +21,7 @@ RUN_INSTALLER_GUARD=true
 INSTALL_ICON_AGENT=true
 ASSUME_YES=false
 BACKUP_EXISTING=true
+HARD_SETUP=false
 
 info() {
     printf "\r [ \033[00;34m..\033[0m ] %s\n" "$1"
@@ -63,6 +64,8 @@ Options:
   --no-installer-guard
                     Skip the LaunchAgent that blocks unmanaged installers.
   --no-backup       Replace conflicting dotfiles instead of backing them up.
+  --hard            Repair mode: overwrite managed dotfiles and re-run managed
+                    installers/configuration even when already present.
   -h, --help        Show this help.
 EOF
 }
@@ -84,11 +87,19 @@ while [[ $# -gt 0 ]]; do
         --no-jdk) RUN_JDK=false ;;
         --no-installer-guard) RUN_INSTALLER_GUARD=false ;;
         --no-backup) BACKUP_EXISTING=false ;;
+        --hard)
+            HARD_SETUP=true
+            ASSUME_YES=true
+            ASK_MACOS=false
+            BACKUP_EXISTING=false
+            ;;
         --help|-h) usage; exit 0 ;;
         *) fail "Unknown option: $1" ;;
     esac
     shift
 done
+
+export DOTFILES_HARD_SETUP="$HARD_SETUP"
 
 is_macos() {
     [[ "$(uname -s)" == "Darwin" ]]
@@ -150,7 +161,7 @@ link_file() {
     if [[ -L "$dst" ]]; then
         local current
         current="$(readlink "$dst")"
-        if [[ "$current" == "$src" ]]; then
+        if [[ "$current" == "$src" && "$HARD_SETUP" == false ]]; then
             success "Already linked $dst"
             return 0
         fi
@@ -214,8 +225,14 @@ create_env_file() {
                 }
             }
         ' "$HOME/.env.sh" > "$tmp"
-        mv "$tmp" "$HOME/.env.sh"
-        success "Updated ~/.env.sh"
+
+        if [[ "$HARD_SETUP" == false ]] && cmp -s "$tmp" "$HOME/.env.sh"; then
+            rm -f "$tmp"
+            success "~/.env.sh is already configured"
+        else
+            mv "$tmp" "$HOME/.env.sh"
+            success "Updated ~/.env.sh"
+        fi
         return 0
     fi
 
@@ -234,10 +251,54 @@ EOF
     success "Created ~/.env.sh"
 }
 
+configure_homebrew_shellenv() {
+    local brew_bin=""
+    local profile="$HOME/.zprofile"
+    local tmp
+    local block_start="# >>> dotfiles homebrew shellenv >>>"
+    local block_end="# <<< dotfiles homebrew shellenv <<<"
+
+    if [[ -x "/opt/homebrew/bin/brew" ]]; then
+        brew_bin="/opt/homebrew/bin/brew"
+    elif [[ -x "/usr/local/bin/brew" ]]; then
+        brew_bin="/usr/local/bin/brew"
+    else
+        return 0
+    fi
+
+    eval "$("$brew_bin" shellenv)"
+
+    tmp="$(mktemp)"
+    if [[ -f "$profile" ]]; then
+        awk -v start="$block_start" -v end="$block_end" '
+            $0 == start { skipping = 1; next }
+            $0 == end { skipping = 0; next }
+            $0 ~ /^eval "\$\(\/opt\/homebrew\/bin\/brew shellenv\)"$/ { next }
+            $0 ~ /^eval "\$\(\/usr\/local\/bin\/brew shellenv\)"$/ { next }
+            skipping != 1 { print }
+        ' "$profile" > "$tmp"
+    fi
+
+    {
+        echo "$block_start"
+        printf 'eval "$(%s shellenv)"\n' "$brew_bin"
+        echo "$block_end"
+    } >> "$tmp"
+
+    if [[ "$HARD_SETUP" == false && -f "$profile" ]] && cmp -s "$tmp" "$profile"; then
+        rm -f "$tmp"
+        success "Homebrew shellenv is already configured in ~/.zprofile"
+    else
+        mv "$tmp" "$profile"
+        success "Homebrew shellenv is configured in ~/.zprofile"
+    fi
+}
+
 ensure_homebrew() {
     export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
     if command -v brew >/dev/null 2>&1; then
+        configure_homebrew_shellenv
         success "Homebrew is installed"
         return 0
     fi
@@ -253,11 +314,7 @@ ensure_homebrew() {
     info "Installing Homebrew"
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-    if [[ -x "/opt/homebrew/bin/brew" ]]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -x "/usr/local/bin/brew" ]]; then
-        eval "$(/usr/local/bin/brew shellenv)"
-    fi
+    configure_homebrew_shellenv
 
     command -v brew >/dev/null 2>&1 || fail "Homebrew installation did not put brew on PATH"
     success "Homebrew installed"
@@ -272,9 +329,17 @@ install_brew_bundle() {
     ensure_homebrew
     [[ -f "$BREWFILE" ]] || fail "Missing Brewfile: $BREWFILE"
 
-    info "Installing/updating Homebrew bundle"
-    brew bundle --file="$BREWFILE"
-    success "Homebrew bundle is up to date"
+    if [[ "$HARD_SETUP" == false ]] && brew bundle check --file="$BREWFILE" >/dev/null 2>&1; then
+        success "Homebrew bundle is already satisfied"
+    else
+        if [[ "$HARD_SETUP" == true ]]; then
+            info "Running Homebrew bundle in repair mode"
+        else
+            info "Installing missing Homebrew bundle dependencies"
+        fi
+        brew bundle --file="$BREWFILE"
+        success "Homebrew bundle is up to date"
+    fi
 }
 
 setup_shell_plugins() {
@@ -286,18 +351,26 @@ setup_shell_plugins() {
     local plugin_dir="$HOME/.zsh/plugins"
     mkdir -p "$plugin_dir"
 
+    if [[ "$HARD_SETUP" == true && -e "$plugin_dir/zsh-syntax-highlighting" ]]; then
+        rm -rf "$plugin_dir/zsh-syntax-highlighting"
+    fi
     if [[ ! -d "$plugin_dir/zsh-syntax-highlighting/.git" ]]; then
+        rm -rf "$plugin_dir/zsh-syntax-highlighting"
         info "Installing zsh-syntax-highlighting"
         git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$plugin_dir/zsh-syntax-highlighting"
     else
-        git -C "$plugin_dir/zsh-syntax-highlighting" pull --ff-only >/dev/null 2>&1 || warn "Could not update zsh-syntax-highlighting"
+        success "zsh-syntax-highlighting is already installed"
     fi
 
+    if [[ "$HARD_SETUP" == true && -e "$plugin_dir/zsh-autosuggestions" ]]; then
+        rm -rf "$plugin_dir/zsh-autosuggestions"
+    fi
     if [[ ! -d "$plugin_dir/zsh-autosuggestions/.git" ]]; then
+        rm -rf "$plugin_dir/zsh-autosuggestions"
         info "Installing zsh-autosuggestions"
         git clone https://github.com/zsh-users/zsh-autosuggestions.git "$plugin_dir/zsh-autosuggestions"
     else
-        git -C "$plugin_dir/zsh-autosuggestions" pull --ff-only >/dev/null 2>&1 || warn "Could not update zsh-autosuggestions"
+        success "zsh-autosuggestions is already installed"
     fi
 
     success "Shell plugins are installed"
@@ -314,9 +387,13 @@ setup_jdk() {
     fi
 
     local target="/Library/Java/JavaVirtualMachines/openjdk.jdk"
-    if [[ -L "$target" && "$(readlink "$target")" == "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk" ]]; then
+    if [[ "$HARD_SETUP" == false && -L "$target" && "$(readlink "$target")" == "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk" ]]; then
         success "OpenJDK is linked"
         return 0
+    fi
+
+    if [[ "$HARD_SETUP" == true && -e "$target" && ! -L "$target" ]]; then
+        sudo rm -rf "$target"
     fi
 
     if confirm "Link Homebrew OpenJDK into /Library/Java/JavaVirtualMachines?"; then
@@ -334,7 +411,7 @@ setup_vscode() {
     }
 
     if [[ -x "$DOTFILES/vscode/install.sh" ]]; then
-        bash "$DOTFILES/vscode/install.sh"
+        DOTFILES_HARD_SETUP="$HARD_SETUP" bash "$DOTFILES/vscode/install.sh"
     else
         warn "VS Code installer not executable or missing"
     fi
@@ -351,10 +428,15 @@ setup_icons() {
         return 0
     fi
 
-    bash "$DOTFILES/macos/icons/setup.sh"
+    local icon_args=()
+    if [[ "$HARD_SETUP" == true ]]; then
+        icon_args+=(--force)
+    fi
+
+    bash "$DOTFILES/macos/icons/setup.sh" "${icon_args[@]}"
 
     if [[ "$INSTALL_ICON_AGENT" == true ]]; then
-        bash "$DOTFILES/macos/icons/install_auto_reapply.sh"
+        DOTFILES_HARD_SETUP="$HARD_SETUP" bash "$DOTFILES/macos/icons/install_auto_reapply.sh"
     fi
 }
 
@@ -369,7 +451,7 @@ setup_installer_guard() {
         return 0
     fi
 
-    bash "$DOTFILES/macos/installer-guard.sh" install
+    DOTFILES_HARD_SETUP="$HARD_SETUP" bash "$DOTFILES/macos/installer-guard.sh" install
     success "Installer guard configured"
 }
 
@@ -388,7 +470,7 @@ setup_terminal() {
 
 setup_python() {
     [[ "$RUN_PYTHON" == true ]] || return 0
-    bash "$DOTFILES/python/install.sh" --no-confirm
+    DOTFILES_HARD_SETUP="$HARD_SETUP" bash "$DOTFILES/python/install.sh" --no-confirm
 }
 
 setup_macos() {
@@ -403,7 +485,11 @@ setup_macos() {
         return 0
     fi
 
-    bash "$DOTFILES/macos/settings.sh"
+    if [[ "$HARD_SETUP" == false ]] && bash "$DOTFILES/run/standards.sh" settings >/dev/null 2>&1; then
+        success "macOS defaults already match"
+    else
+        bash "$DOTFILES/macos/settings.sh"
+    fi
 }
 
 main() {

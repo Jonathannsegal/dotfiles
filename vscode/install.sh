@@ -2,8 +2,9 @@
 
 set -euo pipefail
 
-DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 BREWFILE="$DOTFILES/brew/Brewfile"
+HARD_SETUP="${DOTFILES_HARD_SETUP:-false}"
 
 print_status() {
     printf "\r [ \033[00;34m..\033[0m ] %s\n" "$1"
@@ -44,10 +45,21 @@ fi
 
 print_status "Installing VS Code extensions from Brewfile"
 
+installed_extensions="$("$CODE_CMD" --list-extensions | sort)"
+
 while IFS= read -r extension; do
     [[ -n "$extension" ]] || continue
-    "$CODE_CMD" --install-extension "$extension" --force >/dev/null
-    print_success "Installed/updated $extension"
+    if [[ "$HARD_SETUP" == false ]] && printf "%s\n" "$installed_extensions" | grep -Fxq "$extension"; then
+        print_success "$extension is already installed"
+    else
+        install_args=(--install-extension "$extension")
+        if [[ "$HARD_SETUP" == true ]]; then
+            install_args+=(--force)
+        fi
+
+        "$CODE_CMD" "${install_args[@]}" >/dev/null
+        print_success "Installed $extension"
+    fi
 done < <(sed -n 's/^vscode "\([^"]*\)".*/\1/p' "$BREWFILE")
 
 print_success "VS Code extensions are up to date"

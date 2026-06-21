@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 
+hard_setup_enabled() {
+    [[ "${DOTFILES_HARD_SETUP:-false}" == true ]]
+}
+
 setup_terminal_profiles() {
+    if ! hard_setup_enabled &&
+       defaults read com.apple.Terminal "Window Settings" 2>/dev/null | grep -q '^[[:space:]]*Dark =' &&
+       defaults read com.apple.Terminal "Window Settings" 2>/dev/null | grep -q '^[[:space:]]*Light =' &&
+       [[ "$(defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null || true)" == "Dark" ]] &&
+       [[ "$(defaults read com.apple.Terminal "Startup Window Settings" 2>/dev/null || true)" == "Dark" ]]; then
+        echo "Terminal profiles are already configured"
+        return 0
+    fi
+
     echo "Installing Terminal profiles..."
 
     # Install new profiles
@@ -22,10 +35,12 @@ setup_terminal_profiles() {
 
 setup_theme_switcher() {
     local launch_agent="$HOME/Library/LaunchAgents/com.user.terminal-theme.plist"
+    local tmp
     mkdir -p "$(dirname "$launch_agent")"
 
     # Create LaunchAgent for theme switching
-    cat > "$launch_agent" << EOL
+    tmp="$(mktemp)"
+    cat > "$tmp" << EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -43,7 +58,16 @@ setup_theme_switcher() {
 </dict>
 </plist>
 EOL
-    # Load the LaunchAgent
-    launchctl unload "$launch_agent" 2>/dev/null || true
-    launchctl load "$launch_agent"
+
+    if ! hard_setup_enabled &&
+       [[ -f "$launch_agent" ]] && cmp -s "$tmp" "$launch_agent" &&
+       launchctl print "gui/$(id -u)/com.user.terminal-theme" >/dev/null 2>&1; then
+        rm -f "$tmp"
+        echo "Terminal theme switcher is already configured"
+        return 0
+    fi
+
+    mv "$tmp" "$launch_agent"
+    launchctl bootout "gui/$(id -u)/com.user.terminal-theme" >/dev/null 2>&1 || true
+    launchctl bootstrap "gui/$(id -u)" "$launch_agent"
 }
