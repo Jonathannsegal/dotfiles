@@ -60,14 +60,10 @@ brew "xxh"
 brew "zoxide"
 # Collection of apps and services for photography, design, video, web, and UX
 cask "adobe-creative-cloud"
-# Agent orchestration platform
-cask "antigravity"
 # 3D creation suite
 cask "blender"
 # Client for the Box cloud storage service
 cask "box-drive"
-# Write, edit, and chat about your code with AI
-cask "cursor"
 # Voice and text chat software
 cask "discord"
 cask "font-lexend"

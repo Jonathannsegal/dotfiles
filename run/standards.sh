@@ -8,6 +8,44 @@ LAUNCH_CONFIG="$DOTFILES/macos/launchagents.tsv"
 HOME_DIR="$HOME"
 DEV_DIR="$HOME/Developer"
 VIOLATIONS=0
+SUDO_KEEPALIVE_PID=""
+
+stop_sudo_keepalive() {
+  if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then
+    kill "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1 || true
+  fi
+}
+
+trap stop_sudo_keepalive EXIT
+
+ensure_sudo_keepalive() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    return 0
+  fi
+
+  command -v sudo >/dev/null 2>&1 || {
+    echo "sudo is required for this privileged operation." >&2
+    exit 1
+  }
+
+  if [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill -0 "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if sudo -n true >/dev/null 2>&1; then
+    :
+  else
+    echo "Requesting administrator password once..."
+    sudo -v
+  fi
+
+  while true; do
+    sudo -n true >/dev/null 2>&1 || exit
+    sleep 60
+    kill -0 "$$" >/dev/null 2>&1 || exit
+  done 2>/dev/null &
+  SUDO_KEEPALIVE_PID="$!"
+}
 
 usage() {
   cat <<EOF
@@ -605,6 +643,7 @@ disable_launch_item() {
       launchctl disable "gui/$(id -u)/$label" >/dev/null 2>&1 || true
       ;;
     system-agent|system-daemon)
+      ensure_sudo_keepalive
       sudo launchctl bootout system "$plist" >/dev/null 2>&1 || true
       sudo launchctl disable "system/$label" >/dev/null 2>&1 || true
       ;;
@@ -809,18 +848,11 @@ run_or_print() {
   fi
 }
 
-applescript_quote() {
-  local value="$1"
-  value="${value//\\/\\\\}"
-  value="${value//\"/\\\"}"
-  printf '"%s"' "$value"
-}
-
 remove_paths() {
   local dry_run="$1"
   shift
   local existing=()
-  local path command quoted_command
+  local path
 
   for path in "$@"; do
     [[ -e "$path" || -L "$path" ]] && existing+=("$path")
@@ -838,17 +870,8 @@ remove_paths() {
     return 0
   fi
 
-  if sudo -n true >/dev/null 2>&1; then
-    sudo rm -rf "${existing[@]}"
-    return 0
-  fi
-
-  command="/bin/rm -rf"
-  for path in "${existing[@]}"; do
-    command+=" $(printf "%q" "$path")"
-  done
-  quoted_command="$(applescript_quote "$command")"
-  osascript -e "do shell script $quoted_command with administrator privileges"
+  ensure_sudo_keepalive
+  sudo rm -rf "${existing[@]}"
 }
 
 purge_unwanted() {
@@ -858,6 +881,10 @@ purge_unwanted() {
   local path
 
   echo "Removing unmanaged Homebrew casks/formulae if present"
+  if [[ "$dry_run" == false ]]; then
+    ensure_sudo_keepalive
+  fi
+
   if command -v brew >/dev/null 2>&1; then
     run_or_print "$dry_run" brew uninstall --force --zap --cask maxon logi-options+ docker docker-desktop steam || true
     run_or_print "$dry_run" brew uninstall --force watchman edencommon fb303 fbthrift fizz folly wangle || true

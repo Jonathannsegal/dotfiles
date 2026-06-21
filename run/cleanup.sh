@@ -2,12 +2,48 @@
 
 set -euo pipefail
 
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+BREWFILE="${DOTFILES}/brew/Brewfile"
+APP_ALLOWLIST="${DOTFILES}/macos/app-allowlist.txt"
 HOME_DIR="${HOME}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 STAGING_ROOT="${HOME_DIR}/CleanupStaging"
 MODE="staging"
 APPLY=false
 INCLUDE="all"
+SUDO_KEEPALIVE_PID=""
+
+stop_sudo_keepalive() {
+  if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then
+    kill "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1 || true
+  fi
+}
+
+trap stop_sudo_keepalive EXIT
+
+ensure_sudo_keepalive() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    return 0
+  fi
+
+  command -v sudo >/dev/null 2>&1 || die "sudo is required for privileged cleanup"
+
+  if [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill -0 "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! sudo -n true >/dev/null 2>&1; then
+    echo "Requesting administrator password once for cleanup..."
+    sudo -v
+  fi
+
+  while true; do
+    sudo -n true >/dev/null 2>&1 || exit
+    sleep 60
+    kill -0 "$$" >/dev/null 2>&1 || exit
+  done 2>/dev/null &
+  SUDO_KEEPALIVE_PID="$!"
+}
 
 usage() {
   cat <<EOF
@@ -17,6 +53,7 @@ Commands:
   audit            Read-only storage overview.
   targets          List reversible cleanup target groups.
   move             Dry-run or move selected cleanup targets.
+  apps             Dry-run or remove unmanaged installed apps.
   reports          Generate duplicate/app/media review reports.
   lint-personal    Run Johnny.Decimal lint for ~/Personal.
 
@@ -28,13 +65,15 @@ Move options:
   --include LIST    Comma-separated groups. Default: all.
 
 Groups:
-  podcasts, macwhisper, chrome, app-caches, dev-caches
+  podcasts, macwhisper, chrome, app-caches, dev-caches, apps
 
 Examples:
   $(basename "$0") audit
   $(basename "$0") targets
   $(basename "$0") move --dry-run --include chrome,dev-caches
   $(basename "$0") move --apply --mode staging --include podcasts
+  $(basename "$0") apps --dry-run
+  $(basename "$0") apps --apply --mode staging
   $(basename "$0") reports
   $(basename "$0") lint-personal
 EOF
@@ -78,6 +117,10 @@ list_targets() {
     }
     { sub("^" ENVIRON["HOME"], "~", $2); print "  " $2 }
   '
+  echo
+  echo "apps:"
+  echo "  unmanaged app bundles in /Applications and ~/Applications"
+  echo "  source of truth: brew/Brewfile, MAS entries, macos/app-allowlist.txt"
 }
 
 contains_group() {
@@ -87,6 +130,122 @@ contains_group() {
 
 target_size() {
   du -sh "$1" 2>/dev/null | awk '{print $1}'
+}
+
+require_app_metadata_tools() {
+  [[ -f "$BREWFILE" ]] || die "missing Brewfile: $BREWFILE"
+  command -v brew >/dev/null 2>&1 || die "Homebrew is required for app cleanup metadata"
+  command -v jq >/dev/null 2>&1 || die "jq is required for app cleanup metadata"
+}
+
+brewfile_casks() {
+  sed -n 's/^cask "\([^"]*\)".*/\1/p' "$BREWFILE" | sort
+}
+
+brewfile_mas_names() {
+  sed -n 's/^mas "\([^"]*\)".*/\1/p' "$BREWFILE" | sort
+}
+
+installed_casks() {
+  brew list --cask --full-name 2>/dev/null |
+    sed 's#^.*/##' |
+    sort || true
+}
+
+managed_cask_app_names() {
+  local casks
+  casks="$(brewfile_casks | tr '\n' ' ')"
+  [[ -n "${casks// }" ]] || return 0
+
+  brew info --cask --json=v2 $casks 2>/dev/null |
+    jq -r '
+      .casks[].artifacts[]? |
+      select(type == "object" and has("app")) |
+      .app as $app |
+      if ($app | type) == "array" then
+        ($app[1].target? // $app[0])
+      else
+        $app
+      end |
+      split("/")[-1] |
+      sub("\\.app$"; "")
+    ' |
+    sort -u
+}
+
+managed_app_names() {
+  {
+    managed_cask_app_names
+    brewfile_mas_names
+  } | sort -u
+}
+
+app_allowlist_patterns() {
+  [[ -f "$APP_ALLOWLIST" ]] || return 0
+  sed -e 's/[[:space:]]*#.*$//' -e '/^[[:space:]]*$/d' "$APP_ALLOWLIST"
+}
+
+relative_app_path() {
+  local app_path="$1"
+
+  case "$app_path" in
+    /Applications/*) printf "%s" "${app_path#/Applications/}" ;;
+    "$HOME_DIR"/Applications/*) printf "%s" "${app_path#"$HOME_DIR/Applications/"}" ;;
+    *) printf "%s" "$app_path" ;;
+  esac
+}
+
+is_allowlisted_app() {
+  local app_path="$1"
+  local expected_names="$2"
+  local app_name rel pattern
+
+  app_name="$(basename "$app_path" .app)"
+  rel="$(relative_app_path "$app_path")"
+
+  if grep -Fxq "$app_name" "$expected_names"; then
+    return 0
+  fi
+
+  while IFS= read -r pattern; do
+    [[ "$app_name" == $pattern || "$rel" == $pattern || "${rel%.app}" == $pattern ]] && return 0
+  done < <(app_allowlist_patterns)
+
+  return 1
+}
+
+installed_app_paths() {
+  find /Applications "$HOME_DIR/Applications" -maxdepth 2 -name "*.app" -type d 2>/dev/null |
+    sed 's#/$##' |
+    sort -f
+}
+
+unmanaged_app_paths() {
+  local expected_names app_path
+
+  expected_names="$(mktemp)"
+  managed_app_names > "$expected_names"
+
+  while IFS= read -r app_path; do
+    if ! is_allowlisted_app "$app_path" "$expected_names"; then
+      printf "%s\n" "$app_path"
+    fi
+  done < <(installed_app_paths)
+
+  rm -f "$expected_names"
+}
+
+unmanaged_casks() {
+  local installed expected
+
+  installed="$(mktemp)"
+  expected="$(mktemp)"
+
+  installed_casks > "$installed"
+  brewfile_casks > "$expected"
+  comm -23 "$installed" "$expected" || true
+
+  rm -f "$installed" "$expected"
 }
 
 audit_storage() {
@@ -119,6 +278,13 @@ audit_storage() {
     kb="$(du -sk "$app" 2>/dev/null | awk '{print $1}')"
     [[ -n "$kb" ]] && printf "%s\t%s\n" "$kb" "$app"
   done | sort -nr | head -n 50 | awk -F '\t' '{printf "%.2f GiB\t%s\n", $1/1024/1024, $2}'
+
+  section "Unmanaged Applications"
+  if command -v brew >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && [[ -f "$BREWFILE" ]]; then
+    unmanaged_app_paths | sed "s#^$HOME_DIR#~#" || true
+  else
+    echo "Skipped: Homebrew, jq, and brew/Brewfile are required."
+  fi
 }
 
 parse_move_args() {
@@ -151,8 +317,123 @@ move_target() {
   local dest="${dest_root}${src}"
 
   mkdir -p "$(dirname "$dest")"
-  mv "$src" "$dest"
+  if ! mv "$src" "$dest" 2>/dev/null; then
+    ensure_sudo_keepalive
+    sudo mkdir -p "$(dirname "$dest")"
+    sudo mv "$src" "$dest"
+    sudo chown -R "$(id -u):$(id -g)" "$dest" 2>/dev/null || true
+  fi
   echo "moved: $src -> $dest"
+}
+
+parse_apply_mode_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --dry-run) APPLY=false ;;
+      --apply) APPLY=true ;;
+      --mode)
+        shift
+        MODE="${1:-}"
+        [[ "$MODE" == "staging" || "$MODE" == "trash" ]] || die "invalid --mode: $MODE"
+        ;;
+      --help|-h)
+        usage
+        exit 0
+        ;;
+      *) die "unknown option: $1" ;;
+    esac
+    shift
+  done
+}
+
+cleanup_apps() {
+  local apply="$1"
+  local mode="$2"
+  local report_file="${3:-}"
+  local show_apply_hint="${4:-true}"
+  local dest_root unmanaged cask app size had_any=false
+
+  require_app_metadata_tools
+
+  if [[ "$mode" == "trash" ]]; then
+    dest_root="${HOME_DIR}/.Trash/unmanaged_apps_${TIMESTAMP}"
+  else
+    dest_root="${STAGING_ROOT}/unmanaged_apps_${TIMESTAMP}"
+  fi
+
+  section "Unmanaged Homebrew Casks"
+  unmanaged="$(unmanaged_casks)"
+  if [[ -z "$unmanaged" ]]; then
+    echo "No unmanaged Homebrew casks."
+  else
+    had_any=true
+    if [[ "$apply" == true ]]; then
+      ensure_sudo_keepalive
+    fi
+
+    while IFS= read -r cask; do
+      [[ -n "$cask" ]] || continue
+      if [[ "$apply" == true ]]; then
+        echo "uninstalling cask: $cask"
+        brew uninstall --force --zap --cask "$cask" || true
+        [[ -n "$report_file" ]] && echo "uninstalled cask: $cask" >> "$report_file"
+      else
+        echo "Would uninstall cask: $cask"
+        [[ -n "$report_file" ]] && echo "Would uninstall cask: $cask" >> "$report_file"
+      fi
+    done <<< "$unmanaged"
+  fi
+
+  section "Unmanaged Application Bundles"
+  unmanaged="$(unmanaged_app_paths)"
+  if [[ -z "$unmanaged" ]]; then
+    echo "No unmanaged app bundles."
+  else
+    had_any=true
+    if [[ "$apply" == true ]]; then
+      echo "Moving unmanaged apps to: $dest_root"
+      mkdir -p "$dest_root"
+    fi
+
+    while IFS= read -r app; do
+      [[ -n "$app" ]] || continue
+      size="$(target_size "$app")"
+      if [[ "$apply" == true ]]; then
+        move_target "$app" "$dest_root" | tee -a "${report_file:-/dev/null}"
+      else
+        echo "Would move: ${size:-unknown}  $app -> $dest_root$app"
+        [[ -n "$report_file" ]] && echo "Would move: ${size:-unknown}  $app -> $dest_root$app" >> "$report_file"
+      fi
+    done <<< "$unmanaged"
+  fi
+
+  if [[ "$had_any" == false ]]; then
+    echo "Installed apps match the managed lists."
+  elif [[ "$apply" != true && "$show_apply_hint" == true ]]; then
+    echo
+    echo "Dry-run only. No apps were removed."
+    echo "To apply: $(basename "$0") apps --apply --mode $mode"
+  fi
+}
+
+cleanup_apps_command() {
+  parse_apply_mode_args "$@"
+
+  local report_file
+  mkdir -p "$STAGING_ROOT"
+  report_file="${STAGING_ROOT}/unmanaged_apps_report_${TIMESTAMP}.txt"
+  {
+    echo "app cleanup run: $TIMESTAMP"
+    echo "apply: $APPLY"
+    echo "mode: $MODE"
+    echo "source of truth:"
+    echo "  $BREWFILE"
+    echo "  $APP_ALLOWLIST"
+    echo
+  } > "$report_file"
+
+  cleanup_apps "$APPLY" "$MODE" "$report_file"
+  echo "Report: $report_file"
 }
 
 move_cleanup_targets() {
@@ -192,9 +473,19 @@ move_cleanup_targets() {
     fi
   done < <(target_table)
 
+  if contains_group apps; then
+    selected_count=$((selected_count + 1))
+    echo "  dynamic  unmanaged app bundles"
+    echo "dynamic  unmanaged app bundles" >> "$report_file"
+  fi
+
   [[ "$selected_count" -gt 0 ]] || die "no targets selected"
 
   if [[ "$APPLY" != true ]]; then
+    if contains_group apps; then
+      cleanup_apps false "$MODE" "$report_file" false
+    fi
+
     echo
     echo "Dry-run only. No files were moved."
     echo "To apply: $(basename "$0") move --apply --mode $MODE --include $INCLUDE"
@@ -209,6 +500,10 @@ move_cleanup_targets() {
     [[ -e "$path" ]] || continue
     move_target "$path" "$dest_root" | tee -a "$report_file"
   done < <(target_table)
+
+  if contains_group apps; then
+    cleanup_apps true "$MODE" "$report_file" false
+  fi
 
   echo
   echo "Move complete."
@@ -298,6 +593,7 @@ main() {
     audit) audit_storage "$@" ;;
     targets) list_targets ;;
     move) move_cleanup_targets "$@" ;;
+    apps) cleanup_apps_command "$@" ;;
     reports) generate_reports "$@" ;;
     lint-personal) lint_personal "$@" ;;
     --help|-h|help) usage ;;

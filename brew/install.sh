@@ -5,8 +5,44 @@ set -euo pipefail
 DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 BREWFILE="$DOTFILES/brew/Brewfile"
 HARD_SETUP="${DOTFILES_HARD_SETUP:-false}"
+SUDO_KEEPALIVE_PID=""
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+stop_sudo_keepalive() {
+    if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then
+        kill "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1 || true
+    fi
+}
+
+trap stop_sudo_keepalive EXIT
+
+ensure_sudo_keepalive() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        return 0
+    fi
+
+    command -v sudo >/dev/null 2>&1 || {
+        echo "sudo is required for privileged Homebrew setup."
+        exit 1
+    }
+
+    if [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill -0 "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if ! sudo -n true >/dev/null 2>&1; then
+        echo "Requesting administrator password once for Homebrew setup..."
+        sudo -v
+    fi
+
+    while true; do
+        sudo -n true >/dev/null 2>&1 || exit
+        sleep 60
+        kill -0 "$$" >/dev/null 2>&1 || exit
+    done 2>/dev/null &
+    SUDO_KEEPALIVE_PID="$!"
+}
 
 configure_homebrew_shellenv() {
     local brew_bin=""
@@ -59,6 +95,7 @@ if ! command -v brew >/dev/null 2>&1; then
         echo "This Mac is not reporting Apple Silicon arm64. Rosetta will not be installed by this script."
     fi
 
+    ensure_sudo_keepalive
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
@@ -72,5 +109,6 @@ command -v brew >/dev/null 2>&1 || {
 if [[ "$HARD_SETUP" == false ]] && brew bundle check --file="$BREWFILE" >/dev/null 2>&1; then
     echo "Homebrew bundle is already satisfied."
 else
+    ensure_sudo_keepalive
     brew bundle --file="$BREWFILE"
 fi

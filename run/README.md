@@ -20,6 +20,10 @@ Plain `./run/setup.sh` is the full setup path. In interactive mode it asks
 before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
 `--yes` applies those defaults without prompting.
 
+When setup reaches a privileged step, it asks for the administrator password
+once and keeps that sudo session alive until setup exits. A fully satisfied
+rerun can skip privileged work and avoid a password prompt.
+
 Use `--hard` as the repair path when a setup was interrupted or a managed config
 looks partially applied. It assumes yes, replaces managed dotfile links instead
 of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads
@@ -52,7 +56,7 @@ Subcommands:
 - `launchagents apply`: disable entries marked `disable`.
 - `purge-unwanted --dry-run`: preview removal of banned app families.
 - `purge-unwanted`: remove banned app families and helpers. This may ask for an
-  administrator password.
+  administrator password once, then keep sudo alive for the purge.
 
 The banned app families are Maxon, Logitech Options, Docker Desktop, Steam, and
 Watchman.
@@ -66,10 +70,19 @@ Subcommands:
 
 - `audit`: read-only storage overview.
 - `targets`: list cleanup target groups.
+- `apps --dry-run`: preview Homebrew casks and visible `.app` bundles not on
+  the managed app lists.
+- `apps --apply`: uninstall unmanaged Homebrew casks and move unmanaged app
+  bundles to `~/CleanupStaging`.
 - `move --dry-run`: preview cleanup moves.
 - `move --apply`: move selected cleanup targets.
 - `reports`: generate duplicate/app/media review reports.
 - `lint-personal`: lint `~/Personal` organization.
+
+The managed app lists are `brew/Brewfile`, MAS entries in that Brewfile, and
+`macos/app-allowlist.txt` for package-installed apps whose bundles are not
+reported by Homebrew cask metadata. The `apps` group is included by
+`move --include all`.
 
 ### `export-messages-attachments.sh`
 

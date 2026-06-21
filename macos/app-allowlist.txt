@@ -1,0 +1,13 @@
+# App bundles allowed outside direct Homebrew cask/MAS app metadata.
+# Prefer Brewfile casks or MAS entries. Use this only for package/installer
+# casks whose visible apps are not exposed in `brew info --cask --json=v2`.
+
+Adobe Illustrator */Adobe Illustrator.app
+Adobe Lightroom Classic/Adobe Lightroom Classic.app
+Adobe Photoshop */Adobe Photoshop *.app
+Box.app
+Google Drive.app
+Microsoft PowerPoint.app
+Microsoft Teams.app
+Tailscale.app
+zoom.us.app

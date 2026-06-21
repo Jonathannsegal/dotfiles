@@ -41,6 +41,8 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 
 Plain `./run/setup.sh` is the normal full setup. In interactive mode it asks before applying macOS defaults; pressing Enter accepts. `--yes` accepts that prompt automatically.
 
+When setup reaches a privileged step, it asks for the administrator password once and keeps that sudo session alive until setup exits. A fully satisfied rerun can skip privileged work and avoid a password prompt.
+
 Use `./run/setup.sh --hard` when a new-machine setup was interrupted or a managed config looks partially applied. Hard mode assumes yes, replaces managed dotfile links instead of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads managed LaunchAgents, forces VS Code extension installs, updates shell plugins, repairs Python packages, and reapplies custom icons. It is scoped to repo-managed setup surfaces; it is not a general disk wipe.
 
 ## Maintenance
@@ -50,6 +52,7 @@ See `run/README.md` for the full script map. The common commands are:
 ```bash
 ./run/cleanup.sh audit
 ./run/cleanup.sh targets
+./run/cleanup.sh apps --dry-run
 ./run/cleanup.sh move --dry-run --include chrome,dev-caches
 ./run/cleanup.sh reports
 ./run/cleanup.sh lint-personal
@@ -62,7 +65,7 @@ See `run/README.md` for the full script map. The common commands are:
 ./run/standards.sh purge-unwanted --dry-run
 ```
 
-Cleanup moves are reversible by default when run with `--mode staging`; files are moved under `~/CleanupStaging` instead of deleted.
+Cleanup moves are reversible by default when run with `--mode staging`; files are moved under `~/CleanupStaging` instead of deleted. `./run/cleanup.sh apps --apply` uninstalls Homebrew casks that are not in `brew/Brewfile` and moves visible app bundles that are not represented by `brew/Brewfile`, MAS entries, or `macos/app-allowlist.txt`.
 
 Dock items are managed in `macos/dock-items.txt`. Startup/background items are audited against `macos/launchagents.tsv`; only entries marked `disable` are changed by `./run/standards.sh launchagents apply`.
 
@@ -74,7 +77,7 @@ Dock items are managed in `macos/dock-items.txt`. Startup/background items are a
 
 This repo is the source of truth for the machine. The standard is intentionally strict:
 
-- Install apps, CLIs, npm globals, and VS Code extensions only through `brew/Brewfile`.
+- Install apps, CLIs, npm globals, and VS Code extensions only through `brew/Brewfile`, MAS entries, or `macos/app-allowlist.txt` for package-installed apps that Homebrew cannot expose as `.app` metadata.
 - Do not run downloaded `.dmg`, `.pkg`, `.mpkg`, or `.app` installers directly. The installer guard moves them to `~/CleanupStaging/blocked-installers` and tells you to install via Homebrew.
 - Keep active code in `~/Developer`; interactive `git clone <url>` is wrapped to clone there by default.
 - Keep personal files in `~/Personal`, school/research files in `~/School`, photos/Lightroom in `~/Pictures`, screenshots and temporary downloads in `~/Downloads`, and Zotero data in `~/Zotero`.

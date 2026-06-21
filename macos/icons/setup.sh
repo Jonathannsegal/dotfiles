@@ -9,6 +9,42 @@ SKIP_PRIVILEGED=false
 CLEAR_CACHE=true
 APPLIED_ANY=false
 FORCE_ICON_APPLY=false
+SUDO_KEEPALIVE_PID=""
+
+stop_sudo_keepalive() {
+    if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then
+        kill "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1 || true
+    fi
+}
+
+trap stop_sudo_keepalive EXIT
+
+ensure_sudo_keepalive() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        return 0
+    fi
+
+    command -v sudo >/dev/null 2>&1 || {
+        echo "sudo is required for privileged icon setup"
+        exit 1
+    }
+
+    if [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill -0 "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if ! sudo -n true >/dev/null 2>&1; then
+        echo "Requesting administrator password once for icon setup..."
+        sudo -v
+    fi
+
+    while true; do
+        sudo -n true >/dev/null 2>&1 || exit
+        sleep 60
+        kill -0 "$$" >/dev/null 2>&1 || exit
+    done 2>/dev/null &
+    SUDO_KEEPALIVE_PID="$!"
+}
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -82,6 +118,7 @@ apply_icon() {
             if [[ "$SKIP_PRIVILEGED" == true ]]; then
                 echo "Skipping privileged app in auto mode: $app_path"
             else
+                ensure_sudo_keepalive
                 sudo fileicon set "$app_path" "$icon_path"
                 APPLIED_ANY=true
             fi
@@ -141,6 +178,7 @@ apply_first_found "$ICONS_DIR/facetime.png" "/System/Applications/FaceTime.app" 
 if [[ "$CLEAR_CACHE" == true && "$APPLIED_ANY" == true ]]; then
     # Clear icon cache with sudo
     echo "Clearing icon cache..."
+    ensure_sudo_keepalive
     sudo rm -rf /Library/Caches/com.apple.iconservices.store
     sudo find /private/var/folders/ \
         -name com.apple.iconservices -exec sudo rm -rf {} \; 2>/dev/null

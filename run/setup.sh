@@ -22,6 +22,7 @@ INSTALL_ICON_AGENT=true
 ASSUME_YES=false
 BACKUP_EXISTING=true
 HARD_SETUP=false
+SUDO_KEEPALIVE_PID=""
 
 info() {
     printf "\r [ \033[00;34m..\033[0m ] %s\n" "$1"
@@ -100,6 +101,41 @@ while [[ $# -gt 0 ]]; do
 done
 
 export DOTFILES_HARD_SETUP="$HARD_SETUP"
+
+stop_sudo_keepalive() {
+    if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then
+        kill "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1 || true
+    fi
+}
+
+trap stop_sudo_keepalive EXIT
+
+ensure_sudo_keepalive() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        return 0
+    fi
+
+    command -v sudo >/dev/null 2>&1 || fail "sudo is required for this privileged setup step"
+
+    if [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill -0 "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if sudo -n true >/dev/null 2>&1; then
+        success "Administrator credentials are already cached"
+    else
+        info "Requesting administrator password once for setup"
+        sudo -v || fail "Administrator authentication failed"
+        success "Administrator credentials cached"
+    fi
+
+    while true; do
+        sudo -n true >/dev/null 2>&1 || exit
+        sleep 60
+        kill -0 "$$" >/dev/null 2>&1 || exit
+    done 2>/dev/null &
+    SUDO_KEEPALIVE_PID="$!"
+}
 
 is_macos() {
     [[ "$(uname -s)" == "Darwin" ]]
@@ -312,6 +348,7 @@ ensure_homebrew() {
     fi
 
     info "Installing Homebrew"
+    ensure_sudo_keepalive
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
     configure_homebrew_shellenv
@@ -336,6 +373,9 @@ install_brew_bundle() {
             info "Running Homebrew bundle in repair mode"
         else
             info "Installing missing Homebrew bundle dependencies"
+        fi
+        if is_macos; then
+            ensure_sudo_keepalive
         fi
         brew bundle --file="$BREWFILE"
         success "Homebrew bundle is up to date"
@@ -393,10 +433,12 @@ setup_jdk() {
     fi
 
     if [[ "$HARD_SETUP" == true && -e "$target" && ! -L "$target" ]]; then
+        ensure_sudo_keepalive
         sudo rm -rf "$target"
     fi
 
     if confirm "Link Homebrew OpenJDK into /Library/Java/JavaVirtualMachines?"; then
+        ensure_sudo_keepalive
         sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk "$target"
         success "OpenJDK linked"
     else
@@ -488,6 +530,7 @@ setup_macos() {
     if [[ "$HARD_SETUP" == false ]] && bash "$DOTFILES/run/standards.sh" settings >/dev/null 2>&1; then
         success "macOS defaults already match"
     else
+        ensure_sudo_keepalive
         bash "$DOTFILES/macos/settings.sh"
     fi
 }
