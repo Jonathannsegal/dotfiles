@@ -5,6 +5,7 @@ set -euo pipefail
 DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 BREWFILE="${DOTFILES}/brew/Brewfile"
 APP_ALLOWLIST="${DOTFILES}/macos/app-allowlist.txt"
+REMOVABLE_APPLE_APPS="${DOTFILES}/macos/removable-apple-apps.txt"
 HOME_DIR="${HOME}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 STAGING_ROOT="${HOME_DIR}/CleanupStaging"
@@ -120,6 +121,7 @@ list_targets() {
   echo
   echo "apps:"
   echo "  unmanaged app bundles in /Applications and ~/Applications"
+  echo "  removable Apple apps from macos/removable-apple-apps.txt"
   echo "  source of truth: brew/Brewfile, MAS entries, macos/app-allowlist.txt"
 }
 
@@ -220,6 +222,19 @@ installed_app_paths() {
     sort -f
 }
 
+removable_apple_app_paths() {
+  [[ -f "$REMOVABLE_APPLE_APPS" ]] || return 0
+
+  local app_name app_path
+  while IFS= read -r app_name; do
+    [[ -n "$app_name" ]] || continue
+
+    for app_path in "/Applications/$app_name" "/System/Applications/$app_name"; do
+      [[ -d "$app_path" ]] && printf "%s\n" "$app_path"
+    done
+  done < <(sed -e 's/[[:space:]]*#.*$//' -e '/^[[:space:]]*$/d' "$REMOVABLE_APPLE_APPS")
+}
+
 unmanaged_app_paths() {
   local expected_names app_path
 
@@ -231,6 +246,12 @@ unmanaged_app_paths() {
       printf "%s\n" "$app_path"
     fi
   done < <(installed_app_paths)
+
+  while IFS= read -r app_path; do
+    if ! is_allowlisted_app "$app_path" "$expected_names"; then
+      printf "%s\n" "$app_path"
+    fi
+  done < <(removable_apple_app_paths)
 
   rm -f "$expected_names"
 }
@@ -326,6 +347,19 @@ move_target() {
   echo "moved: $src -> $dest"
 }
 
+remove_system_app() {
+  local app="$1"
+
+  ensure_sudo_keepalive
+  if sudo rm -rf "$app"; then
+    echo "removed: $app"
+    return 0
+  fi
+
+  echo "warning: macOS protected this app and it could not be removed: $app" >&2
+  return 0
+}
+
 parse_apply_mode_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -399,10 +433,19 @@ cleanup_apps() {
       [[ -n "$app" ]] || continue
       size="$(target_size "$app")"
       if [[ "$apply" == true ]]; then
-        move_target "$app" "$dest_root" | tee -a "${report_file:-/dev/null}"
+        if [[ "$app" == /System/Applications/* ]]; then
+          remove_system_app "$app" | tee -a "${report_file:-/dev/null}"
+        else
+          move_target "$app" "$dest_root" | tee -a "${report_file:-/dev/null}"
+        fi
       else
-        echo "Would move: ${size:-unknown}  $app -> $dest_root$app"
-        [[ -n "$report_file" ]] && echo "Would move: ${size:-unknown}  $app -> $dest_root$app" >> "$report_file"
+        if [[ "$app" == /System/Applications/* ]]; then
+          echo "Would remove: ${size:-unknown}  $app"
+          [[ -n "$report_file" ]] && echo "Would remove: ${size:-unknown}  $app" >> "$report_file"
+        else
+          echo "Would move: ${size:-unknown}  $app -> $dest_root$app"
+          [[ -n "$report_file" ]] && echo "Would move: ${size:-unknown}  $app -> $dest_root$app" >> "$report_file"
+        fi
       fi
     done <<< "$unmanaged"
   fi
@@ -429,6 +472,7 @@ cleanup_apps_command() {
     echo "source of truth:"
     echo "  $BREWFILE"
     echo "  $APP_ALLOWLIST"
+    echo "  $REMOVABLE_APPLE_APPS"
     echo
   } > "$report_file"
 

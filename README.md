@@ -65,7 +65,7 @@ See `run/README.md` for the full script map. The common commands are:
 ./run/standards.sh purge-unwanted --dry-run
 ```
 
-Cleanup moves are reversible by default when run with `--mode staging`; files are moved under `~/CleanupStaging` instead of deleted. `./run/cleanup.sh apps --apply` uninstalls Homebrew casks that are not in `brew/Brewfile` and moves visible app bundles that are not represented by `brew/Brewfile`, MAS entries, or `macos/app-allowlist.txt`.
+Cleanup moves are reversible by default when run with `--mode staging`; files are moved under `~/CleanupStaging` instead of deleted. `./run/cleanup.sh apps --apply` uninstalls Homebrew casks that are not in `brew/Brewfile`, moves visible app bundles that are not represented by `brew/Brewfile`, MAS entries, or `macos/app-allowlist.txt`, and removes removable Apple apps listed in `macos/removable-apple-apps.txt` when macOS allows it.
 
 Dock items are managed in `macos/dock-items.txt`. Startup/background items are audited against `macos/launchagents.tsv`; only entries marked `disable` are changed by `./run/standards.sh launchagents apply`.
 

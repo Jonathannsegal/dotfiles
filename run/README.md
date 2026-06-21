@@ -81,8 +81,9 @@ Subcommands:
 
 The managed app lists are `brew/Brewfile`, MAS entries in that Brewfile, and
 `macos/app-allowlist.txt` for package-installed apps whose bundles are not
-reported by Homebrew cask metadata. The `apps` group is included by
-`move --include all`.
+reported by Homebrew cask metadata. Removable Apple apps such as iMovie,
+Numbers, Pages, and Freeform are listed in `macos/removable-apple-apps.txt`.
+The `apps` group is included by `move --include all`.
 
 ### `export-messages-attachments.sh`
 

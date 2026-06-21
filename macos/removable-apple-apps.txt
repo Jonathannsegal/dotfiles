@@ -1,0 +1,7 @@
+# Apple apps to remove when present unless they are intentionally added to the
+# managed MAS list in brew/Brewfile.
+
+iMovie.app
+Numbers.app
+Pages.app
+Freeform.app
