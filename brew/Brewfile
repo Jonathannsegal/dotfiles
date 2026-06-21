@@ -66,11 +66,11 @@ cask "adobe-creative-cloud"
 cask "blender"
 # Client for the Box cloud storage service
 cask "box-drive"
+# Clipboard optimizer for images, videos, and PDFs
+cask "clop"
 # Voice and text chat software
 cask "discord"
 cask "font-lexend"
-# Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
 # Cross-platform Git credential storage for multiple hosting providers
 cask "git-credential-manager"
 # Web browser
@@ -91,6 +91,8 @@ cask "microsoft-teams"
 cask "slack"
 # Mesh VPN based on WireGuard
 cask "tailscale-app"
+# Archive extraction utility
+cask "the-unarchiver"
 # Management tool for Unity
 cask "unity-hub"
 # Open-source code editor
@@ -102,7 +104,6 @@ cask "zotero"
 mas "Developer", id: 640199958
 mas "WhatsApp", id: 310633997
 mas "Whisper Transcription", id: 1668083311
-mas "Windows App", id: 1295203466
 mas "Xcode", id: 497799835
 vscode "anthropic.claude-code"
 vscode "bradlc.vscode-tailwindcss"

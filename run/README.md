@@ -33,7 +33,8 @@ repairs Python packages, and reapplies custom icons.
 
 Setup applies enforceable standards unless `--no-standards` is passed: top-level
 Git repos move into `~/Developer` except `~/dotfiles`, LaunchAgents marked
-`disable` are disabled, and explicitly banned app families are purged. It then
+`disable` are disabled, and Homebrew items not listed in `brew/Brewfile` are
+purged. It then
 runs a strict audit as a report so remaining review items are visible without
 blocking setup.
 
@@ -55,8 +56,8 @@ diagnostics, installer, and uninstaller app bundles so app search stays focused
 on the user-facing Creative Cloud app.
 
 Tailscale is installed through Homebrew. Setup configures Tailscale at the app
-preference level to start at login and hide its Dock icon, then launches it in
-the background when the app is present.
+preference level to hide its Dock icon, but it does not launch Tailscale or
+enable start-at-login.
 
 Standards commands are available through `setup.sh`:
 
@@ -70,12 +71,10 @@ Standards commands are available through `setup.sh`:
 - `standards launchagents audit`: compare startup/background items to
   `macos/launchagents.tsv`.
 - `standards launchagents apply`: disable entries marked `disable`.
-- `standards purge-unwanted --dry-run`: preview removal of banned app families.
-- `standards purge-unwanted`: remove banned app families and helpers. This may ask for an
-  administrator password once, then keep sudo alive for the purge.
-
-The banned app families are Maxon, Logitech Options, Docker Desktop, Steam, and
-Watchman.
+- `standards purge-unwanted --dry-run`: preview removal of Homebrew items not
+  listed in `brew/Brewfile`.
+- `standards purge-unwanted`: remove Homebrew casks and formula leaves not
+  listed in `brew/Brewfile`, then run `brew autoremove` and `brew cleanup`.
 
 ### `cleanup.sh`
 

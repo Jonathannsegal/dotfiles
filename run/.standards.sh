@@ -305,6 +305,32 @@ check_default_bool_unset_false() {
   fi
 }
 
+check_default_if_set() {
+  local domain="$1"
+  local key="$2"
+  local type="$3"
+  local expected="$4"
+  local current
+
+  current="$(read_default "$domain" "$key")"
+  if [[ "$current" == "<unset>" ]]; then
+    printf "OK\t%s\t%s\t<unset accepted>\n" "$domain" "$key"
+    return 0
+  fi
+
+  if [[ "$type" == "bool" ]]; then
+    expected="$(expected_bool "$expected")"
+    current="$(expected_bool "$current")"
+  fi
+
+  if [[ "$current" == "$expected" ]]; then
+    printf "OK\t%s\t%s\t%s\n" "$domain" "$key" "$current"
+  else
+    printf "DIFF\t%s\t%s\texpected=%s\tcurrent=%s\n" "$domain" "$key" "$expected" "$current"
+    return 1
+  fi
+}
+
 check_current_host_default() {
   local domain="$1"
   local key="$2"
@@ -329,7 +355,9 @@ check_current_host_default() {
 audit_dock() {
   local expected current
 
-  expected="$(grep -vE '^[[:space:]]*(#|$)' "$DOTFILES/macos/dock-items.txt" | tr '\n' '|')"
+  expected="$(grep -vE '^[[:space:]]*(#|$)' "$DOTFILES/macos/dock-items.txt" |
+    sed "s#^~/#$HOME/#" |
+    tr '\n' '|')"
   current="$(defaults read com.apple.dock persistent-apps 2>/dev/null |
     awk -F'= ' '/"_CFURLString" =/{gsub(/[\";]/,"",$2); gsub("^file://","",$2); gsub("%20"," ",$2); sub("/$","",$2); print $2}' |
     tr '\n' '|')"
@@ -408,7 +436,7 @@ settings_audit() {
   audit_dock || failures=$((failures + 1))
 
   check_default com.apple.controlcenter "NSStatusItem Visible Weather" bool true || failures=$((failures + 1))
-  check_default com.apple.controlcenter "NSStatusItem Visible WiFi" bool false || failures=$((failures + 1))
+  check_default_bool_unset_false com.apple.controlcenter "NSStatusItem Visible WiFi" || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible Bluetooth" bool false || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible Sound" bool false || failures=$((failures + 1))
   check_default_bool_unset_false com.apple.controlcenter "NSStatusItem Visible Battery" || failures=$((failures + 1))
@@ -446,22 +474,22 @@ settings_audit() {
   check_default com.apple.menuextra.clock TimeAnnouncementsIntervalIdentifier string EveryHourInterval || failures=$((failures + 1))
   check_default com.apple.Spotlight "NSStatusItem Visible Item-0" bool false || failures=$((failures + 1))
 
-  check_default com.apple.Safari DownloadsPath string "$HOME/Downloads" || failures=$((failures + 1))
-  check_default com.apple.Safari ShowFullURLInSmartSearchField bool true || failures=$((failures + 1))
-  check_default com.apple.Safari AutoOpenSafeDownloads bool false || failures=$((failures + 1))
-  check_default com.apple.Safari AlwaysRestoreSessionAtLaunch bool true || failures=$((failures + 1))
-  check_default com.apple.Safari ShowFavoritesBar bool true || failures=$((failures + 1))
-  check_default com.apple.Safari ShowSidebarInNewWindows bool false || failures=$((failures + 1))
-  check_default com.apple.Safari ShowSidebarInNewTabs bool false || failures=$((failures + 1))
-  check_default com.apple.Safari UniversalSearchEnabled bool true || failures=$((failures + 1))
-  check_default com.apple.Safari SuppressSearchSuggestions bool false || failures=$((failures + 1))
-  check_default com.apple.Safari ShowDevelopMenu bool true || failures=$((failures + 1))
-  check_default com.apple.Safari IncludeDevelopMenu bool true || failures=$((failures + 1))
-  check_default com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey bool true || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari DownloadsPath string "$HOME/Downloads" || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari ShowFullURLInSmartSearchField bool true || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari AutoOpenSafeDownloads bool false || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari AlwaysRestoreSessionAtLaunch bool true || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari ShowFavoritesBar bool true || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari ShowSidebarInNewWindows bool false || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari ShowSidebarInNewTabs bool false || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari UniversalSearchEnabled bool true || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari SuppressSearchSuggestions bool false || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari ShowDevelopMenu bool true || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari IncludeDevelopMenu bool true || failures=$((failures + 1))
+  check_default_if_set com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey bool true || failures=$((failures + 1))
   check_default NSGlobalDomain WebKitDeveloperExtras bool true || failures=$((failures + 1))
 
   check_default io.tailscale.ipn.macsys HideDockIcon bool true || failures=$((failures + 1))
-  check_default io.tailscale.ipn.macsys TailscaleStartOnLogin bool true || failures=$((failures + 1))
+  check_default io.tailscale.ipn.macsys TailscaleStartOnLogin bool false || failures=$((failures + 1))
   check_default io.tailscale.ipn.macsys AppIntroShown bool true || failures=$((failures + 1))
   check_default io.tailscale.ipn.macsys OnboardingFlow string hide || failures=$((failures + 1))
   check_default io.tailscale.ipn.macsys OccludedIconAlertSuppressed bool true || failures=$((failures + 1))
@@ -533,7 +561,7 @@ move_repo() {
 
 is_allowed_top_level() {
   case "$(basename "$1")" in
-    Applications|Desktop|Developer|Documents|Downloads|Library|Movies|Music|Personal|Pictures|Public|School|Zotero|dotfiles)
+    Applications|Desktop|Developer|Documents|Downloads|Library|Lightroom|Movies|Music|Personal|Pictures|Public|School|"Unity user templates"|Zotero|dotfiles)
       return 0
       ;;
     "Creative Cloud Files"*|*" - Google Drive")
@@ -627,7 +655,7 @@ check_home() {
 
 plist_label() {
   local plist="$1"
-  defaults read "${plist%.plist}" Label 2>/dev/null || basename "$plist"
+  defaults read "${plist%.plist}" Label 2>/dev/null || basename "$plist" .plist
 }
 
 plist_program() {
@@ -795,6 +823,7 @@ check_downloads() {
 unwanted_paths() {
   cat <<EOF
 /Applications/Docker.app
+/Applications/Ghostty.app
 /Applications/Maxon.app
 /Applications/Steam.app
 /Applications/logioptionsplus.app
@@ -827,31 +856,47 @@ $HOME/Library/Saved Application State/com.docker.docker.savedState
 $HOME/Library/Saved Application State/com.valvesoftware.steam.savedState
 /opt/homebrew/Caskroom/docker
 /opt/homebrew/Caskroom/docker-desktop
+/opt/homebrew/Caskroom/ghostty
 /opt/homebrew/Caskroom/logi-options+
 /opt/homebrew/Caskroom/maxon
 /opt/homebrew/Caskroom/steam
 EOF
 }
 
-unwanted_formulas() {
-  printf "%s\n" watchman edencommon fb303 fbthrift fizz folly wangle
+unmanaged_homebrew_casks() {
+  local installed expected
+
+  installed="$(mktemp)"
+  expected="$(mktemp)"
+
+  installed_casks > "$installed"
+  brewfile_entries cask > "$expected"
+  comm -23 "$installed" "$expected" || true
+
+  rm -f "$installed" "$expected"
 }
 
-unwanted_casks() {
-  printf "%s\n" docker docker-desktop logi-options+ maxon steam
+unmanaged_homebrew_formula_leaves() {
+  local installed expected
+
+  installed="$(mktemp)"
+  expected="$(mktemp)"
+
+  installed_formulas > "$installed"
+  brewfile_entries formula > "$expected"
+  comm -23 "$installed" "$expected" || true
+
+  rm -f "$installed" "$expected"
 }
 
-unwanted_labels() {
-  printf "%s\n" \
-    com.docker.socket \
-    com.docker.vmnetd \
-    com.github.facebook.watchman \
-    com.logi.cp-dev-mgr \
-    com.logi.optionsplus \
-    com.logi.optionsplus.updater \
-    com.logitech.LogiRightSight.Agent \
-    com.valvesoftware.steamclean \
-    net.maxon.deployservice
+disabled_launch_items() {
+  local scope label plist program
+
+  launch_inventory | while IFS=$'\t' read -r scope label plist program; do
+    if [[ "$(config_action "$label")" == "disable" ]]; then
+      printf "%s\t%s\t%s\t%s\n" "$scope" "$label" "$plist" "$program"
+    fi
+  done
 }
 
 check_unwanted_artifacts() {
@@ -872,18 +917,16 @@ check_unwanted_artifacts() {
   done < <(unwanted_paths)
 
   while IFS= read -r formula; do
-    if brew list --formula "$formula" >/dev/null 2>&1; then
-      found_any=1
-      violation "unwanted formula remains: $formula"
-    fi
-  done < <(unwanted_formulas)
+    [[ -n "$formula" ]] || continue
+    found_any=1
+    violation "formula installed but not repo-managed: $formula"
+  done < <(unmanaged_homebrew_formula_leaves)
 
   while IFS= read -r cask; do
-    if brew list --cask "$cask" >/dev/null 2>&1; then
-      found_any=1
-      violation "unwanted cask remains: $cask"
-    fi
-  done < <(unwanted_casks)
+    [[ -n "$cask" ]] || continue
+    found_any=1
+    violation "cask installed but not repo-managed: $cask"
+  done < <(unmanaged_homebrew_casks)
 
   if [[ "$found_any" -eq 0 ]]; then
     echo "No unwanted app artifacts found."
@@ -933,31 +976,36 @@ remove_paths() {
 
 purge_unwanted() {
   local dry_run="${1:-false}"
-  local label
+  local scope label plist program cask formula
   local paths=()
   local path
 
-  echo "Removing unmanaged Homebrew casks/formulae if present"
-  if [[ "$dry_run" == false ]]; then
-    ensure_sudo_keepalive
-  fi
+  echo "Removing Homebrew items not in $BREWFILE"
 
   if command -v brew >/dev/null 2>&1; then
-    run_or_print "$dry_run" brew uninstall --force --zap --cask maxon logi-options+ docker docker-desktop steam || true
-    run_or_print "$dry_run" brew uninstall --force watchman edencommon fb303 fbthrift fizz folly wangle || true
+    while IFS= read -r cask; do
+      [[ -n "$cask" ]] || continue
+      run_or_print "$dry_run" brew uninstall --force --zap --cask "$cask" || true
+    done < <(unmanaged_homebrew_casks)
+
+    while IFS= read -r formula; do
+      [[ -n "$formula" ]] || continue
+      run_or_print "$dry_run" brew uninstall --force "$formula" || true
+    done < <(unmanaged_homebrew_formula_leaves)
+
     run_or_print "$dry_run" brew autoremove || true
     run_or_print "$dry_run" brew cleanup || true
   fi
 
-  while IFS= read -r label; do
-    echo "Disabling launch service: $label"
+  while IFS=$'\t' read -r scope label plist program; do
+    [[ -n "$label" ]] || continue
     if [[ "$dry_run" == false ]]; then
-      launchctl bootout "gui/$(id -u)/$label" >/dev/null 2>&1 || true
-      launchctl disable "gui/$(id -u)/$label" >/dev/null 2>&1 || true
-      launchctl bootout "system/$label" >/dev/null 2>&1 || true
-      launchctl disable "system/$label" >/dev/null 2>&1 || true
+      echo "Disabling launch service: $label"
+      disable_launch_item "$scope" "$label" "$plist"
+    else
+      echo "Would disable launch service: $label"
     fi
-  done < <(unwanted_labels)
+  done < <(disabled_launch_items)
 
   while IFS= read -r path; do
     paths+=("$path")

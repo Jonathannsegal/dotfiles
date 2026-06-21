@@ -7,6 +7,10 @@ DOCK_ITEMS_FILE="${1:-$DOTFILES/macos/dock-items.txt}"
 
 add_dock_app() {
   local app_path="$1"
+  if [[ "$app_path" == "~/"* ]]; then
+    app_path="$HOME/${app_path:2}"
+  fi
+
   local file_url="file://${app_path%/}/"
 
   defaults write com.apple.dock persistent-apps -array-add \

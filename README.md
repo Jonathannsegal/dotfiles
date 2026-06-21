@@ -48,7 +48,7 @@ When setup reaches a privileged step, it asks for the administrator password onc
 
 Use `./run/setup.sh --hard` when a new-machine setup was interrupted or a managed config looks partially applied. Hard mode assumes yes, replaces managed dotfile links instead of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads managed LaunchAgents, forces VS Code extension installs, updates shell plugins, repairs Python packages, and reapplies custom icons. It is scoped to repo-managed setup surfaces; it is not a general disk wipe.
 
-Setup also applies the enforceable standards: top-level Git repos move into `~/Developer` except `~/dotfiles`, LaunchAgents marked `disable` are disabled, and explicitly banned app families are purged. The final standards audit is reported but does not fail setup when manual review items remain.
+Setup also applies the enforceable standards: top-level Git repos move into `~/Developer` except `~/dotfiles`, LaunchAgents marked `disable` are disabled, and Homebrew items not listed in `brew/Brewfile` are purged. The final standards audit is reported but does not fail setup when manual review items remain.
 
 ## Maintenance
 
@@ -74,9 +74,9 @@ Cleanup moves are reversible by default when run with `--mode staging`; files ar
 
 Dock items are managed in `macos/dock-items.txt`. Startup/background items are audited against `macos/launchagents.tsv`; only entries marked `disable` are changed by `./run/setup.sh standards launchagents apply`.
 
-`./run/setup.sh standards apps` is the quickest way to see what is installed locally but no longer part of the repo-managed setup. After reviewing its output, `brew bundle cleanup --file=brew/Brewfile` can remove Homebrew-managed extras.
+`./run/setup.sh standards apps` is the quickest way to see what is installed locally but no longer part of the repo-managed setup.
 
-`./run/setup.sh standards purge-unwanted` purges explicitly banned app families: Maxon, Logitech Options, Docker Desktop, Steam, and Watchman. Run it from Terminal when `./run/setup.sh standards audit` reports protected `/Applications` or `/Library` leftovers so macOS can show the administrator prompt.
+`./run/setup.sh standards purge-unwanted` removes installed Homebrew casks and formula leaves that are not listed in `brew/Brewfile`, then runs `brew autoremove` and `brew cleanup`. Run it from Terminal when protected `/Applications` or `/Library` leftovers require the administrator prompt.
 
 ## Clean Computer Standard
 
@@ -86,13 +86,13 @@ This repo is the source of truth for the machine. The standard is intentionally 
 - Do not run downloaded `.dmg`, `.pkg`, `.mpkg`, or `.app` installers directly. The installer guard moves them to `~/CleanupStaging/blocked-installers` and tells you to install via Homebrew.
 - Keep this dotfiles repo at `~/dotfiles`.
 - Keep active code in `~/Developer`; interactive `git clone <url>` is wrapped to clone there by default.
-- Keep personal files in `~/Personal`, school/research files in `~/School`, photos/Lightroom in `~/Pictures`, screenshots and temporary downloads in `~/Downloads`, and Zotero data in `~/Zotero`.
+- Keep personal files in `~/Personal`, school/research files in `~/School`, photos in `~/Pictures`, Lightroom work in `~/Lightroom`, screenshots and temporary downloads in `~/Downloads`, and Zotero data in `~/Zotero`.
 - Keep Desktop empty except macOS metadata files.
 - Treat Downloads as an inbox; review files older than 14 days.
 - Manage Dock order through `macos/dock-items.txt`.
 - Manage startup/background items through `macos/launchagents.tsv`; any `review` or unmanaged item fails the strict audit until it is classified.
 - Manage macOS preferences through `macos/settings.sh`; unapplied differences fail the strict audit.
-- Keep Maxon, Logitech Options, Docker Desktop, Steam, and Watchman off the machine unless they are intentionally added back to `brew/Brewfile`.
+- Keep apps and CLI tools off the machine unless they are intentionally added back to `brew/Brewfile`, MAS entries, or the app allowlist.
 
 Run `./run/setup.sh standards audit` when you want the full cleanliness check.
 
@@ -102,7 +102,8 @@ Run `./run/setup.sh standards audit` when you want the full cleanliness check.
 - `~/Developer`: active programming projects.
 - `~/Personal`: personal files.
 - `~/School`: school/research files.
-- `~/Pictures`: photo libraries and Lightroom projects.
+- `~/Pictures`: photo libraries.
+- `~/Lightroom`: Lightroom catalogs, previews, and project files.
 - `~/Downloads`: screenshots and temporary downloads.
 - `~/Zotero`: Zotero library data.
 

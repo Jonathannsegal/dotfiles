@@ -9,6 +9,24 @@ sudo -v
 # Keep-alive: update existing `sudo` time stamp until script has finished
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
+write_default_or_skip() {
+    local label="$1"
+    shift
+
+    if ! defaults write "$@" >/dev/null 2>&1; then
+        echo "Skipping $label (macOS denied preference write)"
+    fi
+}
+
+write_sudo_default_or_skip() {
+    local label="$1"
+    shift
+
+    if ! sudo defaults write "$@" >/dev/null 2>&1; then
+        echo "Skipping $label (macOS denied preference write)"
+    fi
+}
+
 # Create Developer folder if it doesn't exist
 if [ ! -d "${HOME}/Developer" ]; then
     mkdir "${HOME}/Developer"
@@ -236,7 +254,7 @@ defaults write com.apple.dock magnification -bool false
 ###############################################################################
 
 # Add desired apps to Dock from the repo-managed list.
-"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apply-dock.sh"
+bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apply-dock.sh"
 
 ###############################################################################
 # Menu Bar & Control Center                                                    #
@@ -322,7 +340,7 @@ if command -v duti >/dev/null 2>&1; then
     local identifier="$2"
 
     if ! duti -s com.apple.Safari "$identifier" "$role" >/dev/null 2>&1; then
-      echo "warning: could not set Safari as handler for ${identifier}; continuing"
+      echo "Skipping Safari default handler for ${identifier} (macOS denied handler change)"
     fi
   }
 
@@ -333,25 +351,25 @@ if command -v duti >/dev/null 2>&1; then
 fi
 
 # Keep browser downloads in the same inbox as screenshots and temporary files.
-defaults write com.apple.Safari DownloadsPath -string "${HOME}/Downloads"
-defaults write com.apple.Safari.SandboxBroker DidMigrateDownloadFolderToSandbox -bool true
-defaults write com.apple.Safari.SandboxBroker DidMigrateDownloadMetadataToSandboxGroupContainer -bool true
+write_default_or_skip "Safari DownloadsPath" com.apple.Safari DownloadsPath -string "${HOME}/Downloads"
+write_default_or_skip "Safari download folder sandbox migration" com.apple.Safari.SandboxBroker DidMigrateDownloadFolderToSandbox -bool true
+write_default_or_skip "Safari download metadata sandbox migration" com.apple.Safari.SandboxBroker DidMigrateDownloadMetadataToSandboxGroupContainer -bool true
 
 # Chrome-like browsing ergonomics.
-defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
-defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
-defaults write com.apple.Safari AlwaysRestoreSessionAtLaunch -bool true
-defaults write com.apple.Safari ShowFavoritesBar -bool true
-defaults write com.apple.Safari ShowSidebarInNewWindows -bool false
-defaults write com.apple.Safari ShowSidebarInNewTabs -bool false
-defaults write com.apple.Safari UniversalSearchEnabled -bool true
-defaults write com.apple.Safari SuppressSearchSuggestions -bool false
+write_default_or_skip "Safari full URL setting" com.apple.Safari ShowFullURLInSmartSearchField -bool true
+write_default_or_skip "Safari safe downloads setting" com.apple.Safari AutoOpenSafeDownloads -bool false
+write_default_or_skip "Safari session restore setting" com.apple.Safari AlwaysRestoreSessionAtLaunch -bool true
+write_default_or_skip "Safari favorites bar setting" com.apple.Safari ShowFavoritesBar -bool true
+write_default_or_skip "Safari new-window sidebar setting" com.apple.Safari ShowSidebarInNewWindows -bool false
+write_default_or_skip "Safari new-tab sidebar setting" com.apple.Safari ShowSidebarInNewTabs -bool false
+write_default_or_skip "Safari universal search setting" com.apple.Safari UniversalSearchEnabled -bool true
+write_default_or_skip "Safari search suggestions setting" com.apple.Safari SuppressSearchSuggestions -bool false
 
 # Developer tools, matching the existing local Safari setup.
-defaults write com.apple.Safari ShowDevelopMenu -bool true
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+write_default_or_skip "Safari Develop menu setting" com.apple.Safari ShowDevelopMenu -bool true
+write_default_or_skip "Safari Include Develop menu setting" com.apple.Safari IncludeDevelopMenu -bool true
+write_default_or_skip "Safari WebKit developer extras setting" com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+write_default_or_skip "Safari content developer extras setting" com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
 defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
 
 killall Safari >/dev/null 2>&1 || true
@@ -396,7 +414,7 @@ defaults write com.apple.terminal SecureKeyboardEntry -bool true
 defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 
 # Turn off automatic brightness adjustments
-defaults write /Library/Preferences/com.apple.iokit.AmbientLightSensor "Automatic Display Enabled" -bool false
+write_sudo_default_or_skip "ambient light sensor setting" /Library/Preferences/com.apple.iokit.AmbientLightSensor "Automatic Display Enabled" -bool false
 
 ###############################################################################
 # Activity Monitor                                                            #

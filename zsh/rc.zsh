@@ -138,3 +138,7 @@ fi
 
 # Finally, strip any remaining Anaconda paths from PATH (defensive)
 PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '$0!~/anaconda3/' | sed 's/:$//')
+
+if [[ -o interactive ]]; then
+    dotfiles_health_check
+fi

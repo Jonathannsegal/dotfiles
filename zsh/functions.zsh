@@ -122,6 +122,43 @@ brew_check() {
     echo "$current_date" > "$BREW_CHECK_FILE"
 }
 
+# Daily repo-backed health check for terminal sessions.
+dotfiles_health_check() {
+    local CHECK_FILE="$HOME/.dotfiles_health_check"
+    local current_date output failed=false
+
+    current_date=$(date +%Y-%m-%d)
+    if [ -f "$CHECK_FILE" ] && [ "$(cat "$CHECK_FILE")" = "$current_date" ]; then
+        return
+    fi
+
+    if [ ! -d "${DOTFILES:-}" ]; then
+        return
+    fi
+
+    output="$(bash "$DOTFILES/run/cleanup.sh" lint-personal 2>&1)"
+    if [ $? -eq 0 ]; then
+        echo "✅ Johnny.Decimal good"
+    else
+        failed=true
+        echo "⚠️ Johnny.Decimal issues:"
+        printf '%s\n' "$output"
+    fi
+
+    output="$(bash "$DOTFILES/run/.standards.sh" audit 2>&1)"
+    if [ $? -eq 0 ]; then
+        echo "✅ Standards good"
+    else
+        failed=true
+        echo "⚠️ Standards issues:"
+        printf '%s\n' "$output"
+    fi
+
+    if [ "$failed" = false ]; then
+        echo "$current_date" > "$CHECK_FILE"
+    fi
+}
+
 # Wrap pip command to auto-sync requirements.txt
 pip() {
     if (( ! $+commands[pip] )); then
