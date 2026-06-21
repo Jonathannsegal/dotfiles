@@ -9,9 +9,10 @@ export DOTFILES
 BACKUP_DIR="$HOME/.dotfiles_backup/$(date +%Y%m%d_%H%M%S)"
 BREWFILE="$DOTFILES/brew/Brewfile"
 RUN_BREW=true
-RUN_MACOS=false
-RUN_TERMINAL=false
-RUN_PYTHON=false
+RUN_MACOS=true
+ASK_MACOS=true
+RUN_TERMINAL=true
+RUN_PYTHON=true
 RUN_VSCODE=true
 RUN_ICONS=true
 RUN_SHELL_PLUGINS=true
@@ -49,9 +50,12 @@ Options:
   --no-brew         Skip Homebrew installation and brew bundle.
   --no-icons        Skip custom application icons.
   --no-icon-agent   Do not install the LaunchAgent that reapplies icons.
-  --macos           Apply macOS defaults. This can change system preferences.
-  --terminal        Import Terminal.app profiles.
-  --python          Run the Python package installer. This is intentionally opt-in.
+  --macos           Apply macOS defaults without prompting.
+  --no-macos        Skip macOS defaults.
+  --terminal        Import Terminal.app profiles. This is the default.
+  --no-terminal     Skip Terminal.app profile import.
+  --python          Run the Python package installer. This is the default.
+  --no-python       Skip the Python package installer.
   --no-vscode       Skip VS Code extension installation.
   --no-shell-plugins
                     Skip zsh plugin installation/update.
@@ -69,9 +73,12 @@ while [[ $# -gt 0 ]]; do
         --no-brew) RUN_BREW=false ;;
         --no-icons) RUN_ICONS=false ;;
         --no-icon-agent) INSTALL_ICON_AGENT=false ;;
-        --macos) RUN_MACOS=true ;;
+        --macos) RUN_MACOS=true; ASK_MACOS=false ;;
+        --no-macos) RUN_MACOS=false; ASK_MACOS=false ;;
         --terminal) RUN_TERMINAL=true ;;
+        --no-terminal) RUN_TERMINAL=false ;;
         --python) RUN_PYTHON=true ;;
+        --no-python) RUN_PYTHON=false ;;
         --no-vscode) RUN_VSCODE=false ;;
         --no-shell-plugins) RUN_SHELL_PLUGINS=false ;;
         --no-jdk) RUN_JDK=false ;;
@@ -97,6 +104,18 @@ confirm() {
     printf "\r [ \033[0;33m??\033[0m ] %s [y/N] " "$prompt"
     read -r reply < /dev/tty
     [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+confirm_yes() {
+    local prompt="$1"
+
+    if [[ "$ASSUME_YES" == true ]]; then
+        return 0
+    fi
+
+    printf "\r [ \033[0;33m??\033[0m ] %s [Y/n] " "$prompt"
+    read -r reply < /dev/tty
+    [[ -z "$reply" || "$reply" =~ ^[Yy]$ ]]
 }
 
 strip_quotes() {
@@ -378,6 +397,12 @@ setup_macos() {
         success "Skipped macOS defaults outside macOS"
         return 0
     }
+
+    if [[ "$ASK_MACOS" == true ]] && ! confirm_yes "Apply macOS defaults from macos/settings.sh?"; then
+        warn "Skipped macOS defaults"
+        return 0
+    fi
+
     bash "$DOTFILES/macos/settings.sh"
 }
 

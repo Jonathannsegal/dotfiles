@@ -247,6 +247,8 @@ defaults write com.apple.controlcenter "NSStatusItem Visible Bluetooth" -bool fa
 defaults write com.apple.controlcenter "NSStatusItem Visible Sound" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible Battery" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible Clock" -bool true
+defaults write com.apple.controlcenter "NSStatusItem VisibleCC Battery" -bool true
+defaults write com.apple.controlcenter "NSStatusItem VisibleCC Clock" -bool true
 
 # Show percentage in battery indicator
 defaults write com.apple.menuextra.battery ShowPercent -bool false

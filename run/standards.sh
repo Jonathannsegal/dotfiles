@@ -49,12 +49,14 @@ installed_formulas() {
   brew leaves 2>/dev/null | sort || true
 }
 
+installed_formulae_all() {
+  brew list --formula 2>/dev/null | sort || true
+}
+
 installed_casks() {
-  if [[ -d /opt/homebrew/Caskroom ]]; then
-    ls -1 /opt/homebrew/Caskroom | sort
-  elif [[ -d /usr/local/Caskroom ]]; then
-    ls -1 /usr/local/Caskroom | sort
-  fi
+  brew list --cask --full-name 2>/dev/null |
+    sed 's#^.*/##' |
+    sort || true
 }
 
 installed_vscode() {
@@ -64,6 +66,7 @@ installed_vscode() {
 installed_npm() {
   npm list -g --depth=0 --parseable 2>/dev/null |
     sed '1d; s#.*/node_modules/##' |
+    sed '/^npm$/d' |
     sort || true
 }
 
@@ -109,6 +112,52 @@ compare_set_report() {
   rm -f "$installed" "$expected"
 }
 
+formula_report() {
+  local installed expected
+
+  installed="$(mktemp)"
+  expected="$(mktemp)"
+
+  installed_formulas > "$installed"
+  brewfile_entries formula > "$expected"
+  section "Formula leaves: installed but not in Brewfile"
+  comm -23 "$installed" "$expected" || true
+
+  installed_formulae_all > "$installed"
+  section "Formulae: in Brewfile but not installed"
+  comm -13 "$installed" "$expected" || true
+
+  rm -f "$installed" "$expected"
+}
+
+check_formula_drift() {
+  local installed expected extra missing
+
+  installed="$(mktemp)"
+  expected="$(mktemp)"
+
+  installed_formulas > "$installed"
+  brewfile_entries formula > "$expected"
+  extra="$(comm -23 "$installed" "$expected" || true)"
+
+  if [[ -n "$extra" ]]; then
+    while IFS= read -r item; do
+      [[ -n "$item" ]] && violation "formula installed but not repo-managed: $item"
+    done <<< "$extra"
+  fi
+
+  installed_formulae_all > "$installed"
+  missing="$(comm -13 "$installed" "$expected" || true)"
+
+  if [[ -n "$missing" ]]; then
+    while IFS= read -r item; do
+      [[ -n "$item" ]] && violation "formula repo-managed but not installed: $item"
+    done <<< "$missing"
+  fi
+
+  rm -f "$installed" "$expected"
+}
+
 check_set_drift() {
   local label="$1"
   local installed_cmd="$2"
@@ -145,7 +194,7 @@ apps_report() {
     exit 1
   }
 
-  compare_set_report "Formula leaves" installed_formulas "brewfile_entries formula"
+  formula_report
   compare_set_report "Casks" installed_casks "brewfile_entries cask"
   compare_set_report "VS Code extensions" installed_vscode "brewfile_entries vscode"
   compare_set_report "Global npm packages" installed_npm "brewfile_entries npm"
@@ -159,7 +208,7 @@ apps_report() {
 
 check_apps() {
   section "Apps And Packages"
-  check_set_drift "formula" installed_formulas "brewfile_entries formula"
+  check_formula_drift
   check_set_drift "cask" installed_casks "brewfile_entries cask"
   check_set_drift "VS Code extension" installed_vscode "brewfile_entries vscode"
   check_set_drift "global npm package" installed_npm "brewfile_entries npm"
@@ -197,6 +246,22 @@ check_default() {
     printf "OK\t%s\t%s\t%s\n" "$domain" "$key" "$current"
   else
     printf "DIFF\t%s\t%s\texpected=%s\tcurrent=%s\n" "$domain" "$key" "$expected" "$current"
+    return 1
+  fi
+}
+
+check_default_bool_unset_false() {
+  local domain="$1"
+  local key="$2"
+  local current
+
+  current="$(read_default "$domain" "$key")"
+  current="$(expected_bool "$current")"
+
+  if [[ "$current" == "0" || "$current" == "<unset>" ]]; then
+    printf "OK\t%s\t%s\t%s\n" "$domain" "$key" "$current"
+  else
+    printf "DIFF\t%s\t%s\texpected=0-or-unset\tcurrent=%s\n" "$domain" "$key" "$current"
     return 1
   fi
 }
@@ -303,8 +368,9 @@ settings_audit() {
   check_default com.apple.controlcenter "NSStatusItem Visible WiFi" bool false || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible Bluetooth" bool false || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible Sound" bool false || failures=$((failures + 1))
-  check_default com.apple.controlcenter "NSStatusItem Visible Battery" bool false || failures=$((failures + 1))
-  check_default com.apple.controlcenter "NSStatusItem Visible Clock" bool true || failures=$((failures + 1))
+  check_default_bool_unset_false com.apple.controlcenter "NSStatusItem Visible Battery" || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem VisibleCC Battery" bool true || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem VisibleCC Clock" bool true || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Preferred Position Battery" float 195 || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Preferred Position Clock" float 200 || failures=$((failures + 1))
   check_default com.apple.menuextra.battery ShowPercent bool false || failures=$((failures + 1))
@@ -697,6 +763,12 @@ check_unwanted_artifacts() {
   local path formula cask found_any=0
 
   while IFS= read -r path; do
+    if [[ "$path" == "$HOME/Library/Containers/com.docker.docker" ]] &&
+       [[ -d "$path" ]] &&
+       [[ "$(find "$path" -mindepth 1 -maxdepth 1 -not -name ".com.apple.containermanagerd.metadata.plist" -print -quit 2>/dev/null)" == "" ]]; then
+      continue
+    fi
+
     if [[ -e "$path" || -L "$path" ]]; then
       found_any=1
       violation "unwanted artifact remains: ${path#$HOME/}"

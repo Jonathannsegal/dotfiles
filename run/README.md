@@ -10,9 +10,13 @@ behind `standards.sh` subcommands so there are fewer entry points to remember.
 Repeatable bootstrap for a new or existing Mac.
 
 It installs Homebrew when missing, runs `brew bundle`, links dotfiles, installs
-shell plugins, installs VS Code extensions, refreshes custom app icons, and
-installs the LaunchAgents that keep icons reapplied and unmanaged installers
-blocked.
+shell plugins, installs VS Code extensions, imports Terminal.app profiles, runs
+the Python package installer, refreshes custom app icons, and installs the
+LaunchAgents that keep icons reapplied and unmanaged installers blocked.
+
+Plain `./run/setup.sh` is the full setup path. In interactive mode it asks
+before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
+`--yes` applies those defaults without prompting.
 
 Common usage:
 
@@ -69,14 +73,3 @@ Common usage:
 ./run/export-messages-attachments.sh --dry-run
 ./run/export-messages-attachments.sh --apply --dest ~/CleanupStaging/messages
 ```
-
-## Removed Entry Points
-
-The old one-off audit scripts were folded into `standards.sh`:
-
-- `apps.sh` -> `standards.sh apps`
-- `audit-settings.sh` -> `standards.sh settings`
-- `organize-home.sh` -> `standards.sh home`
-- `launchagents.sh` -> `standards.sh launchagents`
-- `remove-unwanted-apps.sh` -> `standards.sh purge-unwanted`
-- `reset.sh` -> replaced by `cleanup.sh`

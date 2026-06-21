@@ -2,18 +2,7 @@
 
 setup_terminal_profiles() {
     echo "Installing Terminal profiles..."
-    
-    # First list and remove all existing profiles
-    echo "Removing existing profiles..."
-    profiles_list=$(sudo profiles -P | grep -B1 "Terminal" | grep "attribute" | awk '{print $4}')
-    
-    while IFS= read -r profile_id; do
-        if [ ! -z "$profile_id" ]; then
-            echo "Removing profile: $profile_id"
-            sudo profiles -R -p "$profile_id"
-        fi
-    done <<< "$profiles_list"
-    
+
     # Install new profiles
     open "$DOTFILES/terminal/profiles/Dark.terminal"
     sleep 1  # Give Terminal time to process the first profile
@@ -24,10 +13,6 @@ setup_terminal_profiles() {
     defaults write com.apple.Terminal "Default Window Settings" -string "Dark"
     defaults write com.apple.Terminal "Startup Window Settings" -string "Dark"
     
-    # Verify remaining profiles
-    echo "Verifying profiles..."
-    sudo profiles -P
-    
     # Kill Terminal to apply changes
     echo "Restarting Terminal to apply changes..."
     killall Terminal &>/dev/null || true
@@ -37,6 +22,8 @@ setup_terminal_profiles() {
 
 setup_theme_switcher() {
     local launch_agent="$HOME/Library/LaunchAgents/com.user.terminal-theme.plist"
+    mkdir -p "$(dirname "$launch_agent")"
+
     # Create LaunchAgent for theme switching
     cat > "$launch_agent" << EOL
 <?xml version="1.0" encoding="UTF-8"?>

@@ -72,13 +72,14 @@ scan_dir() {
     \( -name "*.dmg" -o -name "*.pkg" -o -name "*.mpkg" -o -name "*.app" \) \
     -print0 2>/dev/null |
   while IFS= read -r -d '' item; do
-    block_item "$item"
-  done
+    block_item "$item" || true
+  done || true
 }
 
 scan_installers() {
   scan_dir "$HOME/Downloads"
   scan_dir "$HOME/Desktop"
+  return 0
 }
 
 install_agent() {

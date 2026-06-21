@@ -5,6 +5,7 @@ Personal macOS dotfiles.
 ## Install
 
 ```bash
+mkdir -p ~/Developer
 git clone https://github.com/Jonathannsegal/dotfiles.git ~/Developer/dotfiles
 cd ~/Developer/dotfiles
 ./run/setup.sh
@@ -18,9 +19,10 @@ The default setup is safe to rerun. It will:
 4. Install/update zsh plugins outside shell startup.
 5. Link Homebrew OpenJDK for macOS tools when approved.
 6. Install/update VS Code extensions from the Brewfile when VS Code is available.
-7. Apply custom app icons.
-8. Install a LaunchAgent that reapplies icons at login, every 6 hours, and when `/Applications` changes.
+7. Import Terminal.app profiles and run the Python package installer.
+8. Ask whether to apply macOS defaults from `macos/settings.sh`.
 9. Install a LaunchAgent that blocks unmanaged installers in `~/Downloads` and `~/Desktop`.
+10. Apply custom app icons and install the LaunchAgent that reapplies them at login, every 6 hours, and when `/Applications` changes.
 
 ## Useful Options
 
@@ -28,14 +30,15 @@ The default setup is safe to rerun. It will:
 ./run/setup.sh --yes          # non-interactive where possible
 ./run/setup.sh --no-brew      # skip Homebrew bundle
 ./run/setup.sh --no-icons     # skip icon refresh
-./run/setup.sh --macos        # apply macOS defaults
-./run/setup.sh --terminal     # import Terminal.app profiles
-./run/setup.sh --python       # run the Python package installer
+./run/setup.sh --macos        # apply macOS defaults without prompting
+./run/setup.sh --no-macos     # skip macOS defaults
+./run/setup.sh --no-terminal  # skip Terminal.app profiles
+./run/setup.sh --no-python    # skip the Python package installer
 ./run/setup.sh --no-jdk       # skip the system OpenJDK symlink
 ./run/setup.sh --no-installer-guard # skip unmanaged installer blocking
 ```
 
-`--macos`, `--terminal`, and `--python` are opt-in because they change system preferences, open GUI apps, or rebuild Python packages.
+Plain `./run/setup.sh` is the normal full setup. In interactive mode it asks before applying macOS defaults; pressing Enter accepts. `--yes` accepts that prompt automatically.
 
 ## Maintenance
 
