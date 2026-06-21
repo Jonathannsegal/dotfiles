@@ -2,6 +2,8 @@
 brew "bat"
 # .NET Core
 brew "dotnet"
+# Set default applications for file types and URL schemes
+brew "duti"
 # Perl lib for reading and writing EXIF metadata
 brew "exiftool"
 # Modern, maintained replacement for ls

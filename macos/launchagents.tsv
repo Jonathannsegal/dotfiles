@@ -2,7 +2,7 @@
 # Actions:
 #   keep    repo-approved background item
 #   review  show in audit, do not change on apply
-#   disable disable when run/standards.sh launchagents apply is used
+#   disable disable when run/setup.sh standards launchagents apply is used
 keep	com.adobe.AdobeCreativeCloud	Adobe Creative Cloud
 keep	com.adobe.AdobeDesktopService	Adobe desktop service
 keep	com.adobe.GC.Scheduler-1.0	Adobe genuine client

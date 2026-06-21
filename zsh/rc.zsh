@@ -9,7 +9,9 @@ source_if_exists() {
 source_if_exists "$HOME/.env.sh"
 
 if [ -z "${DOTFILES:-}" ]; then
-    if [ -d "$HOME/Developer/dotfiles" ]; then
+    if [ -d "$HOME/dotfiles" ]; then
+        export DOTFILES="$HOME/dotfiles"
+    elif [ -d "$HOME/Developer/dotfiles" ]; then
         export DOTFILES="$HOME/Developer/dotfiles"
     else
         export DOTFILES="$HOME/.dotfiles"

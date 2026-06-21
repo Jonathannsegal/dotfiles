@@ -241,24 +241,49 @@ defaults write ~/Library/Preferences/ByHost/com.apple.controlcenter.plist Weathe
 # Hide Spotlight from menu bar (but keep it accessible via cmd+space)
 defaults write com.apple.Spotlight "NSStatusItem Visible Item-0" -bool false
 
-# Configure other menu bar items
+# Configure menu bar items to match this machine.
 defaults write com.apple.controlcenter "NSStatusItem Visible WiFi" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible Bluetooth" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible Sound" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible Battery" -bool false
-defaults write com.apple.controlcenter "NSStatusItem Visible Clock" -bool true
+defaults write com.apple.controlcenter "NSStatusItem Visible AccessibilityShortcuts" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible BentoBox" -bool true
+defaults write com.apple.controlcenter "NSStatusItem Visible MusicRecognition" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-0" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-1" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-2" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-3" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-4" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-5" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-6" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-7" -bool false
+defaults write com.apple.controlcenter "NSStatusItem Visible Item-8" -bool false
 defaults write com.apple.controlcenter "NSStatusItem VisibleCC Battery" -bool true
 defaults write com.apple.controlcenter "NSStatusItem VisibleCC Clock" -bool true
+defaults write com.apple.controlcenter "NSStatusItem VisibleCC BentoBox-0" -bool true
 
 # Show percentage in battery indicator
 defaults write com.apple.menuextra.battery ShowPercent -bool false
 
 # Set clock format to show date and 12-hour time
 defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  h:mm a"
+defaults write com.apple.menuextra.clock FlashDateSeparators -bool false
+defaults write com.apple.menuextra.clock IsAnalog -bool false
+defaults write com.apple.menuextra.clock Show24Hour -bool true
+defaults write com.apple.menuextra.clock ShowAMPM -bool false
+defaults write com.apple.menuextra.clock ShowDate -bool false
+defaults write com.apple.menuextra.clock ShowDayOfWeek -bool false
+defaults write com.apple.menuextra.clock ShowSeconds -bool false
+defaults write com.apple.menuextra.clock TimeAnnouncementsEnabled -bool false
+defaults write com.apple.menuextra.clock TimeAnnouncementsIntervalIdentifier -string EveryHourInterval
 
 # Control Center modules configuration
+defaults write com.apple.controlcenter "NSStatusItem Preferred Position BentoBox-0" -float 105
+defaults write com.apple.controlcenter "NSStatusItem Preferred Position BentoBox" -float 127
 defaults write com.apple.controlcenter "NSStatusItem Preferred Position Battery" -float 195
 defaults write com.apple.controlcenter "NSStatusItem Preferred Position Clock" -float 200
+defaults write com.apple.controlcenter "NSStatusItem Preferred Position AccessibilityShortcuts" -float 211
+defaults write com.apple.controlcenter "NSStatusItem Preferred Position WiFi" -float 331
 
 # Automatically switch between light and dark appearances.
 defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
@@ -272,13 +297,47 @@ defaults write NSGlobalDomain AppleMenuBarVisibleInFullscreen -bool false
 defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.TimeMachine" -bool false
 defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.VPN" -bool false
 
-# Remove unnecessary menu extras
-defaults write com.apple.systemuiserver menuExtras -array \
-  "/System/Library/CoreServices/Menu Extras/Clock.menu" \
-  "/System/Library/CoreServices/Menu Extras/Battery.menu"
+# Remove legacy SystemUIServer menu extras; Control Center owns the visible items.
+defaults write com.apple.systemuiserver menuExtras -array
 
 killall SystemUIServer >/dev/null 2>&1 || true
 killall ControlCenter >/dev/null 2>&1 || true
+
+###############################################################################
+# Safari                                                                       #
+###############################################################################
+
+# Make Safari the default browser for web links and HTML documents.
+if command -v duti >/dev/null 2>&1; then
+  duti -s com.apple.Safari http || true
+  duti -s com.apple.Safari https || true
+  duti -s com.apple.Safari public.html all || true
+  duti -s com.apple.Safari public.xhtml all || true
+fi
+
+# Keep browser downloads in the same inbox as screenshots and temporary files.
+defaults write com.apple.Safari DownloadsPath -string "${HOME}/Downloads"
+defaults write com.apple.Safari.SandboxBroker DidMigrateDownloadFolderToSandbox -bool true
+defaults write com.apple.Safari.SandboxBroker DidMigrateDownloadMetadataToSandboxGroupContainer -bool true
+
+# Chrome-like browsing ergonomics.
+defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
+defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
+defaults write com.apple.Safari AlwaysRestoreSessionAtLaunch -bool true
+defaults write com.apple.Safari ShowFavoritesBar -bool true
+defaults write com.apple.Safari ShowSidebarInNewWindows -bool false
+defaults write com.apple.Safari ShowSidebarInNewTabs -bool false
+defaults write com.apple.Safari UniversalSearchEnabled -bool true
+defaults write com.apple.Safari SuppressSearchSuggestions -bool false
+
+# Developer tools, matching the existing local Safari setup.
+defaults write com.apple.Safari ShowDevelopMenu -bool true
+defaults write com.apple.Safari IncludeDevelopMenu -bool true
+defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
+
+killall Safari >/dev/null 2>&1 || true
 
 ###############################################################################
 # Launchpad                                                                   #

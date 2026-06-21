@@ -4,7 +4,7 @@
 /Applications/iTerm.app
 /Applications/Visual Studio Code.app
 /Applications/Blender.app
-/Applications/Google Chrome.app
+/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
 /Applications/Unity Hub.app
 /Applications/Lens Studio.app
 /Applications/Xcode.app

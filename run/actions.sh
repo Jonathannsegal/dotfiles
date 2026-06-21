@@ -12,7 +12,14 @@ WRITE_MANIFEST=true
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") [options]
+Usage: $(basename "$0") <action> [options]
+
+Actions:
+  messages           Export Messages attachments.
+
+Messages usage:
+  $(basename "$0") messages [options]
+  $(basename "$0") [options]        # Backward-compatible shortcut for messages.
 
 Exports Messages attachments without modifying the Messages library.
 Default mode is a dry-run, flat, media-only export for Google Photos workflows.
@@ -64,6 +71,21 @@ find_relative_files() {
 }
 
 parse_args() {
+  case "${1:-}" in
+    messages)
+      shift
+      ;;
+    actions|--help|-h|help)
+      usage
+      exit 0
+      ;;
+    ""|--*)
+      ;;
+    *)
+      die "unknown action: $1"
+      ;;
+  esac
+
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --apply) APPLY=true ;;

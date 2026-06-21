@@ -80,6 +80,20 @@ Examples:
 EOF
 }
 
+apply_standards() {
+  section "Standards Enforcement"
+  bash "$DOTFILES/run/.standards.sh" home --apply
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    bash "$DOTFILES/run/.standards.sh" launchagents apply
+  fi
+  bash "$DOTFILES/run/.standards.sh" purge-unwanted
+  if bash "$DOTFILES/run/.standards.sh" audit >/dev/null 2>&1; then
+    echo "Standards audit passes."
+  else
+    echo "Standards audit still has review items. Run ./run/setup.sh standards audit."
+  fi
+}
+
 die() {
   echo "error: $*" >&2
   exit 1
@@ -478,6 +492,10 @@ cleanup_apps_command() {
 
   cleanup_apps "$APPLY" "$MODE" "$report_file"
   echo "Report: $report_file"
+
+  if [[ "$APPLY" == true ]]; then
+    apply_standards
+  fi
 }
 
 move_cleanup_targets() {
@@ -553,6 +571,7 @@ move_cleanup_targets() {
   echo "Move complete."
   echo "Reversal: move files from $dest_root back to original paths."
   echo "Report: $report_file"
+  apply_standards
 }
 
 generate_reports() {

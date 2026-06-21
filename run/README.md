@@ -1,7 +1,7 @@
 # Run Scripts
 
-`run/` is intentionally small. Most machine-audit and enforcement behavior lives
-behind `standards.sh` subcommands so there are fewer entry points to remember.
+`run/` is intentionally small. The public entry points are `setup.sh`,
+`cleanup.sh`, and `actions.sh`.
 
 ## Primary Commands
 
@@ -14,8 +14,8 @@ It installs Homebrew when missing, configures Homebrew in `~/.zprofile`, install
 missing Brewfile dependencies, links dotfiles, installs shell plugins, installs VS Code
 extensions, installs or updates Lens Studio from Snap's official Apple Silicon
 download, imports Terminal.app profiles, runs the Python package installer,
-refreshes custom app icons, and installs the LaunchAgents that keep icons
-reapplied and unmanaged installers blocked.
+force-refreshes custom app icons, installs the LaunchAgents that keep icons
+reapplied and unmanaged installers blocked, and applies enforceable standards.
 
 Plain `./run/setup.sh` is the full setup path. In interactive mode it asks
 before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
@@ -31,6 +31,12 @@ of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads
 managed LaunchAgents, forces VS Code extension installs, updates shell plugins,
 repairs Python packages, and reapplies custom icons.
 
+Setup applies enforceable standards unless `--no-standards` is passed: top-level
+Git repos move into `~/Developer` except `~/dotfiles`, LaunchAgents marked
+`disable` are disabled, and explicitly banned app families are purged. It then
+runs a strict audit as a report so remaining review items are visible without
+blocking setup.
+
 Common usage:
 
 ```bash
@@ -44,23 +50,20 @@ Lens Studio is not a Homebrew cask; `macos/lens-studio.sh` installs the latest
 Apple Silicon build directly from Snap's official download API and is called by
 setup unless `--no-lens-studio` is passed.
 
-### `standards.sh`
+Standards commands are available through `setup.sh`:
 
-The source-of-truth audit and enforcement command for keeping the Mac clean.
-
-Subcommands:
-
-- `audit`: full read-only strict audit.
-- `apps`: compare Homebrew formulae, casks, VS Code extensions, and npm globals
+- `standards audit`: full read-only strict audit.
+- `standards apps`: compare Homebrew formulae, casks, VS Code extensions, and npm globals
   against `brew/Brewfile`.
-- `settings`: compare live macOS defaults against the managed settings.
-- `home --dry-run`: report top-level home folder drift.
-- `home --apply`: move top-level git repositories into `~/Developer`.
-- `launchagents audit`: compare startup/background items to
+- `standards settings`: compare live macOS defaults against the managed settings.
+- `standards home --dry-run`: report top-level home folder drift.
+- `standards home --apply`: move top-level git repositories into `~/Developer`, except
+  the canonical dotfiles repo at `~/dotfiles`.
+- `standards launchagents audit`: compare startup/background items to
   `macos/launchagents.tsv`.
-- `launchagents apply`: disable entries marked `disable`.
-- `purge-unwanted --dry-run`: preview removal of banned app families.
-- `purge-unwanted`: remove banned app families and helpers. This may ask for an
+- `standards launchagents apply`: disable entries marked `disable`.
+- `standards purge-unwanted --dry-run`: preview removal of banned app families.
+- `standards purge-unwanted`: remove banned app families and helpers. This may ask for an
   administrator password once, then keep sudo alive for the purge.
 
 The banned app families are Maxon, Logitech Options, Docker Desktop, Steam, and
@@ -70,6 +73,7 @@ Watchman.
 
 Storage cleanup and organization utility. It is reversible by default because
 `move` sends files to `~/CleanupStaging` unless `--mode trash` is selected.
+Apply commands also run standards enforcement after cleanup finishes.
 
 Subcommands:
 
@@ -90,14 +94,15 @@ reported by Homebrew cask metadata. Removable Apple apps such as iMovie,
 Numbers, Pages, and Freeform are listed in `macos/removable-apple-apps.txt`.
 The `apps` group is included by `move --include all`.
 
-### `export-messages-attachments.sh`
+### `actions.sh`
 
-Exports Messages attachments without modifying the Messages database. The
-default is a dry-run, flat, media-only export for photo review workflows.
+Device and data actions that are useful but not part of setup or cleanup.
+Currently it contains the Messages attachment exporter. The default is a dry-run,
+flat, media-only export for photo review workflows.
 
 Common usage:
 
 ```bash
-./run/export-messages-attachments.sh --dry-run
-./run/export-messages-attachments.sh --apply --dest ~/CleanupStaging/messages
+./run/actions.sh messages --dry-run
+./run/actions.sh messages --apply --dest ~/CleanupStaging/messages
 ```

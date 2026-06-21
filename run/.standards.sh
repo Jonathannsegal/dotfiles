@@ -7,6 +7,7 @@ BREWFILE="$DOTFILES/brew/Brewfile"
 LAUNCH_CONFIG="$DOTFILES/macos/launchagents.tsv"
 HOME_DIR="$HOME"
 DEV_DIR="$HOME/Developer"
+DOTFILES_DIR="$HOME/dotfiles"
 VIOLATIONS=0
 SUDO_KEEPALIVE_PID=""
 
@@ -49,7 +50,7 @@ ensure_sudo_keepalive() {
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") <command> [options]
+Usage: ./run/setup.sh standards <command> [options]
 
 Commands:
   audit                       Full strict clean-computer audit.
@@ -407,13 +408,53 @@ settings_audit() {
   check_default com.apple.controlcenter "NSStatusItem Visible Bluetooth" bool false || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible Sound" bool false || failures=$((failures + 1))
   check_default_bool_unset_false com.apple.controlcenter "NSStatusItem Visible Battery" || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible AccessibilityShortcuts" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible BentoBox" bool true || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible MusicRecognition" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-0" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-1" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-2" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-3" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-4" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-5" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-6" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-7" bool false || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Visible Item-8" bool false || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem VisibleCC Battery" bool true || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem VisibleCC Clock" bool true || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem VisibleCC BentoBox-0" bool true || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Preferred Position BentoBox-0" float 105 || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Preferred Position BentoBox" float 127 || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Preferred Position Battery" float 195 || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Preferred Position Clock" float 200 || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Preferred Position AccessibilityShortcuts" float 211 || failures=$((failures + 1))
+  check_default com.apple.controlcenter "NSStatusItem Preferred Position WiFi" float 331 || failures=$((failures + 1))
   check_default com.apple.menuextra.battery ShowPercent bool false || failures=$((failures + 1))
   check_default com.apple.menuextra.clock DateFormat string "EEE MMM d  h:mm a" || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock FlashDateSeparators bool false || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock IsAnalog bool false || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock Show24Hour bool true || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock ShowAMPM bool false || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock ShowDate bool false || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock ShowDayOfWeek bool false || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock ShowSeconds bool false || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock TimeAnnouncementsEnabled bool false || failures=$((failures + 1))
+  check_default com.apple.menuextra.clock TimeAnnouncementsIntervalIdentifier string EveryHourInterval || failures=$((failures + 1))
   check_default com.apple.Spotlight "NSStatusItem Visible Item-0" bool false || failures=$((failures + 1))
+
+  check_default com.apple.Safari DownloadsPath string "$HOME/Downloads" || failures=$((failures + 1))
+  check_default com.apple.Safari ShowFullURLInSmartSearchField bool true || failures=$((failures + 1))
+  check_default com.apple.Safari AutoOpenSafeDownloads bool false || failures=$((failures + 1))
+  check_default com.apple.Safari AlwaysRestoreSessionAtLaunch bool true || failures=$((failures + 1))
+  check_default com.apple.Safari ShowFavoritesBar bool true || failures=$((failures + 1))
+  check_default com.apple.Safari ShowSidebarInNewWindows bool false || failures=$((failures + 1))
+  check_default com.apple.Safari ShowSidebarInNewTabs bool false || failures=$((failures + 1))
+  check_default com.apple.Safari UniversalSearchEnabled bool true || failures=$((failures + 1))
+  check_default com.apple.Safari SuppressSearchSuggestions bool false || failures=$((failures + 1))
+  check_default com.apple.Safari ShowDevelopMenu bool true || failures=$((failures + 1))
+  check_default com.apple.Safari IncludeDevelopMenu bool true || failures=$((failures + 1))
+  check_default com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey bool true || failures=$((failures + 1))
+  check_default NSGlobalDomain WebKitDeveloperExtras bool true || failures=$((failures + 1))
 
   check_default com.apple.ActivityMonitor ShowCategory int 0 || failures=$((failures + 1))
   check_default com.apple.ActivityMonitor SortColumn string CPUUsage || failures=$((failures + 1))
@@ -482,7 +523,7 @@ move_repo() {
 
 is_allowed_top_level() {
   case "$(basename "$1")" in
-    Applications|Desktop|Developer|Documents|Downloads|Library|Movies|Music|Personal|Pictures|Public|School|Zotero)
+    Applications|Desktop|Developer|Documents|Downloads|Library|Movies|Music|Personal|Pictures|Public|School|Zotero|dotfiles)
       return 0
       ;;
     "Creative Cloud Files"*|*" - Google Drive")
@@ -505,10 +546,18 @@ print_cloud_roots() {
 
 home_audit() {
   local apply="${1:-false}"
+  local dotfiles_real expected_dotfiles_real
 
   echo "Home organization audit"
   echo "Mode: $([[ "$apply" == true ]] && echo apply || echo dry-run)"
   echo
+
+  dotfiles_real="$(cd "$DOTFILES" 2>/dev/null && pwd -P || printf "%s" "$DOTFILES")"
+  expected_dotfiles_real="$(cd "$DOTFILES_DIR" 2>/dev/null && pwd -P || printf "%s" "$DOTFILES_DIR")"
+
+  if [[ "$dotfiles_real" != "$expected_dotfiles_real" ]]; then
+    printf "DOTFILES_LOCATION_DRIFT\tDOTFILES=%s\texpected ~/dotfiles\n" "$dotfiles_real"
+  fi
 
   find "$HOME_DIR" -maxdepth 1 -mindepth 1 -type d -print 2>/dev/null | sort |
   while read -r dir; do
@@ -528,17 +577,14 @@ home_audit() {
         ;;
     esac
 
+    if [[ "$dir" == "$DOTFILES_DIR" ]]; then
+      continue
+    fi
+
     if [[ -d "$dir/.git" && "$dir" != "$DEV_DIR" && "$dir" != "$DEV_DIR/"* ]]; then
       move_repo "$dir" "$apply"
       continue
     fi
-
-    case "$(basename "$dir")" in
-      dotfiles)
-        printf "REVIEW_DUPLICATE_REPO\t%s\tcurrent repo is in ~/Developer/dotfiles\n" "$(rel_home "$dir")"
-        continue
-        ;;
-    esac
 
     if ! is_allowed_top_level "$dir" && [[ "$(basename "$dir")" != .* ]]; then
       printf "REVIEW_TOP_LEVEL\t%s\n" "$(rel_home "$dir")"
@@ -553,6 +599,7 @@ home_audit() {
   echo "  ~/Documents"
   echo "  ~/Zotero"
   echo "  ~/Downloads"
+  echo "  ~/dotfiles"
   print_cloud_roots
 }
 
@@ -561,11 +608,11 @@ check_home() {
   local output
 
   output="$(home_audit false)"
-  echo "$output" | awk -F '\t' '$1 == "DEV_TOOL_DRIFT" || $1 == "REVIEW_TOP_LEVEL" || $1 == "REVIEW_DUPLICATE_REPO" || $1 == "STALE_APP_BUILD" || $1 == "WOULD_MOVE_REPO" { print }'
+  echo "$output" | awk -F '\t' '$1 == "DEV_TOOL_DRIFT" || $1 == "REVIEW_TOP_LEVEL" || $1 == "DOTFILES_LOCATION_DRIFT" || $1 == "STALE_APP_BUILD" || $1 == "WOULD_MOVE_REPO" { print }'
 
   while IFS= read -r line; do
     [[ -n "$line" ]] && violation "home organization drift: $line"
-  done < <(echo "$output" | awk -F '\t' '$1 == "DEV_TOOL_DRIFT" || $1 == "REVIEW_TOP_LEVEL" || $1 == "REVIEW_DUPLICATE_REPO" || $1 == "STALE_APP_BUILD" || $1 == "WOULD_MOVE_REPO" { print }')
+  done < <(echo "$output" | awk -F '\t' '$1 == "DEV_TOOL_DRIFT" || $1 == "REVIEW_TOP_LEVEL" || $1 == "DOTFILES_LOCATION_DRIFT" || $1 == "STALE_APP_BUILD" || $1 == "WOULD_MOVE_REPO" { print }')
 }
 
 plist_label() {
@@ -831,7 +878,7 @@ check_unwanted_artifacts() {
   if [[ "$found_any" -eq 0 ]]; then
     echo "No unwanted app artifacts found."
   else
-    echo "Run ./run/standards.sh purge-unwanted from Terminal to purge these."
+    echo "Run ./run/setup.sh standards purge-unwanted from Terminal to purge these."
   fi
 }
 

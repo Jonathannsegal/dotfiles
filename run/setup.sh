@@ -7,6 +7,11 @@ DOTFILES="$(pwd -P)"
 export DOTFILES
 export NODE_NO_WARNINGS="${NODE_NO_WARNINGS:-1}"
 
+if [[ "${1:-}" == "standards" ]]; then
+    shift
+    exec bash "$DOTFILES/run/.standards.sh" "$@"
+fi
+
 BACKUP_DIR="$HOME/.dotfiles_backup/$(date +%Y%m%d_%H%M%S)"
 BREWFILE="$DOTFILES/brew/Brewfile"
 RUN_BREW=true
@@ -20,6 +25,7 @@ RUN_ICONS=true
 RUN_SHELL_PLUGINS=true
 RUN_JDK=true
 RUN_INSTALLER_GUARD=true
+RUN_STANDARDS=true
 INSTALL_ICON_AGENT=true
 ASSUME_YES=false
 BACKUP_EXISTING=true
@@ -45,7 +51,9 @@ fail() {
 
 usage() {
     cat <<EOF
-Usage: ./run/setup.sh [options]
+Usage:
+  ./run/setup.sh [options]
+  ./run/setup.sh standards <command> [options]
 
 Repeatable macOS bootstrap for this dotfiles repo.
 
@@ -67,6 +75,7 @@ Options:
   --no-jdk          Skip the Homebrew OpenJDK system link.
   --no-installer-guard
                     Skip the LaunchAgent that blocks unmanaged installers.
+  --no-standards    Skip applying enforceable clean-computer standards.
   --no-backup       Replace conflicting dotfiles instead of backing them up.
   --hard            Repair mode: overwrite managed dotfiles and re-run managed
                     installers/configuration even when already present.
@@ -91,6 +100,7 @@ while [[ $# -gt 0 ]]; do
         --no-shell-plugins) RUN_SHELL_PLUGINS=false ;;
         --no-jdk) RUN_JDK=false ;;
         --no-installer-guard) RUN_INSTALLER_GUARD=false ;;
+        --no-standards) RUN_STANDARDS=false ;;
         --no-backup) BACKUP_EXISTING=false ;;
         --hard)
             HARD_SETUP=true
@@ -386,6 +396,38 @@ install_brew_bundle() {
     fi
 }
 
+setup_creative_cloud() {
+    [[ "$RUN_BREW" == true ]] || return 0
+    grep -q '^cask "adobe-creative-cloud"' "$BREWFILE" || return 0
+    command -v brew >/dev/null 2>&1 || return 0
+
+    local launcher="/Applications/Adobe Creative Cloud/Adobe Creative Cloud"
+    local target="/Applications/Utilities/Adobe Creative Cloud/ACC/Creative Cloud.app"
+
+    if brew list --cask adobe-creative-cloud >/dev/null 2>&1 &&
+       [[ -e "$launcher" && -e "$target" ]]; then
+        success "Adobe Creative Cloud is installed"
+        return 0
+    fi
+
+    info "Repairing Adobe Creative Cloud cask install"
+    if is_macos; then
+        ensure_sudo_keepalive
+    fi
+
+    if brew list --cask adobe-creative-cloud >/dev/null 2>&1; then
+        brew reinstall --cask adobe-creative-cloud
+    else
+        brew install --cask adobe-creative-cloud
+    fi
+
+    if [[ -e "$launcher" && -e "$target" ]]; then
+        success "Adobe Creative Cloud installed"
+    else
+        warn "Adobe Creative Cloud cask ran, but the launcher was not found"
+    fi
+}
+
 setup_shell_plugins() {
     [[ "$RUN_SHELL_PLUGINS" == true ]] || {
         success "Skipped shell plugins"
@@ -493,10 +535,7 @@ setup_icons() {
         return 0
     fi
 
-    local icon_args=()
-    if [[ "$HARD_SETUP" == true ]]; then
-        icon_args+=(--force)
-    fi
+    local icon_args=(--force)
 
     bash "$DOTFILES/macos/icons/setup.sh" "${icon_args[@]}"
 
@@ -518,6 +557,28 @@ setup_installer_guard() {
 
     DOTFILES_HARD_SETUP="$HARD_SETUP" bash "$DOTFILES/macos/installer-guard.sh" install
     success "Installer guard configured"
+}
+
+setup_standards() {
+    [[ "$RUN_STANDARDS" == true ]] || {
+        success "Skipped standards enforcement"
+        return 0
+    }
+
+    info "Applying enforceable clean-computer standards"
+    bash "$DOTFILES/run/.standards.sh" home --apply
+
+    if is_macos; then
+        bash "$DOTFILES/run/.standards.sh" launchagents apply
+    fi
+
+    bash "$DOTFILES/run/.standards.sh" purge-unwanted
+
+    if bash "$DOTFILES/run/.standards.sh" audit >/dev/null 2>&1; then
+        success "Standards audit passes"
+    else
+        warn "Standards audit still has review items; run ./run/setup.sh standards audit"
+    fi
 }
 
 setup_terminal() {
@@ -550,7 +611,7 @@ setup_macos() {
         return 0
     fi
 
-    if [[ "$HARD_SETUP" == false ]] && bash "$DOTFILES/run/standards.sh" settings >/dev/null 2>&1; then
+    if [[ "$HARD_SETUP" == false ]] && bash "$DOTFILES/run/.standards.sh" settings >/dev/null 2>&1; then
         success "macOS defaults already match"
     else
         ensure_sudo_keepalive
@@ -562,6 +623,7 @@ main() {
     create_env_file
     install_dotfiles
     install_brew_bundle
+    setup_creative_cloud
     setup_lens_studio
     setup_shell_plugins
     setup_jdk
@@ -571,6 +633,7 @@ main() {
     setup_macos
     setup_installer_guard
     setup_icons
+    setup_standards
     success "Setup complete"
 }
 

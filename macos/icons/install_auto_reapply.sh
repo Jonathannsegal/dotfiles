@@ -23,7 +23,7 @@ cat > "$TMP_PLIST" <<EOF
   <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>${SCRIPT_PATH} --auto</string>
+    <string>${SCRIPT_PATH} --auto --force</string>
   </array>
 
   <key>RunAtLoad</key>
