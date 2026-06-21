@@ -396,6 +396,38 @@ install_brew_bundle() {
     fi
 }
 
+declutter_creative_cloud_apps() {
+    is_macos || return 0
+
+    local visible_app="/Applications/Utilities/Adobe Creative Cloud/ACC/Creative Cloud.app"
+    local hidden_apps=(
+        "/Applications/Utilities/Adobe Creative Cloud/ACC/Creative Cloud Helper.app"
+        "/Applications/Utilities/Adobe Creative Cloud/Diagnostics/Adobe Creative Cloud Diagnostics.app"
+        "/Applications/Utilities/Adobe Creative Cloud/Utils/Creative Cloud Desktop App.app"
+        "/Applications/Utilities/Adobe Creative Cloud/Utils/Creative Cloud Installer.app"
+        "/Applications/Utilities/Adobe Creative Cloud/Utils/Creative Cloud Uninstaller.app"
+    )
+    local changed=false
+    local app
+
+    for app in "${hidden_apps[@]}"; do
+        [[ -d "$app" ]] || continue
+        ensure_sudo_keepalive
+        sudo chflags hidden "$app"
+        changed=true
+    done
+
+    if [[ -d "$visible_app" ]]; then
+        ensure_sudo_keepalive
+        sudo chflags nohidden "$visible_app"
+        changed=true
+    fi
+
+    if [[ "$changed" == true ]]; then
+        success "Adobe Creative Cloud app search is decluttered"
+    fi
+}
+
 setup_creative_cloud() {
     [[ "$RUN_BREW" == true ]] || return 0
     grep -q '^cask "adobe-creative-cloud"' "$BREWFILE" || return 0
@@ -406,6 +438,7 @@ setup_creative_cloud() {
 
     if brew list --cask adobe-creative-cloud >/dev/null 2>&1 &&
        [[ -e "$launcher" && -e "$target" ]]; then
+        declutter_creative_cloud_apps
         success "Adobe Creative Cloud is installed"
         return 0
     fi
@@ -422,6 +455,7 @@ setup_creative_cloud() {
     fi
 
     if [[ -e "$launcher" && -e "$target" ]]; then
+        declutter_creative_cloud_apps
         success "Adobe Creative Cloud installed"
     else
         warn "Adobe Creative Cloud cask ran, but the launcher was not found"

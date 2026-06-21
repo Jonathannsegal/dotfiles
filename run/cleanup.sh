@@ -66,7 +66,7 @@ Move options:
   --include LIST    Comma-separated groups. Default: all.
 
 Groups:
-  podcasts, macwhisper, chrome, app-caches, dev-caches, apps
+  podcasts, macwhisper, chrome, garageband, app-caches, dev-caches, apps
 
 Examples:
   $(basename "$0") audit
@@ -112,6 +112,12 @@ macwhisper|${HOME_DIR}/Library/Containers/com.goodsnooze.MacWhisper/Data/Library
 chrome|${HOME_DIR}/Library/Application Support/Google/Chrome/Default/Service Worker
 chrome|${HOME_DIR}/Library/Application Support/Google/Chrome/Default/File System
 chrome|${HOME_DIR}/Library/Application Support/Google/Chrome/Default/IndexedDB
+garageband|/Library/Application Support/GarageBand
+garageband|/Library/Application Support/Logic
+garageband|/Library/Audio/Apple Loops
+garageband|/Library/Audio/Impulse Responses/Apple
+garageband|/Library/Audio/Presets/Apple
+garageband|/Library/Audio/Sounds/Apple
 app-caches|${HOME_DIR}/Library/Application Support/Slack/Cache
 app-caches|${HOME_DIR}/Library/Application Support/discord/Cache
 app-caches|${HOME_DIR}/Library/Application Support/Code/Cache

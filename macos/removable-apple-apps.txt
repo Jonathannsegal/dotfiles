@@ -2,6 +2,7 @@
 # managed MAS list in brew/Brewfile.
 
 iMovie.app
+News.app
 Numbers.app
 Pages.app
 Freeform.app

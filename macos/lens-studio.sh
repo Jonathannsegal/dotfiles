@@ -7,6 +7,8 @@ DOWNLOAD_PAGE="https://ar.snap.com/download"
 DOWNLOAD_API="https://ar-web-api.snapchat.com/api/ls-download/"
 PLATFORM="MAC_OS_ARM"
 CACHE_DIR="${HOME}/Library/Caches/dotfiles/lens-studio"
+LENS_TMP_DIR=""
+LENS_MOUNT_DIR=""
 
 info() {
     printf "\r [ \033[00;34m..\033[0m ] %s\n" "$1"
@@ -129,20 +131,22 @@ download_url_for_version() {
 install_lens_studio() {
     local version="$1"
     local url="$2"
-    local tmp_dir dmg_path cached_dmg mount_dir source_app
+    local dmg_path cached_dmg source_app
 
-    tmp_dir="$(mktemp -d)"
-    dmg_path="$tmp_dir/lens-studio.dmg"
+    LENS_TMP_DIR="$(mktemp -d)"
+    dmg_path="$LENS_TMP_DIR/lens-studio.dmg"
     cached_dmg="$CACHE_DIR/Lens_Studio_${version}_mac_arm64.dmg"
-    mount_dir="$tmp_dir/mount"
-    mkdir -p "$mount_dir"
+    LENS_MOUNT_DIR="$LENS_TMP_DIR/mount"
+    mkdir -p "$LENS_MOUNT_DIR"
     mkdir -p "$CACHE_DIR"
 
     cleanup() {
-        if mount | grep -Fq "$mount_dir"; then
-            hdiutil detach "$mount_dir" -quiet || true
+        if [[ -n "${LENS_MOUNT_DIR:-}" ]] && mount | grep -Fq "$LENS_MOUNT_DIR"; then
+            hdiutil detach "$LENS_MOUNT_DIR" -quiet || true
         fi
-        rm -rf "$tmp_dir"
+        if [[ -n "${LENS_TMP_DIR:-}" ]]; then
+            rm -rf "$LENS_TMP_DIR"
+        fi
     }
     trap cleanup EXIT
 
@@ -154,9 +158,9 @@ install_lens_studio() {
     cp "$cached_dmg" "$dmg_path"
 
     info "Mounting Lens Studio installer"
-    hdiutil attach "$dmg_path" -nobrowse -readonly -mountpoint "$mount_dir" -quiet
+    hdiutil attach "$dmg_path" -nobrowse -readonly -mountpoint "$LENS_MOUNT_DIR" -quiet
 
-    source_app="$(find "$mount_dir" -maxdepth 2 -name "Lens Studio.app" -type d | head -n 1)"
+    source_app="$(find "$LENS_MOUNT_DIR" -maxdepth 2 -name "Lens Studio.app" -type d | head -n 1)"
     [[ -n "$source_app" ]] || fail "Lens Studio.app was not found in the DMG"
 
     if pgrep -x "Lens Studio" >/dev/null 2>&1; then

@@ -50,6 +50,10 @@ Lens Studio is not a Homebrew cask; `macos/lens-studio.sh` installs the latest
 Apple Silicon build directly from Snap's official download API and is called by
 setup unless `--no-lens-studio` is passed.
 
+Creative Cloud is installed through Homebrew. Setup also hides Adobe's helper,
+diagnostics, installer, and uninstaller app bundles so app search stays focused
+on the user-facing Creative Cloud app.
+
 Standards commands are available through `setup.sh`:
 
 - `standards audit`: full read-only strict audit.
@@ -90,9 +94,11 @@ Subcommands:
 
 The managed app lists are `brew/Brewfile`, MAS entries in that Brewfile, and
 `macos/app-allowlist.txt` for package-installed apps whose bundles are not
-reported by Homebrew cask metadata. Removable Apple apps such as iMovie,
+reported by Homebrew cask metadata. Removable Apple apps such as iMovie, News,
 Numbers, Pages, and Freeform are listed in `macos/removable-apple-apps.txt`.
-The `apps` group is included by `move --include all`.
+The `garageband` group removes optional GarageBand/Logic sound-library content
+from `/Library/Application Support` and `/Library/Audio`. The `apps` and
+`garageband` groups are included by `move --include all`.
 
 ### `actions.sh`
 
