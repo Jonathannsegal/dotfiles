@@ -106,10 +106,8 @@ cask "zoom"
 # Collect, organise, cite, and share research sources
 cask "zotero"
 mas "Developer", id: 640199958
-mas "Hidden Bar", id: 1452453066
 mas "WhatsApp", id: 310633997
 mas "Whisper Transcription", id: 1668083311
-mas "Windows App", id: 1295203466
 mas "Xcode", id: 497799835
 vscode "anthropic.claude-code"
 vscode "bradlc.vscode-tailwindcss"

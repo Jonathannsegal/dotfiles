@@ -7,6 +7,7 @@ BREWFILE="${DOTFILES}/brew/Brewfile"
 APP_ALLOWLIST="${DOTFILES}/macos/app-allowlist.txt"
 REMOVABLE_APPLE_APPS="${DOTFILES}/macos/removable-apple-apps.txt"
 HOME_DIR="${HOME}"
+DEV_DIR="${HOME_DIR}/Developer"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 STAGING_ROOT="${HOME_DIR}/CleanupStaging"
 MODE="staging"
@@ -53,6 +54,7 @@ Usage: $(basename "$0") <command> [options]
 Commands:
   audit            Read-only storage overview.
   targets          List reversible cleanup target groups.
+  projects         List Git repositories and flag projects outside ~/Developer.
   move             Dry-run or move selected cleanup targets.
   apps             Dry-run or remove unmanaged installed apps.
   reports          Generate duplicate/app/media review reports.
@@ -71,6 +73,7 @@ Groups:
 Examples:
   $(basename "$0") audit
   $(basename "$0") targets
+  $(basename "$0") projects
   $(basename "$0") move --dry-run --include chrome,dev-caches
   $(basename "$0") move --apply --mode staging --include podcasts
   $(basename "$0") apps --dry-run
@@ -287,6 +290,91 @@ unmanaged_casks() {
   comm -23 "$installed" "$expected" || true
 
   rm -f "$installed" "$expected"
+}
+
+is_skipped_project_root() {
+  case "$1" in
+    "$HOME_DIR/.Trash"|"$HOME_DIR/.Trash/"*) return 0 ;;
+    "$HOME_DIR/CleanupStaging"|"$HOME_DIR/CleanupStaging/"*) return 0 ;;
+    "$HOME_DIR/Library"|"$HOME_DIR/Library/"*) return 0 ;;
+    "$HOME_DIR/Library/CloudStorage"|"$HOME_DIR/Library/CloudStorage/"*) return 0 ;;
+    "$HOME_DIR/.cache"|"$HOME_DIR/.cache/"*) return 0 ;;
+    "$HOME_DIR/.npm"|"$HOME_DIR/.npm/"*) return 0 ;;
+    "$HOME_DIR/.local"|"$HOME_DIR/.local/"*) return 0 ;;
+    "$HOME_DIR/.codex"|"$HOME_DIR/.codex/"*) return 0 ;;
+    "$HOME_DIR/.oh-my-zsh"|"$HOME_DIR/.oh-my-zsh/"*) return 0 ;;
+    "$HOME_DIR/.zsh/plugins"|"$HOME_DIR/.zsh/plugins/"*) return 0 ;;
+    "$HOME_DIR/.Trash") return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+project_roots() {
+  find "$HOME_DIR" -path "$HOME_DIR/Library" -prune -o \
+    -path "$HOME_DIR/.Trash" -prune -o \
+    -path "$HOME_DIR/CleanupStaging" -prune -o \
+    -path "$HOME_DIR/.cache" -prune -o \
+    -path "$HOME_DIR/.npm" -prune -o \
+    -path "$HOME_DIR/.local" -prune -o \
+    -path "$HOME_DIR/.codex" -prune -o \
+    -path "$HOME_DIR/.oh-my-zsh" -prune -o \
+    -path "$HOME_DIR/.zsh/plugins" -prune -o \
+    -name .git -type d -prune -print 2>/dev/null |
+    sed 's#/.git$##' |
+    sort -f
+}
+
+project_location_status() {
+  local repo="$1"
+  case "$repo" in
+    "$DOTFILES"|"$DEV_DIR"|"$DEV_DIR"/*) echo "ok" ;;
+    *) echo "move-to-developer" ;;
+  esac
+}
+
+project_worktree_status() {
+  local repo="$1"
+  if git -C "$repo" status --porcelain 2>/dev/null | grep -q .; then
+    echo "dirty"
+  else
+    echo "clean"
+  fi
+}
+
+project_branch() {
+  local repo="$1"
+  git -C "$repo" branch --show-current 2>/dev/null ||
+    git -C "$repo" rev-parse --short HEAD 2>/dev/null ||
+    echo "unknown"
+}
+
+project_last_change() {
+  local repo="$1"
+  git -C "$repo" log -1 --format=%ci 2>/dev/null | cut -d' ' -f1 || echo "unknown"
+}
+
+projects_report() {
+  section "Git Projects"
+  local repo location worktree branch last_change had_drift=false
+
+  printf "location\tworktree\tbranch\tlast_commit\tpath\n"
+  while IFS= read -r repo; do
+    [[ -n "$repo" ]] || continue
+    is_skipped_project_root "$repo" && continue
+
+    location="$(project_location_status "$repo")"
+    worktree="$(project_worktree_status "$repo")"
+    branch="$(project_branch "$repo")"
+    last_change="$(project_last_change "$repo")"
+    [[ "$location" != "ok" ]] && had_drift=true
+    printf "%s\t%s\t%s\t%s\t%s\n" "$location" "$worktree" "$branch" "$last_change" "${repo#$HOME_DIR/}"
+  done < <(project_roots)
+
+  if [[ "$had_drift" == true ]]; then
+    echo
+    echo "Projects marked move-to-developer are outside ~/Developer."
+    echo "Run ./run/setup.sh standards home --apply to move top-level repos automatically."
+  fi
 }
 
 audit_storage() {
@@ -661,6 +749,7 @@ main() {
   case "$command" in
     audit) audit_storage "$@" ;;
     targets) list_targets ;;
+    projects) projects_report "$@" ;;
     move) move_cleanup_targets "$@" ;;
     apps) cleanup_apps_command "$@" ;;
     reports) generate_reports "$@" ;;

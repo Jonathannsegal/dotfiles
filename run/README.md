@@ -1,7 +1,7 @@
 # Run Scripts
 
 `run/` is intentionally small. The public entry points are `setup.sh`,
-`cleanup.sh`, and `actions.sh`.
+`cleanup.sh`, `maintain.sh`, and `actions.sh`.
 
 ## Primary Commands
 
@@ -94,6 +94,7 @@ Subcommands:
 - `move --apply`: move selected cleanup targets.
 - `reports`: generate duplicate/app/media review reports.
 - `lint-personal`: lint `~/Personal` organization.
+- `projects`: list Git repositories and flag any outside `~/Developer`.
 
 The managed app lists are `brew/Brewfile`, MAS entries in that Brewfile, and
 `macos/app-allowlist.txt` for package-installed apps whose bundles are not
@@ -102,6 +103,17 @@ Numbers, Pages, and Freeform are listed in `macos/removable-apple-apps.txt`.
 The `garageband` group removes optional GarageBand/Logic sound-library content
 from `/Library/Application Support` and `/Library/Audio`. The `apps` and
 `garageband` groups are included by `move --include all`.
+
+### `maintain.sh`
+
+Shortcuts for keeping the current machine shape easy to preserve and recover.
+
+- `check`: run standards, Johnny.Decimal, and project-location checks now.
+- `snapshot`: write a local state report under `~/CleanupStaging/state-snapshots`.
+- `restore`: snapshot first, then run `setup.sh --yes --hard` and recheck.
+
+Use `restore` when installed apps, preferences, icons, Dock items, or managed
+dotfiles have drifted and you want to converge back to the repo baseline.
 
 ### `actions.sh`
 

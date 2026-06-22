@@ -61,6 +61,10 @@ See `run/README.md` for the full script map. The common commands are:
 ./run/cleanup.sh move --dry-run --include app-caches,dev-caches
 ./run/cleanup.sh reports
 ./run/cleanup.sh lint-personal
+./run/cleanup.sh projects
+./run/maintain.sh check
+./run/maintain.sh snapshot
+./run/maintain.sh restore
 ./run/actions.sh messages --dry-run
 ./run/setup.sh standards audit
 ./run/setup.sh standards apps
@@ -78,6 +82,8 @@ Dock items are managed in `macos/dock-items.txt`. Startup/background items are a
 
 `./run/setup.sh standards purge-unwanted` removes installed Homebrew casks and formula leaves that are not listed in `brew/Brewfile`, then runs `brew autoremove` and `brew cleanup`. Run it from Terminal when protected `/Applications` or `/Library` leftovers require the administrator prompt.
 
+`./run/maintain.sh snapshot` writes a local state report under `~/CleanupStaging/state-snapshots` so you can compare a messy future machine to a known-good moment. `./run/maintain.sh restore` snapshots first, then runs the hard setup path to reinstall missing managed apps, reapply macOS settings, relink dotfiles, refresh icons, purge unmanaged Homebrew items, and rerun the health checks.
+
 ## Clean Computer Standard
 
 This repo is the source of truth for the machine. The standard is intentionally strict:
@@ -89,6 +95,7 @@ This repo is the source of truth for the machine. The standard is intentionally 
 - Keep personal files in `~/Personal`, school/research files in `~/School`, photos in `~/Pictures`, Lightroom work in `~/Lightroom`, screenshots and temporary downloads in `~/Downloads`, and Zotero data in `~/Zotero`.
 - Keep Desktop empty except macOS metadata files.
 - Treat Downloads as an inbox; review files older than 14 days.
+- Review scattered code with `./run/cleanup.sh projects`; active repositories should live under `~/Developer`.
 - Manage Dock order through `macos/dock-items.txt`.
 - Manage startup/background items through `macos/launchagents.tsv`; any `review` or unmanaged item fails the strict audit until it is classified.
 - Manage macOS preferences through `macos/settings.sh`; unapplied differences fail the strict audit.
@@ -105,6 +112,7 @@ Run `./run/setup.sh standards audit` when you want the full cleanliness check.
 - `~/Pictures`: photo libraries.
 - `~/Lightroom`: Lightroom catalogs, previews, and project files.
 - `~/Downloads`: screenshots and temporary downloads.
+- `~/CleanupStaging`: reversible cleanup moves and local state snapshots.
 - `~/Zotero`: Zotero library data.
 
 Interactive `git clone <url>` commands are wrapped by the shell config so new repositories land in `~/Developer` by default.

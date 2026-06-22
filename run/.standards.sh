@@ -575,7 +575,7 @@ move_repo() {
 
 is_allowed_top_level() {
   case "$(basename "$1")" in
-    Applications|Desktop|Developer|Documents|Downloads|Library|Lightroom|Movies|Music|Personal|Pictures|Public|School|"Unity user templates"|Zotero|dotfiles)
+    Applications|CleanupStaging|Desktop|Developer|Documents|Downloads|Library|Lightroom|Movies|Music|Personal|Pictures|Public|School|"Unity user templates"|Zotero|dotfiles)
       return 0
       ;;
     "Creative Cloud Files"*|*" - Google Drive")
@@ -651,6 +651,7 @@ home_audit() {
   echo "  ~/Documents"
   echo "  ~/Zotero"
   echo "  ~/Downloads"
+  echo "  ~/CleanupStaging"
   echo "  ~/dotfiles"
   print_cloud_roots
 }

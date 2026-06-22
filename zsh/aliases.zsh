@@ -39,6 +39,11 @@ alias projects='cd $HOME/Developer'
 # Common operations
 alias zshrc='$EDITOR $DOTFILES/zsh/rc.zsh'
 alias reload='source $HOME/.zshrc'
+alias maintain='$DOTFILES/run/maintain.sh'
+alias health='$DOTFILES/run/maintain.sh check'
+alias snapshot='$DOTFILES/run/maintain.sh snapshot'
+alias restore-dotfiles='$DOTFILES/run/maintain.sh restore'
+alias project-report='$DOTFILES/run/cleanup.sh projects'
 
 # Homebrew shortcuts
 alias brews='brew bundle dump --force --file=$HOME/.Brewfile' # Manual Brewfile update
