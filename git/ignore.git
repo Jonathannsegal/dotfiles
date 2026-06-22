@@ -39,3 +39,4 @@ ENV/
 # Logs and databases
 *.log
 *.sqlite
+**/.claude/settings.local.json

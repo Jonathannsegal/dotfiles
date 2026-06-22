@@ -2,7 +2,7 @@
 brew "bat"
 # .NET Core
 brew "dotnet"
-# Set default applications for file types and URL schemes
+# Select default apps for documents and URL schemes on macOS
 brew "duti"
 # Perl lib for reading and writing EXIF metadata
 brew "exiftool"
@@ -26,16 +26,14 @@ brew "git-filter-repo"
 brew "git-lfs"
 # Audit git repos for secrets
 brew "gitleaks"
-# Open-source, cross-platform JavaScript runtime environment
-brew "node"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.14"
 # Improved top (interactive process viewer)
 brew "htop"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Mac App Store command-line interface
 brew "mas"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
 # Development kit for the Java programming language
 brew "openjdk"
 # Swiss-army knife of markup format conversion
@@ -48,6 +46,8 @@ brew "poppler"
 brew "prettier"
 # Data validation using Python type hints
 brew "pydantic"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Cross-shell prompt for astronauts
@@ -66,8 +66,12 @@ cask "adobe-creative-cloud"
 cask "blender"
 # Client for the Box cloud storage service
 cask "box-drive"
-# Clipboard optimizer for images, videos, and PDFs
+# Image, video and clipboard optimiser
 cask "clop"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
+# OpenAI's Codex desktop app for managing coding agents
+cask "codex-app"
 # Voice and text chat software
 cask "discord"
 cask "font-lexend"
@@ -91,7 +95,7 @@ cask "microsoft-teams"
 cask "slack"
 # Mesh VPN based on WireGuard
 cask "tailscale-app"
-# Archive extraction utility
+# Unpacks archive files
 cask "the-unarchiver"
 # Management tool for Unity
 cask "unity-hub"
@@ -102,8 +106,10 @@ cask "zoom"
 # Collect, organise, cite, and share research sources
 cask "zotero"
 mas "Developer", id: 640199958
+mas "Hidden Bar", id: 1452453066
 mas "WhatsApp", id: 310633997
 mas "Whisper Transcription", id: 1668083311
+mas "Windows App", id: 1295203466
 mas "Xcode", id: 497799835
 vscode "anthropic.claude-code"
 vscode "bradlc.vscode-tailwindcss"

@@ -305,6 +305,21 @@ check_default_bool_unset_false() {
   fi
 }
 
+check_default_unset() {
+  local domain="$1"
+  local key="$2"
+  local current
+
+  current="$(read_default "$domain" "$key")"
+
+  if [[ "$current" == "<unset>" ]]; then
+    printf "OK\t%s\t%s\t<unset>\n" "$domain" "$key"
+  else
+    printf "DIFF\t%s\t%s\texpected=<unset>\tcurrent=%s\n" "$domain" "$key" "$current"
+    return 1
+  fi
+}
+
 check_default_if_set() {
   local domain="$1"
   local key="$2"
@@ -383,8 +398,8 @@ settings_audit() {
   check_default NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled bool false || failures=$((failures + 1))
   check_default NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled bool false || failures=$((failures + 1))
   check_default NSGlobalDomain NSAutomaticSpellingCorrectionEnabled bool false || failures=$((failures + 1))
-  check_default NSGlobalDomain AppleInterfaceStyle string Dark || failures=$((failures + 1))
-  check_default NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically bool true || failures=$((failures + 1))
+  check_default_unset NSGlobalDomain AppleInterfaceStyle || failures=$((failures + 1))
+  check_default NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically bool false || failures=$((failures + 1))
   check_default NSGlobalDomain _HIHideMenuBar bool false || failures=$((failures + 1))
   check_default NSGlobalDomain AppleMenuBarVisibleInFullscreen bool false || failures=$((failures + 1))
   check_default NSGlobalDomain com.apple.mouse.tapBehavior int 0 || failures=$((failures + 1))
@@ -460,7 +475,6 @@ settings_audit() {
   check_default com.apple.controlcenter "NSStatusItem Preferred Position Battery" float 195 || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Preferred Position Clock" float 200 || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Preferred Position AccessibilityShortcuts" float 211 || failures=$((failures + 1))
-  check_default com.apple.controlcenter "NSStatusItem Preferred Position WiFi" float 331 || failures=$((failures + 1))
   check_default com.apple.menuextra.battery ShowPercent bool false || failures=$((failures + 1))
   check_default com.apple.menuextra.clock DateFormat string "EEE MMM d  h:mm a" || failures=$((failures + 1))
   check_default com.apple.menuextra.clock FlashDateSeparators bool false || failures=$((failures + 1))
@@ -1015,15 +1029,30 @@ purge_unwanted() {
   echo "Done."
 }
 
+run_audit_category() {
+  local before output_file
+
+  before="$VIOLATIONS"
+  output_file="$(mktemp)"
+
+  "$@" > "$output_file"
+
+  if [[ "$VIOLATIONS" -gt "$before" ]]; then
+    cat "$output_file"
+  fi
+
+  rm -f "$output_file"
+}
+
 full_audit() {
-  check_apps
-  check_settings
-  check_home
-  check_launchagents
-  check_installer_guard
-  check_desktop
-  check_downloads
-  check_unwanted_artifacts
+  run_audit_category check_apps
+  run_audit_category check_settings
+  run_audit_category check_home
+  run_audit_category check_launchagents
+  run_audit_category check_installer_guard
+  run_audit_category check_desktop
+  run_audit_category check_downloads
+  run_audit_category check_unwanted_artifacts
 
   section "Result"
   if [[ "$VIOLATIONS" -eq 0 ]]; then

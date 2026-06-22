@@ -3,6 +3,7 @@
 [user]
     name = AUTHORNAME
     email = AUTHOREMAIL
+    signingkey = YOUR_LOCAL_SIGNING_KEY
 
 [github]
     user = your-github-username

@@ -309,11 +309,10 @@ defaults write com.apple.controlcenter "NSStatusItem Preferred Position BentoBox
 defaults write com.apple.controlcenter "NSStatusItem Preferred Position Battery" -float 195
 defaults write com.apple.controlcenter "NSStatusItem Preferred Position Clock" -float 200
 defaults write com.apple.controlcenter "NSStatusItem Preferred Position AccessibilityShortcuts" -float 211
-defaults write com.apple.controlcenter "NSStatusItem Preferred Position WiFi" -float 331
 
-# Automatically switch between light and dark appearances.
-defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
-defaults write NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically -bool true
+# Use the standard macOS appearance.
+defaults delete NSGlobalDomain AppleInterfaceStyle >/dev/null 2>&1 || true
+defaults write NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically -bool false
 
 # Automatically hide and show the menu bar in full screen only
 defaults write NSGlobalDomain _HIHideMenuBar -bool false
@@ -330,24 +329,31 @@ killall SystemUIServer >/dev/null 2>&1 || true
 killall ControlCenter >/dev/null 2>&1 || true
 
 ###############################################################################
-# Safari                                                                       #
+# Browser                                                                      #
 ###############################################################################
 
-# Make Safari the default browser for web links and HTML documents.
+# Make Chrome the default browser for web links and HTML documents.
 if command -v duti >/dev/null 2>&1; then
-  set_default_handler() {
-    local role="$1"
-    local identifier="$2"
+  set_default_browser_scheme() {
+    local scheme="$1"
 
-    if ! duti -s com.apple.Safari "$identifier" "$role" >/dev/null 2>&1; then
-      echo "Skipping Safari default handler for ${identifier} (macOS denied handler change)"
+    if ! duti -s com.google.Chrome "$scheme" >/dev/null 2>&1; then
+      echo "Skipping Chrome default handler for ${scheme} (macOS denied handler change)"
     fi
   }
 
-  set_default_handler all http
-  set_default_handler all https
-  set_default_handler all public.html
-  set_default_handler all public.xhtml
+  set_default_browser_document() {
+    local identifier="$1"
+
+    if ! duti -s com.google.Chrome "$identifier" all >/dev/null 2>&1; then
+      echo "Skipping Chrome default handler for ${identifier} (macOS denied handler change)"
+    fi
+  }
+
+  set_default_browser_scheme http
+  set_default_browser_scheme https
+  set_default_browser_document public.html
+  set_default_browser_document public.xhtml
 fi
 
 # Keep browser downloads in the same inbox as screenshots and temporary files.
