@@ -164,8 +164,9 @@ defaults write com.apple.screensaver askForPassword -int 1
 # Set the delay before password is required (5 minutes = 300 seconds)
 defaults write com.apple.screensaver askForPasswordDelay -int 300
 
-# Save screenshots to Downloads and set format to PNG
-defaults write com.apple.screencapture location -string "${HOME}/Downloads"
+# Save screenshots to the clipboard and set format to PNG
+defaults write com.apple.screencapture target -string "clipboard"
+defaults delete com.apple.screencapture location 2>/dev/null || true
 defaults write com.apple.screencapture type -string "png"
 
 ###############################################################################

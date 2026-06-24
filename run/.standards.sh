@@ -413,7 +413,8 @@ settings_audit() {
   check_current_host_default com.apple.screensaver idleTime int 180 || failures=$((failures + 1))
   check_default com.apple.screensaver askForPassword int 1 || failures=$((failures + 1))
   check_default com.apple.screensaver askForPasswordDelay int 300 || failures=$((failures + 1))
-  check_default com.apple.screencapture location string "$HOME/Downloads" || failures=$((failures + 1))
+  check_default com.apple.screencapture target string clipboard || failures=$((failures + 1))
+  check_default_unset com.apple.screencapture location || failures=$((failures + 1))
   check_default com.apple.screencapture type string png || failures=$((failures + 1))
 
   check_default com.apple.finder FXPreferredViewStyle string Nlsv || failures=$((failures + 1))
@@ -531,9 +532,11 @@ check_settings() {
     return 0
   fi
 
-  echo "$output" | sed -n '/^DIFF/p'
   while IFS= read -r line; do
-    [[ -n "$line" ]] && violation "managed setting drift: $line"
+    if [[ -n "$line" ]]; then
+      VIOLATIONS=$((VIOLATIONS + 1))
+      echo "$line"
+    fi
   done < <(echo "$output" | sed -n '/^DIFF/p')
 }
 
