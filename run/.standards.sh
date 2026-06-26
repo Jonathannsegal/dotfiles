@@ -268,6 +268,27 @@ read_default() {
   defaults read "$domain" "$key" 2>/dev/null || echo "<unset>"
 }
 
+read_nvram() {
+  local key="$1"
+
+  nvram "$key" 2>/dev/null | sed "s/^${key}[[:space:]]*//" || echo "<unset>"
+}
+
+check_nvram() {
+  local key="$1"
+  local expected="$2"
+  local current
+
+  current="$(read_nvram "$key")"
+
+  if [[ "$current" == "$expected" ]]; then
+    printf "OK\tnvram\t%s\t%s\n" "$key" "$current"
+  else
+    printf "DIFF\tnvram\t%s\texpected=%s\tcurrent=%s\n" "$key" "$expected" "$current"
+    return 1
+  fi
+}
+
 check_default() {
   local domain="$1"
   local key="$2"
@@ -387,6 +408,8 @@ audit_dock() {
 
 settings_audit() {
   local failures=0
+
+  check_nvram StartupMute "%01" || failures=$((failures + 1))
 
   check_default NSGlobalDomain KeyRepeat int 6 || failures=$((failures + 1))
   check_default NSGlobalDomain InitialKeyRepeat int 25 || failures=$((failures + 1))

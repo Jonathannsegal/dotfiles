@@ -36,7 +36,10 @@ fi
 ###############################################################################
 # General UI/UX & Performance                                                 #
 ###############################################################################
-# Disable the sound effects on boot
+# Disable the startup sound.
+sudo nvram StartupMute=%01
+
+# Disable the legacy boot sound fallback.
 sudo nvram SystemAudioVolume=" "
 
 # Disable system sound effects
