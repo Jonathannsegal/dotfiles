@@ -43,8 +43,9 @@ sudo nvram StartupMute=%01
 sudo nvram SystemAudioVolume=" "
 
 # Disable system sound effects
-defaults write "com.apple.sound.uiaudio.enabled" -int 0
+defaults delete "com.apple.sound.uiaudio.enabled" -int >/dev/null 2>&1 || true
 defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -bool false
+defaults write com.apple.finder FinderSounds -bool false
 
 # Disable volume change feedback sound
 defaults write NSGlobalDomain com.apple.sound.beep.feedback -bool false

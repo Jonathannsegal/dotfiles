@@ -425,8 +425,11 @@ settings_audit() {
   check_default NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically bool false || failures=$((failures + 1))
   check_default NSGlobalDomain _HIHideMenuBar bool false || failures=$((failures + 1))
   check_default NSGlobalDomain AppleMenuBarVisibleInFullscreen bool false || failures=$((failures + 1))
+  check_default NSGlobalDomain com.apple.sound.beep.feedback bool false || failures=$((failures + 1))
   check_default NSGlobalDomain com.apple.mouse.tapBehavior int 0 || failures=$((failures + 1))
   check_default NSGlobalDomain com.apple.trackpad.forceClick bool true || failures=$((failures + 1))
+
+  check_default com.apple.systemsound com.apple.sound.uiaudio.enabled bool false || failures=$((failures + 1))
 
   check_default com.apple.AppleMultitouchTrackpad Clicking bool false || failures=$((failures + 1))
   check_default com.apple.AppleMultitouchTrackpad TrackpadRightClick bool true || failures=$((failures + 1))
@@ -440,6 +443,7 @@ settings_audit() {
   check_default_unset com.apple.screencapture location || failures=$((failures + 1))
   check_default com.apple.screencapture type string png || failures=$((failures + 1))
 
+  check_default com.apple.finder FinderSounds bool false || failures=$((failures + 1))
   check_default com.apple.finder FXPreferredViewStyle string Nlsv || failures=$((failures + 1))
   check_default com.apple.finder FXPreferredSearchViewStyle string Nlsv || failures=$((failures + 1))
   check_default com.apple.finder SearchRecentsSavedViewStyle string Nlsv || failures=$((failures + 1))
