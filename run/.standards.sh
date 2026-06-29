@@ -442,6 +442,7 @@ settings_audit() {
   check_default com.apple.screencapture target string clipboard || failures=$((failures + 1))
   check_default_unset com.apple.screencapture location || failures=$((failures + 1))
   check_default com.apple.screencapture type string png || failures=$((failures + 1))
+  check_default com.apple.screencapture disable-sound bool true || failures=$((failures + 1))
 
   check_default com.apple.finder FinderSounds bool false || failures=$((failures + 1))
   check_default com.apple.finder FXPreferredViewStyle string Nlsv || failures=$((failures + 1))
