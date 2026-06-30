@@ -341,6 +341,19 @@ check_default_unset() {
   fi
 }
 
+check_preference_domain_absent() {
+  local domain="$1"
+  local plist="$HOME_DIR/Library/Preferences/${domain}.plist"
+
+  if defaults domains 2>/dev/null | tr ',' '\n' | sed 's/^ *//' | grep -Fxq "$domain" ||
+    [[ -e "$plist" ]]; then
+    printf "DIFF\t%s\texpected=absent\tcurrent=present\n" "$domain"
+    return 1
+  fi
+
+  printf "OK\t%s\tabsent\n" "$domain"
+}
+
 check_default_if_set() {
   local domain="$1"
   local key="$2"
@@ -425,11 +438,14 @@ settings_audit() {
   check_default NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically bool false || failures=$((failures + 1))
   check_default NSGlobalDomain _HIHideMenuBar bool false || failures=$((failures + 1))
   check_default NSGlobalDomain AppleMenuBarVisibleInFullscreen bool false || failures=$((failures + 1))
+  check_default NSGlobalDomain com.apple.sound.uiaudio.enabled bool false || failures=$((failures + 1))
+  check_default NSGlobalDomain com.apple.sound.beep.volume float 0 || failures=$((failures + 1))
   check_default NSGlobalDomain com.apple.sound.beep.feedback bool false || failures=$((failures + 1))
   check_default NSGlobalDomain com.apple.mouse.tapBehavior int 0 || failures=$((failures + 1))
   check_default NSGlobalDomain com.apple.trackpad.forceClick bool true || failures=$((failures + 1))
 
   check_default com.apple.systemsound com.apple.sound.uiaudio.enabled bool false || failures=$((failures + 1))
+  check_preference_domain_absent com.apple.sound.uiaudio.enabled || failures=$((failures + 1))
 
   check_default com.apple.AppleMultitouchTrackpad Clicking bool false || failures=$((failures + 1))
   check_default com.apple.AppleMultitouchTrackpad TrackpadRightClick bool true || failures=$((failures + 1))

@@ -43,11 +43,14 @@ sudo nvram StartupMute=%01
 sudo nvram SystemAudioVolume=" "
 
 # Disable system sound effects
-defaults delete "com.apple.sound.uiaudio.enabled" -int >/dev/null 2>&1 || true
+defaults delete com.apple.sound.uiaudio.enabled >/dev/null 2>&1 || true
+rm -f "${HOME}/Library/Preferences/com.apple.sound.uiaudio.enabled.plist"
+defaults write NSGlobalDomain com.apple.sound.uiaudio.enabled -bool false
 defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -bool false
 defaults write com.apple.finder FinderSounds -bool false
 
-# Disable volume change feedback sound
+# Disable alert and volume feedback sounds.
+defaults write NSGlobalDomain com.apple.sound.beep.volume -float 0
 defaults write NSGlobalDomain com.apple.sound.beep.feedback -bool false
 
 # Use list view in all Finder windows
