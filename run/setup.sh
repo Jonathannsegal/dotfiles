@@ -12,6 +12,36 @@ if [[ "${1:-}" == "standards" ]]; then
     exec bash "$DOTFILES/run/.standards.sh" "$@"
 fi
 
+if [[ "${1:-}" == "icons" ]]; then
+    shift
+    install_icon_agent=true
+    icon_args=(--force)
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help|-h)
+                exec bash "$DOTFILES/macos/icons/setup.sh" --help
+                ;;
+            --no-icon-agent)
+                install_icon_agent=false
+                ;;
+            *)
+                icon_args+=("$1")
+                ;;
+        esac
+        shift
+    done
+
+    bash "$DOTFILES/macos/icons/setup.sh" "${icon_args[@]}"
+    if [[ "$install_icon_agent" == true ]]; then
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+            DOTFILES_HARD_SETUP=true bash "$DOTFILES/macos/icons/install_auto_reapply.sh"
+        else
+            echo "Skipped icon LaunchAgent outside macOS"
+        fi
+    fi
+    exit 0
+fi
+
 BACKUP_DIR="$HOME/.dotfiles_backup/$(date +%Y%m%d_%H%M%S)"
 BREWFILE="$DOTFILES/brew/Brewfile"
 RUN_BREW=true
@@ -54,6 +84,7 @@ usage() {
 Usage:
   ./run/setup.sh [options]
   ./run/setup.sh standards <command> [options]
+  ./run/setup.sh icons [icon-options]
 
 Repeatable macOS bootstrap for this dotfiles repo.
 
@@ -80,6 +111,14 @@ Options:
   --hard            Repair mode: overwrite managed dotfiles and re-run managed
                     installers/configuration even when already present.
   -h, --help        Show this help.
+
+Icon-only setup:
+  ./run/setup.sh icons
+                    Reapply custom app icons without running the full setup.
+                    Also refreshes the automatic icon LaunchAgent.
+                    Extra icon-options are passed to macos/icons/setup.sh.
+  ./run/setup.sh icons --no-icon-agent
+                    Reapply icons without installing/reloading the LaunchAgent.
 EOF
 }
 

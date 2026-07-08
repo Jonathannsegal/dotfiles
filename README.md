@@ -22,7 +22,7 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 8. Import Terminal.app profiles and run the Python package installer.
 9. Ask whether to apply macOS defaults from `macos/settings.sh`.
 10. Install a LaunchAgent that blocks unmanaged installers in `~/Downloads` and `~/Desktop`.
-11. Force-refresh custom app icons and install the LaunchAgent that reapplies them at login, every 6 hours, and when `/Applications` changes.
+11. Force-refresh custom app icons and install the LaunchAgent that reapplies them at login, every 6 hours, and when `/Applications` or the Chrome app bundle changes.
 12. Apply enforceable clean-computer standards and report any remaining audit drift.
 
 ## Useful Options
@@ -40,11 +40,12 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 ./run/setup.sh --no-installer-guard # skip unmanaged installer blocking
 ./run/setup.sh --no-standards # skip standards enforcement
 ./run/setup.sh --hard         # repair mode: overwrite/reapply managed setup
+./run/setup.sh icons          # reapply custom icons and refresh their watcher only
 ```
 
 Plain `./run/setup.sh` is the normal full setup. In interactive mode it asks before applying macOS defaults; pressing Enter accepts. `--yes` accepts that prompt automatically.
 
-When setup reaches a privileged step, it asks for the administrator password once and keeps that sudo session alive until setup exits. A fully satisfied rerun can skip privileged work and avoid a password prompt.
+When setup reaches a privileged step, it asks for the administrator password once and keeps that sudo session alive until setup exits. A fully satisfied rerun can skip privileged work and avoid a password prompt. Use `./run/setup.sh icons` when an app update, especially Chrome, resets a custom icon and you only want the icon refresh plus the automatic reapply LaunchAgent.
 
 Use `./run/setup.sh --hard` when a new-machine setup was interrupted or a managed config looks partially applied. Hard mode assumes yes, replaces managed dotfile links instead of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads managed LaunchAgents, forces VS Code extension installs, updates shell plugins, repairs Python packages, and reapplies custom icons. It is scoped to repo-managed setup surfaces; it is not a general disk wipe.
 

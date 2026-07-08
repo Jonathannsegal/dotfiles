@@ -35,6 +35,10 @@ cat > "$TMP_PLIST" <<EOF
   <key>WatchPaths</key>
   <array>
     <string>/Applications</string>
+    <string>/Applications/Google Chrome.app</string>
+    <string>/Applications/Google Chrome.app/Contents</string>
+    <string>/Applications/Google Chrome.app/Contents/Info.plist</string>
+    <string>/Applications/Google Chrome.app/Contents/Resources</string>
   </array>
 
   <key>StandardOutPath</key>

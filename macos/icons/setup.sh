@@ -87,6 +87,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if [[ "$SKIP_PRIVILEGED" == true ]]; then
+    CLEAR_CACHE=false
+fi
+
 if [[ "$(uname -s)" != "Darwin" ]]; then
     echo "Skipping icon setup outside macOS"
     exit 0

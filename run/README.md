@@ -21,6 +21,10 @@ Plain `./run/setup.sh` is the full setup path. In interactive mode it asks
 before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
 `--yes` applies those defaults without prompting.
 
+Use `./run/setup.sh icons` to reapply custom app icons and reload the automatic
+icon LaunchAgent without running the full setup. This is the quick repair path
+after Chrome or another app update restores its stock icon.
+
 When setup reaches a privileged step, it asks for the administrator password
 once and keeps that sudo session alive until setup exits. A fully satisfied
 rerun can skip privileged work and avoid a password prompt.
@@ -45,6 +49,7 @@ Common usage:
 ./run/setup.sh --yes
 ./run/setup.sh --macos
 ./run/setup.sh --hard
+./run/setup.sh icons
 ```
 
 Lens Studio is not a Homebrew cask; `macos/lens-studio.sh` installs the latest
