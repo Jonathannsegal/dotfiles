@@ -300,8 +300,7 @@ defaults write com.apple.controlcenter "NSStatusItem VisibleCC BentoBox-0" -bool
 # Show percentage in battery indicator
 defaults write com.apple.menuextra.battery ShowPercent -bool false
 
-# Set clock format to show date and 12-hour time
-defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  h:mm a"
+# Configure the menu bar clock
 defaults write com.apple.menuextra.clock FlashDateSeparators -bool false
 defaults write com.apple.menuextra.clock IsAnalog -bool false
 defaults write com.apple.menuextra.clock Show24Hour -bool true

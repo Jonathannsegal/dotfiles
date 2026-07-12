@@ -521,7 +521,6 @@ settings_audit() {
   check_default com.apple.controlcenter "NSStatusItem Preferred Position Clock" float 200 || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Preferred Position AccessibilityShortcuts" float 211 || failures=$((failures + 1))
   check_default com.apple.menuextra.battery ShowPercent bool false || failures=$((failures + 1))
-  check_default com.apple.menuextra.clock DateFormat string "EEE MMM d  h:mm a" || failures=$((failures + 1))
   check_default com.apple.menuextra.clock FlashDateSeparators bool false || failures=$((failures + 1))
   check_default com.apple.menuextra.clock IsAnalog bool false || failures=$((failures + 1))
   check_default com.apple.menuextra.clock Show24Hour bool true || failures=$((failures + 1))
