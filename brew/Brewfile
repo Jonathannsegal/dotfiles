@@ -109,7 +109,6 @@ mas "Developer", id: 640199958
 mas "WhatsApp", id: 310633997
 mas "Whisper Transcription", id: 1668083311
 mas "Xcode", id: 497799835
-vscode "anthropic.claude-code"
 vscode "bradlc.vscode-tailwindcss"
 vscode "csharpier.csharpier-vscode"
 vscode "davidanson.vscode-markdownlint"
