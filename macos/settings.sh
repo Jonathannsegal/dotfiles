@@ -279,7 +279,6 @@ defaults write com.apple.Spotlight "NSStatusItem Visible Item-0" -bool false
 # Configure menu bar items to match this machine.
 defaults write com.apple.controlcenter "NSStatusItem Visible WiFi" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible Bluetooth" -bool false
-defaults write com.apple.controlcenter "NSStatusItem Visible Sound" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible Battery" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible AccessibilityShortcuts" -bool false
 defaults write com.apple.controlcenter "NSStatusItem Visible BentoBox" -bool true

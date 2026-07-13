@@ -108,7 +108,7 @@
     "vscode",
     "vscode-insiders"
   ],
-  "workbench.colorTheme": "Visual Studio Dark",
+  "workbench.colorTheme": "Light 2026",
   "git.ignoreRebaseWarning": true,
   "python.analysis.typeCheckingMode": "basic",
   "github.copilot.nextEditSuggestions.enabled": true,
@@ -131,7 +131,6 @@
   },
   "diffEditor.renderSideBySide": false,
   "diffEditor.ignoreTrimWhitespace": false,
-  "window.autoDetectColorScheme": true,
   "workbench.preferredLightColorTheme": "Visual Studio Dark",
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
@@ -148,5 +147,6 @@
     "**/.gitea/workflows/*.yaml",
     "**/.forgejo/workflows/*.yml",
     "**/.forgejo/workflows/*.yaml"
-  ]
+  ],
+  "window.autoDetectColorScheme": true
 }

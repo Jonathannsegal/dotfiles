@@ -498,7 +498,6 @@ settings_audit() {
   check_default com.apple.controlcenter "NSStatusItem Visible Weather" bool true || failures=$((failures + 1))
   check_default_bool_unset_false com.apple.controlcenter "NSStatusItem Visible WiFi" || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible Bluetooth" bool false || failures=$((failures + 1))
-  check_default com.apple.controlcenter "NSStatusItem Visible Sound" bool false || failures=$((failures + 1))
   check_default_bool_unset_false com.apple.controlcenter "NSStatusItem Visible Battery" || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible AccessibilityShortcuts" bool false || failures=$((failures + 1))
   check_default com.apple.controlcenter "NSStatusItem Visible BentoBox" bool true || failures=$((failures + 1))
