@@ -64,8 +64,6 @@ brew "xxh"
 brew "zoxide"
 # Collection of apps and services for photography, design, video, web, and UX
 cask "adobe-creative-cloud"
-# Agent orchestration platform
-cask "antigravity"
 # 3D creation suite
 cask "blender"
 # Client for the Box cloud storage service
@@ -125,6 +123,7 @@ vscode "george-alisson.html-preview-vscode"
 vscode "github.github-vscode-theme"
 vscode "github.vscode-github-actions"
 vscode "github.vscode-pull-request-github"
+vscode "google.geminicodeassist"
 vscode "gruntfuggly.todo-tree"
 vscode "iamhyc.overleaf-workshop"
 vscode "jackiotyu.size-tree"

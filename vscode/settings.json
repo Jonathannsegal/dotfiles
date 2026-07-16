@@ -149,5 +149,6 @@
     "**/.forgejo/workflows/*.yaml"
   ],
   "window.autoDetectColorScheme": true,
-  "http.systemCertificatesNode": true
+  "http.systemCertificatesNode": true,
+  "geminicodeassist.project": "gen-lang-client-0015677059"
 }
