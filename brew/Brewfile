@@ -50,6 +50,8 @@ brew "pydantic"
 brew "python@3.14"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Rust toolchain installer
+brew "rustup"
 # Cross-shell prompt for astronauts
 brew "starship"
 # Simplified and community-driven man pages
@@ -62,6 +64,8 @@ brew "xxh"
 brew "zoxide"
 # Collection of apps and services for photography, design, video, web, and UX
 cask "adobe-creative-cloud"
+# Agent orchestration platform
+cask "antigravity"
 # 3D creation suite
 cask "blender"
 # Client for the Box cloud storage service

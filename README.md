@@ -22,7 +22,7 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 8. Import Terminal.app profiles and run the Python package installer.
 9. Ask whether to apply macOS defaults from `macos/settings.sh`.
 10. Install a LaunchAgent that blocks unmanaged installers in `~/Downloads` and `~/Desktop`.
-11. Force-refresh custom app icons and install the LaunchAgent that reapplies them at login, every 6 hours, and when `/Applications` or the Chrome app bundle changes.
+11. Force-refresh custom app icons and install the LaunchAgent that reapplies them at login, every 6 hours, and when `/Applications` or any managed app bundle changes.
 12. Apply enforceable clean-computer standards and report any remaining audit drift.
 
 ## Useful Options
@@ -45,7 +45,7 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 
 Plain `./run/setup.sh` is the normal full setup. In interactive mode it asks before applying macOS defaults; pressing Enter accepts. `--yes` accepts that prompt automatically.
 
-When setup reaches a privileged step, it asks for the administrator password once and keeps that sudo session alive until setup exits. A fully satisfied rerun can skip privileged work and avoid a password prompt. Use `./run/setup.sh icons` when an app update, especially Chrome, resets a custom icon and you only want the icon refresh plus the automatic reapply LaunchAgent.
+When setup reaches a privileged step, it asks for the administrator password once and keeps that sudo session alive until setup exits. A fully satisfied rerun can skip privileged work and avoid a password prompt. Use `./run/setup.sh icons` when an app update resets a custom icon and you only want the icon refresh plus the automatic reapply LaunchAgent. The agent watches each managed app bundle (including Visual Studio Code) and its automatic pass skips icons that are still correct, so an update repairs only the app that reverted.
 
 Use `./run/setup.sh --hard` when a new-machine setup was interrupted or a managed config looks partially applied. Hard mode assumes yes, replaces managed dotfile links instead of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads managed LaunchAgents, forces VS Code extension installs, updates shell plugins, repairs Python packages, and reapplies custom icons. It is scoped to repo-managed setup surfaces; it is not a general disk wipe.
 

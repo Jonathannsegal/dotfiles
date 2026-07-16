@@ -148,5 +148,6 @@
     "**/.forgejo/workflows/*.yml",
     "**/.forgejo/workflows/*.yaml"
   ],
-  "window.autoDetectColorScheme": true
+  "window.autoDetectColorScheme": true,
+  "http.systemCertificatesNode": true
 }

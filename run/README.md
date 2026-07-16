@@ -23,7 +23,8 @@ before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
 
 Use `./run/setup.sh icons` to reapply custom app icons and reload the automatic
 icon LaunchAgent without running the full setup. This is the quick repair path
-after Chrome or another app update restores its stock icon.
+after an app update restores its stock icon. The agent watches every managed app
+bundle, including Visual Studio Code, and skips apps whose icons are still set.
 
 When setup reaches a privileged step, it asks for the administrator password
 once and keeps that sudo session alive until setup exits. A fully satisfied
