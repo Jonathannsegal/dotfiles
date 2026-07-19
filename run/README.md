@@ -14,7 +14,7 @@ It installs Homebrew when missing, configures Homebrew in `~/.zprofile`, install
 missing Brewfile dependencies, links dotfiles, installs shell plugins, installs VS Code
 extensions, installs or updates Lens Studio from Snap's official Apple Silicon
 download, imports Terminal.app profiles, runs the Python package installer,
-force-refreshes custom app icons, installs the LaunchAgents that keep icons
+force-refreshes custom app icons, configures Pictogram's signed login helper to keep icons
 reapplied and unmanaged installers blocked, and applies enforceable standards.
 
 Plain `./run/setup.sh` is the full setup path. In interactive mode it asks
@@ -22,8 +22,8 @@ before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
 `--yes` applies those defaults without prompting.
 
 Use `./run/setup.sh icons` to reapply custom app icons and reload the automatic
-icon LaunchAgent without running the full setup. This is the quick repair path
-after an app update restores its stock icon. The agent watches every managed app
+icon persistence helper without running the full setup. This is the quick repair path
+after an app update restores its stock icon. Pictogram watches every managed third-party app
 bundle, including Visual Studio Code, and skips apps whose icons are still set.
 
 When setup reaches a privileged step, it asks for the administrator password

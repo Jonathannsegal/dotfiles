@@ -93,6 +93,8 @@ cask "microsoft-auto-update"
 cask "microsoft-powerpoint"
 # Meet, chat, call, and collaborate in just one place
 cask "microsoft-teams"
+# Preserve custom application icons across updates
+cask "pictogram"
 # Team communication and collaboration software
 cask "slack"
 # Mesh VPN based on WireGuard

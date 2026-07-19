@@ -36,7 +36,7 @@ if [[ "${1:-}" == "icons" ]]; then
         if [[ "$(uname -s)" == "Darwin" ]]; then
             DOTFILES_HARD_SETUP=true bash "$DOTFILES/macos/icons/install_auto_reapply.sh"
         else
-            echo "Skipped icon LaunchAgent outside macOS"
+            echo "Skipped icon persistence helper outside macOS"
         fi
     fi
     exit 0
@@ -115,7 +115,7 @@ Options:
 Icon-only setup:
   ./run/setup.sh icons
                     Reapply custom app icons without running the full setup.
-                    Also refreshes the automatic icon LaunchAgent.
+                    Also refreshes the automatic icon persistence helper.
                     Extra icon-options are passed to macos/icons/setup.sh.
   ./run/setup.sh icons --no-icon-agent
                     Reapply icons without installing/reloading the LaunchAgent.

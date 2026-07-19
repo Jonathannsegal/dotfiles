@@ -16,7 +16,7 @@ keep	com.google.GoogleUpdater.wake.system	Google updater system
 keep	com.google.keystone.agent	Google updater legacy agent
 keep	com.google.keystone.xpcservice	Google updater legacy XPC
 keep	com.google.keystone.daemon	Google updater legacy daemon
-keep	com.jsegal.dotfiles-icons-reapply	Dotfiles custom icon reapply
+keep	com.NeilSardesai.Pictogram-Helper	Pictogram custom icon reapply
 keep	com.jsegal.dotfiles-installer-guard	Dotfiles unmanaged installer guard
 keep	com.user.terminal-theme	Dotfiles Terminal theme switcher
 keep	com.box.desktop.launch	Box Drive login item
