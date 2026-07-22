@@ -560,6 +560,28 @@ apply_first_found() {
     echo "Skipping $(basename "$icon_path" .png) (app not found)"
 }
 
+resolve_icon_path() {
+    local icon_name="$1"
+    local legacy_name="${2:-}"
+
+    if [[ -f "$ICONS_DIR/$icon_name" ]]; then
+        printf "%s" "$ICONS_DIR/$icon_name"
+        return 0
+    fi
+
+    if [[ -n "$legacy_name" && -f "$ICONS_DIR/$legacy_name" ]]; then
+        printf "%s" "$ICONS_DIR/$legacy_name"
+        return 0
+    fi
+
+    return 1
+}
+
+LENS_ICON_PATH=""
+if ! LENS_ICON_PATH="$(resolve_icon_path "lens.png" "lense.png")"; then
+    echo "Skipping Lens Studio (icon not found: lens.png or lense.png)"
+fi
+
 # Apply icons
 apply_icon "/Applications/Google Chrome.app" "$ICONS_DIR/chrome.png"
 
@@ -573,7 +595,7 @@ else
     echo "Skipping Adobe Illustrator (app not found)"
 fi
 apply_icon "/Applications/iTerm.app" "$ICONS_DIR/iterm2.png"
-apply_icon "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "$ICONS_DIR/lightroom.png"
+apply_first_found "$ICONS_DIR/lightroom.png" "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "/Applications/Adobe Lightroom Classic.app"
 apply_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
 apply_icon "/Applications/Slack.app" "$ICONS_DIR/slack.png"
 apply_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"
@@ -582,7 +604,9 @@ apply_icon "/Applications/zoom.us.app" "$ICONS_DIR/zoom.png"
 apply_first_found "$ICONS_DIR/zotero.png" "/Applications/Zotero.app" "/Applications/zotero.app"
 apply_icon "/Applications/ATLAS.ti.app" "$ICONS_DIR/atlasti.png"
 apply_icon "/Applications/Blender.app" "$ICONS_DIR/blender.png"
-apply_icon "/Applications/Lens Studio.app" "$ICONS_DIR/lense.png"
+if [[ -n "$LENS_ICON_PATH" ]]; then
+    apply_icon "/Applications/Lens Studio.app" "$LENS_ICON_PATH"
+fi
 apply_icon "/Applications/Xcode.app" "$ICONS_DIR/xcode.png"
 apply_first_found "$ICONS_DIR/messages.png" "/System/Applications/Messages.app" "/Applications/Messages.app"
 apply_first_found "$ICONS_DIR/mail.png" "/System/Applications/Mail.app" "/Applications/Mail.app"

@@ -59,6 +59,28 @@ register_first_found() {
   done
 }
 
+resolve_icon_path() {
+  local icon_name="$1"
+  local legacy_name="${2:-}"
+
+  if [[ -f "$ICONS_DIR/$icon_name" ]]; then
+    printf "%s" "$ICONS_DIR/$icon_name"
+    return 0
+  fi
+
+  if [[ -n "$legacy_name" && -f "$ICONS_DIR/$legacy_name" ]]; then
+    printf "%s" "$ICONS_DIR/$legacy_name"
+    return 0
+  fi
+
+  return 1
+}
+
+LENS_ICON_PATH=""
+if ! LENS_ICON_PATH="$(resolve_icon_path "lens.png" "lense.png")"; then
+  echo "Skipping Lens Studio (icon not found: lens.png or lense.png)"
+fi
+
 register_icon "/Applications/Google Chrome.app" "$ICONS_DIR/chrome.png"
 
 shopt -s nullglob
@@ -69,7 +91,7 @@ if [[ ${#ILLUSTRATOR_CANDIDATES[@]} -gt 0 ]]; then
 fi
 
 register_icon "/Applications/iTerm.app" "$ICONS_DIR/iterm2.png"
-register_icon "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "$ICONS_DIR/lightroom.png"
+register_first_found "$ICONS_DIR/lightroom.png" "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "/Applications/Adobe Lightroom Classic.app"
 register_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
 register_icon "/Applications/Slack.app" "$ICONS_DIR/slack.png"
 register_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"
@@ -78,7 +100,9 @@ register_icon "/Applications/zoom.us.app" "$ICONS_DIR/zoom.png"
 register_first_found "$ICONS_DIR/zotero.png" "/Applications/Zotero.app" "/Applications/zotero.app"
 register_icon "/Applications/ATLAS.ti.app" "$ICONS_DIR/atlasti.png"
 register_icon "/Applications/Blender.app" "$ICONS_DIR/blender.png"
-register_icon "/Applications/Lens Studio.app" "$ICONS_DIR/lense.png"
+if [[ -n "$LENS_ICON_PATH" ]]; then
+  register_icon "/Applications/Lens Studio.app" "$LENS_ICON_PATH"
+fi
 register_icon "/Applications/Xcode.app" "$ICONS_DIR/xcode.png"
 
 # Launching Pictogram once registers its signed background login helper. It is
