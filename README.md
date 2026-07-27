@@ -15,7 +15,7 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 1. Create or update `~/.env.sh` with `DOTFILES`.
 2. Symlink config files from this repo, backing up conflicting files to `~/.dotfiles_backup`.
 3. Install Homebrew if needed, configure Homebrew in `~/.zprofile`, and install missing Homebrew bundle dependencies.
-4. Install or update Snap Lens Studio for Apple Silicon from Snap's official download API.
+4. Install Snap Lens Studio 5.15.4 for Spectacles (2024) through a local Homebrew cask.
 5. Install missing zsh plugins outside shell startup.
 6. Link Homebrew OpenJDK for macOS tools when approved and not already linked.
 7. Install missing VS Code extensions from the Brewfile when VS Code is available.

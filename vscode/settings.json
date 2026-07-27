@@ -150,5 +150,6 @@
   ],
   "window.autoDetectColorScheme": true,
   "http.systemCertificatesNode": true,
-  "geminicodeassist.project": "gen-lang-client-0015677059"
+  "geminicodeassist.project": "gen-lang-client-0015677059",
+  "chat.sessionSync.enabled": true
 }

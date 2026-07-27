@@ -107,6 +107,8 @@ command -v brew >/dev/null 2>&1 || {
     exit 1
 }
 
+bash "$DOTFILES/brew/setup-local-tap.sh"
+
 if [[ "$HARD_SETUP" == false ]] && brew bundle check --file="$BREWFILE" >/dev/null 2>&1; then
     echo "Homebrew bundle is already satisfied."
 else

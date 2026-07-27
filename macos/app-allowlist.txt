@@ -2,13 +2,25 @@
 # Prefer Brewfile casks or MAS entries. Use this only for package/installer
 # casks whose visible apps are not exposed in `brew info --cask --json=v2`.
 
+# Child apps installed by Homebrew-managed parent casks.
 Adobe Illustrator */Adobe Illustrator.app
 Adobe Lightroom Classic/Adobe Lightroom Classic.app
+Adobe Media Encoder */Adobe Media Encoder *.app
 Adobe Photoshop */Adobe Photoshop *.app
+Adobe Premiere Pro */Adobe Premiere Pro *.app
 Box.app
+ChatGPT.app
+Google Docs.app
 Google Drive.app
-Lens Studio.app
+Google Sheets.app
+Google Slides.app
 Microsoft PowerPoint.app
 Microsoft Teams.app
 Tailscale.app
 zoom.us.app
+
+# Approved vendor-managed exceptions without a Homebrew cask or App Store app.
+ATLAS.ti.app
+Cisco/Cisco Secure Client - Socket Filter.app
+Cisco/Cisco Secure Client.app
+Cisco/Uninstall Cisco Secure Client.app

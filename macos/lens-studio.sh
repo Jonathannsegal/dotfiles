@@ -3,9 +3,9 @@
 set -euo pipefail
 
 APP_PATH="/Applications/Lens Studio.app"
-DOWNLOAD_PAGE="https://ar.snap.com/download"
 DOWNLOAD_API="https://ar-web-api.snapchat.com/api/ls-download/"
 PLATFORM="MAC_OS_ARM"
+TARGET_VERSION="${LENS_STUDIO_VERSION:-5.15.4}"
 CACHE_DIR="${HOME}/Library/Caches/dotfiles/lens-studio"
 LENS_TMP_DIR=""
 LENS_MOUNT_DIR=""
@@ -31,13 +31,13 @@ usage() {
     cat <<EOF
 Usage: macos/lens-studio.sh [--force] [--dry-run]
 
-Install or update Snap Lens Studio for Apple Silicon from Snap's official
-download API. Skips installation when the current app already matches the
-latest version.
+Install Snap Lens Studio for Apple Silicon from Snap's official download API.
+The default version is 5.15.4 for Spectacles (2024). Set LENS_STUDIO_VERSION to
+override it. Skips installation when the current app already matches the target.
 
 Options:
   --force   Reinstall even when the current version is already installed.
-  --dry-run Report the current/latest versions and download URL without installing.
+  --dry-run Report the current/target versions and download URL without installing.
   -h, --help
             Show this help.
 EOF
@@ -84,28 +84,6 @@ current_version() {
 
 public_version() {
     printf "%s" "$1" | sed -E 's/^([0-9]+[.][0-9]+[.][0-9]+).*/\1/'
-}
-
-latest_version() {
-    curl -fsSL "$DOWNLOAD_PAGE" | perl -0ne '
-        while (/"initialValue":"([0-9]+(?:\.[0-9]+){1,3})"/g) {
-            $seen{$1} = 1;
-        }
-        END {
-            @versions = sort {
-                @aa = split(/\./, $a);
-                @bb = split(/\./, $b);
-                for ($i = 0; $i < 4; $i++) {
-                    $cmp = (($aa[$i] // 0) <=> ($bb[$i] // 0));
-                    return $cmp if $cmp != 0;
-                }
-                0;
-            } keys %seen;
-            if (@versions) {
-                print $versions[-1];
-            }
-        }
-    '
 }
 
 json_url() {
@@ -184,8 +162,7 @@ main() {
 
     installed="$(current_version)"
     installed_public="$(public_version "$installed")"
-    latest="$(latest_version)"
-    [[ -n "$latest" ]] || fail "Could not determine the latest Lens Studio version"
+    latest="$TARGET_VERSION"
 
     if [[ "$FORCE" == false && "$installed_public" == "$latest" ]]; then
         success "Lens Studio $installed is already installed"
@@ -197,7 +174,7 @@ main() {
 
     if [[ "$DRY_RUN" == true ]]; then
         info "Installed Lens Studio: ${installed:-not installed}"
-        info "Latest Lens Studio: $latest"
+        info "Target Lens Studio: $latest"
         info "Download URL resolved for $PLATFORM"
         return 0
     fi

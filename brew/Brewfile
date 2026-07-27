@@ -1,3 +1,4 @@
+tap "jsegal/local"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
 # .NET Core
@@ -85,6 +86,8 @@ cask "google-chrome"
 cask "google-drive"
 # Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
+# AR development platform pinned for Spectacles (2024)
+cask "jsegal/local/lens-studio@5.15", trusted: true
 # Connect to your Android devices
 cask "macdroid"
 # Provides updates to various Microsoft products
@@ -93,7 +96,7 @@ cask "microsoft-auto-update"
 cask "microsoft-powerpoint"
 # Meet, chat, call, and collaborate in just one place
 cask "microsoft-teams"
-# Preserve custom application icons across updates
+# Customise and maintain app icons
 cask "pictogram"
 # Team communication and collaboration software
 cask "slack"

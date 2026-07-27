@@ -53,9 +53,10 @@ Common usage:
 ./run/setup.sh icons
 ```
 
-Lens Studio is not a Homebrew cask; `macos/lens-studio.sh` installs the latest
-Apple Silicon build directly from Snap's official download API and is called by
-setup unless `--no-lens-studio` is passed.
+Lens Studio 5.15.4 is managed by the local Homebrew cask
+`jsegal/local/lens-studio@5.15` for Spectacles (2024). The setup script syncs
+the cask from `brew/Casks` before running `brew bundle`. The direct
+`macos/lens-studio.sh` fallback is pinned to the same version.
 
 Creative Cloud is installed through Homebrew. Setup also hides Adobe's helper,
 diagnostics, installer, and uninstaller app bundles so app search stays focused

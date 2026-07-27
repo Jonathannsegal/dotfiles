@@ -418,6 +418,7 @@ install_brew_bundle() {
 
     ensure_homebrew
     [[ -f "$BREWFILE" ]] || fail "Missing Brewfile: $BREWFILE"
+    bash "$DOTFILES/brew/setup-local-tap.sh"
 
     if [[ "$HARD_SETUP" == false ]] && brew bundle check --file="$BREWFILE" >/dev/null 2>&1; then
         success "Homebrew bundle is already satisfied"
