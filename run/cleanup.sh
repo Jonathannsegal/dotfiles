@@ -172,9 +172,7 @@ brewfile_mas_names() {
 }
 
 installed_casks() {
-  brew list --cask --full-name 2>/dev/null |
-    sed 's#^.*/##' |
-    sort || true
+  brew list --cask --full-name 2>/dev/null | sort || true
 }
 
 managed_cask_app_names() {

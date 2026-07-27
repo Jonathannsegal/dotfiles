@@ -93,9 +93,7 @@ installed_formulae_all() {
 }
 
 installed_casks() {
-  brew list --cask --full-name 2>/dev/null |
-    sed 's#^.*/##' |
-    sort || true
+  brew list --cask --full-name 2>/dev/null | sort || true
 }
 
 installed_vscode() {
