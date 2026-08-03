@@ -59,6 +59,16 @@ register_first_found() {
   done
 }
 
+unregister_icon() {
+  local bundle_id="$1"
+  local registration="${CUSTOM_ICONS_DIR}/${bundle_id}"
+
+  if [[ -e "$registration" ]]; then
+    rm -f "$registration"
+    echo "Removed unsafe persistent icon registration for ${bundle_id}"
+  fi
+}
+
 resolve_icon_path() {
   local icon_name="$1"
   local legacy_name="${2:-}"
@@ -83,15 +93,13 @@ fi
 
 register_icon "/Applications/Google Chrome.app" "$ICONS_DIR/chrome.png"
 
-shopt -s nullglob
-ILLUSTRATOR_CANDIDATES=(/Applications/Adobe\ Illustrator*/Adobe\ Illustrator*.app)
-shopt -u nullglob
-if [[ ${#ILLUSTRATOR_CANDIDATES[@]} -gt 0 ]]; then
-  register_icon "${ILLUSTRATOR_CANDIDATES[0]}" "$ICONS_DIR/illustrator.png"
-fi
+# Pictogram reapplies icons immediately after an app changes. That races
+# Creative Cloud's patch installer and mutates Adobe's signed app bundles,
+# which can make later updates fail with MoveFileCommand error 146.
+unregister_icon "com.adobe.illustrator"
+unregister_icon "com.adobe.LightroomClassicCC7"
 
 register_icon "/Applications/iTerm.app" "$ICONS_DIR/iterm2.png"
-register_first_found "$ICONS_DIR/lightroom.png" "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "/Applications/Adobe Lightroom Classic.app"
 register_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
 register_icon "/Applications/Slack.app" "$ICONS_DIR/slack.png"
 register_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"

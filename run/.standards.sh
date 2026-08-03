@@ -837,6 +837,42 @@ check_installer_guard() {
   violation "installer guard is not loaded; run ./macos/installer-guard.sh install or ./run/setup.sh"
 }
 
+check_adobe_app_bundles() {
+  section "Adobe App Bundle Integrity"
+
+  local app bad_owner signature_error registration
+  local custom_icons="$HOME/Library/Application Support/com.NeilSardesai.Pictogram/Custom Icons"
+  local found=false
+
+  while IFS= read -r -d '' app; do
+    found=true
+    echo "Checking $app"
+
+    bad_owner="$(find "$app" -xdev -maxdepth 2 ! -user root -print -quit 2>/dev/null || true)"
+    if [[ -n "$bad_owner" ]]; then
+      violation "Adobe bundle contains a non-root-owned path: $bad_owner"
+    fi
+
+    if find "$app" -xdev -name '*.dotfiles-original' -print -quit 2>/dev/null | grep -q .; then
+      violation "Adobe bundle contains legacy dotfiles icon backup: $app"
+    fi
+
+    if ! signature_error="$(codesign --verify --strict --verbose=1 "$app" 2>&1)"; then
+      violation "Adobe bundle signature is invalid: $app (${signature_error//$'\n'/; })"
+    fi
+  done < <(find /Applications -mindepth 2 -maxdepth 2 -type d -path '/Applications/Adobe */*.app' -print0 2>/dev/null)
+
+  if [[ -d "$custom_icons" ]]; then
+    while IFS= read -r -d '' registration; do
+      violation "Pictogram must not manage Adobe bundle icons: $registration"
+    done < <(find "$custom_icons" -maxdepth 1 -type f -name 'com.adobe.*' -print0 2>/dev/null)
+  fi
+
+  if [[ "$found" == false ]]; then
+    echo "No Creative Cloud product bundles found."
+  fi
+}
+
 check_desktop() {
   section "Desktop"
   local files
@@ -1094,6 +1130,7 @@ full_audit() {
   run_audit_category check_home
   run_audit_category check_launchagents
   run_audit_category check_installer_guard
+  run_audit_category check_adobe_app_bundles
   run_audit_category check_desktop
   run_audit_category check_downloads
   run_audit_category check_unwanted_artifacts

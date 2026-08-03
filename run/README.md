@@ -23,8 +23,10 @@ before applying macOS defaults from `macos/settings.sh`; pressing Enter accepts.
 
 Use `./run/setup.sh icons` to reapply custom app icons and reload the automatic
 icon persistence helper without running the full setup. This is the quick repair path
-after an app update restores its stock icon. Pictogram watches every managed third-party app
-bundle, including Visual Studio Code, and skips apps whose icons are still set.
+after an app update restores its stock icon. Pictogram watches supported third-party app
+bundles, including Visual Studio Code, and skips apps whose icons are still set. Adobe
+apps remain on their stock icons because modifying their signed bundles can break Creative
+Cloud patch updates with MoveFileCommand error 146.
 
 When setup reaches a privileged step, it asks for the administrator password
 once and keeps that sudo session alive until setup exits. A fully satisfied

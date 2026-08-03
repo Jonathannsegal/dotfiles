@@ -259,7 +259,18 @@ verify_custom_icon() {
 
 bundle_icon_resource_update_needed() {
     case "$1" in
-        *"/Xcode.app"|*"/Adobe Illustrator.app"|*"/Adobe Lightroom Classic.app")
+        *"/Xcode.app")
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+vendor_managed_app_bundle() {
+    case "$1" in
+        /Applications/Adobe\ */*.app|/Applications/Utilities/Adobe\ */*.app)
             return 0
             ;;
         *)
@@ -479,6 +490,15 @@ apply_icon() {
     local app_path="$1"
     local icon_path="$2"
     local needs_sudo=false
+
+    # Creative Cloud patch updates replace files inside signed app bundles.
+    # Adding Finder icon resources, rewriting the bundled .icns, or stripping
+    # bundle metadata can leave Adobe's MoveFileCommand unable to replace a
+    # file (error 146). Keep vendor-managed Adobe bundles completely stock.
+    if vendor_managed_app_bundle "$app_path"; then
+        echo "Skipping vendor-managed Adobe bundle: $app_path"
+        return 0
+    fi
     
     if [ -e "$app_path" ] && [ -f "$icon_path" ]; then
         if [[ "$FORCE_ICON_APPLY" == false ]] && fileicon test "$app_path" >/dev/null 2>&1; then
@@ -585,17 +605,7 @@ fi
 # Apply icons
 apply_icon "/Applications/Google Chrome.app" "$ICONS_DIR/chrome.png"
 
-# Resolve Adobe Illustrator path dynamically (handles different yearly versions)
-shopt -s nullglob
-ILLUSTRATOR_CANDIDATES=(/Applications/Adobe\ Illustrator*/Adobe\ Illustrator*.app)
-shopt -u nullglob
-if [ ${#ILLUSTRATOR_CANDIDATES[@]} -gt 0 ]; then
-    apply_icon "${ILLUSTRATOR_CANDIDATES[0]}" "$ICONS_DIR/illustrator.png"
-else
-    echo "Skipping Adobe Illustrator (app not found)"
-fi
 apply_icon "/Applications/iTerm.app" "$ICONS_DIR/iterm2.png"
-apply_first_found "$ICONS_DIR/lightroom.png" "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "/Applications/Adobe Lightroom Classic.app"
 apply_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
 apply_icon "/Applications/Slack.app" "$ICONS_DIR/slack.png"
 apply_icon "/Applications/Unity Hub.app" "$ICONS_DIR/unityhub.png"
