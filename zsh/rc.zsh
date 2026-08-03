@@ -98,8 +98,12 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
 
-# pnpm from homebrew
-export PNPM_HOME="/opt/homebrew/bin"
+# Keep pnpm-managed global executables out of Homebrew's managed bin directory.
+export PNPM_HOME="$HOME/Library/pnpm"
+case ":$PATH:" in
+    *":$PNPM_HOME:"*) ;;
+    *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
 
 # zoxide (if installed)
 if command -v zoxide >/dev/null 2>&1; then

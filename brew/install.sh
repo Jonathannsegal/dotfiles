@@ -107,6 +107,13 @@ command -v brew >/dev/null 2>&1 || {
     exit 1
 }
 
+# Git uses a global hooks directory that includes Git LFS hooks. Homebrew may
+# invoke Git while fetching taps before Brew Bundle reaches the git-lfs entry,
+# so bootstrap it first to keep those hooks runnable on a fresh setup.
+if ! command -v git-lfs >/dev/null 2>&1; then
+    brew install git-lfs
+fi
+
 bash "$DOTFILES/brew/setup-local-tap.sh"
 
 if [[ "$HARD_SETUP" == false ]] && brew bundle check --file="$BREWFILE" >/dev/null 2>&1; then
