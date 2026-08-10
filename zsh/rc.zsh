@@ -49,7 +49,9 @@ setopt PUSHD_SILENT
 if [ -d "/opt/homebrew/bin" ]; then
     export PATH="/opt/homebrew/bin:$PATH"
 fi
-export PATH="$HOME/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
+export PIPX_HOME="$HOME/.local/share/pipx"
+export PIPX_BIN_DIR="$HOME/.local/bin"
 
 # Remove any pyenv initialization (we manage a single Homebrew Python now)
 # Also ensure pyenv paths are stripped from PATH

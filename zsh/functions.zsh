@@ -250,3 +250,17 @@ export PIP_DOWNLOAD_CACHE="$HOME/.pip/cache"
 # Python development settings
 export PYTHONDONTWRITEBYTECODE=1  # Prevent Python from writing .pyc files
 export PYTHONUNBUFFERED=1         # Force Python output to be unbuffered
+
+# Start Reachy Mini's MuJoCo simulator without probing macOS media devices.
+reachy-mini-simulator() {
+    if ! command -v mjpython >/dev/null 2>&1; then
+        echo "mjpython is unavailable; install reachy-mini[mujoco] first." >&2
+        return 127
+    fi
+
+    command mjpython -m reachy_mini.daemon.app.main \
+        --sim \
+        --scene minimal \
+        --no-media \
+        "$@"
+}

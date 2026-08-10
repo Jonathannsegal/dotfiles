@@ -39,6 +39,8 @@ brew "node"
 brew "openjdk"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
+# Install and run Python applications in isolated environments
+brew "pipx"
 # Fast, disk space efficient package manager
 brew "pnpm"
 # PDF rendering library (based on the xpdf-3.0 code base)
@@ -47,6 +49,8 @@ brew "poppler"
 brew "prettier"
 # Data validation using Python type hints
 brew "pydantic"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.12"
 # Interpreted, interactive, object-oriented programming language
 brew "python@3.14"
 # Search tool like grep and The Silver Searcher
@@ -98,6 +102,8 @@ cask "microsoft-powerpoint"
 cask "microsoft-teams"
 # Customise and maintain app icons
 cask "pictogram"
+# Desktop controller and application manager for Reachy Mini
+cask "jsegal/local/reachy-mini-control"
 # Team communication and collaboration software
 cask "slack"
 # Mesh VPN based on WireGuard
