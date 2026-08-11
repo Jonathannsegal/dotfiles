@@ -28,6 +28,10 @@ bundles, including Visual Studio Code, and skips apps whose icons are still set.
 apps remain on their stock icons because modifying their signed bundles can break Creative
 Cloud patch updates with MoveFileCommand error 146.
 
+Use `./run/setup.sh icons --adobe` to opt into a one-time Illustrator and Lightroom
+icon refresh. Adobe icons are not registered with Pictogram, so run the command again
+after a Creative Cloud update restores the stock icons.
+
 When setup reaches a privileged step, it asks for the administrator password
 once and keeps that sudo session alive until setup exits. A fully satisfied
 rerun can skip privileged work and avoid a password prompt.

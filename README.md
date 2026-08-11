@@ -41,11 +41,12 @@ The default setup is safe to rerun. It converges the machine toward this repo an
 ./run/setup.sh --no-standards # skip standards enforcement
 ./run/setup.sh --hard         # repair mode: overwrite/reapply managed setup
 ./run/setup.sh icons          # reapply custom icons and refresh their watcher only
+./run/setup.sh icons --adobe  # also reapply Illustrator and Lightroom icons once
 ```
 
 Plain `./run/setup.sh` is the normal full setup. In interactive mode it asks before applying macOS defaults; pressing Enter accepts. `--yes` accepts that prompt automatically.
 
-When setup reaches a privileged step, it asks for the administrator password once and keeps that sudo session alive until setup exits. A fully satisfied rerun can skip privileged work and avoid a password prompt. Use `./run/setup.sh icons` when an app update resets a custom icon and you only want the icon refresh plus the automatic persistence helper. The setup registers supported third-party apps and their repo-managed PNGs under Pictogram's application-support directory, including Google Chrome and Visual Studio Code. Adobe apps are excluded because changing their bundles can break Creative Cloud delta updates with error 146. Pictogram's signed login helper then reapplies the remaining mappings after app updates.
+When setup reaches a privileged step, it asks for the administrator password once and keeps that sudo session alive until setup exits. A fully satisfied rerun can skip privileged work and avoid a password prompt. Use `./run/setup.sh icons` when an app update resets a custom icon and you only want the icon refresh plus the automatic persistence helper. The setup registers supported third-party apps and their repo-managed PNGs under Pictogram's application-support directory, including Google Chrome and Visual Studio Code. Adobe apps are excluded by default because changing their bundles can break Creative Cloud delta updates with error 146. Use `./run/setup.sh icons --adobe` to apply Illustrator and Lightroom icons once; they remain excluded from Pictogram's automatic reapply loop so Creative Cloud can replace their bundles during updates. Pictogram's signed login helper then reapplies the remaining mappings after app updates.
 
 Use `./run/setup.sh --hard` when a new-machine setup was interrupted or a managed config looks partially applied. Hard mode assumes yes, replaces managed dotfile links instead of backing them up, reruns `brew bundle`, reapplies macOS settings, reloads managed LaunchAgents, forces VS Code extension installs, updates shell plugins, repairs Python packages, and reapplies custom icons. It is scoped to repo-managed setup surfaces; it is not a general disk wipe.
 

@@ -9,6 +9,7 @@ SKIP_PRIVILEGED=false
 CLEAR_CACHE=true
 APPLIED_ANY=false
 FORCE_ICON_APPLY=false
+INCLUDE_ADOBE=false
 TERMINAL_RELAUNCH=false
 SUDO_KEEPALIVE_PID=""
 ORIGINAL_ARGS=("$@")
@@ -68,6 +69,10 @@ while [[ $# -gt 0 ]]; do
             FORCE_ICON_APPLY=true
             shift
             ;;
+        --adobe)
+            INCLUDE_ADOBE=true
+            shift
+            ;;
         --terminal-relaunch)
             TERMINAL_RELAUNCH=true
             shift
@@ -77,7 +82,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "Usage: setup.sh [--auto] [--skip-privileged] [--no-cache-clear] [--force] [--terminal-relaunch]"
+            echo "Usage: setup.sh [--auto] [--skip-privileged] [--no-cache-clear] [--force] [--adobe] [--terminal-relaunch]"
             exit 0
             ;;
         *)
@@ -495,7 +500,7 @@ apply_icon() {
     # Adding Finder icon resources, rewriting the bundled .icns, or stripping
     # bundle metadata can leave Adobe's MoveFileCommand unable to replace a
     # file (error 146). Keep vendor-managed Adobe bundles completely stock.
-    if vendor_managed_app_bundle "$app_path"; then
+    if [[ "$INCLUDE_ADOBE" == false ]] && vendor_managed_app_bundle "$app_path"; then
         echo "Skipping vendor-managed Adobe bundle: $app_path"
         return 0
     fi
@@ -604,6 +609,21 @@ fi
 
 # Apply icons
 apply_icon "/Applications/Google Chrome.app" "$ICONS_DIR/chrome.png"
+
+if [[ "$INCLUDE_ADOBE" == true ]]; then
+    # Adobe apps are opt-in because adding Finder icon metadata modifies their
+    # signed bundles. Do not register these with the automatic reapply helper:
+    # Creative Cloud updates must be allowed to replace the bundle cleanly.
+    shopt -s nullglob
+    ILLUSTRATOR_CANDIDATES=(/Applications/Adobe\ Illustrator*/Adobe\ Illustrator*.app)
+    shopt -u nullglob
+    if [[ ${#ILLUSTRATOR_CANDIDATES[@]} -gt 0 ]]; then
+        apply_icon "${ILLUSTRATOR_CANDIDATES[0]}" "$ICONS_DIR/illustrator.png"
+    else
+        echo "Skipping Adobe Illustrator (app not found)"
+    fi
+    apply_first_found "$ICONS_DIR/lightroom.png" "/Applications/Adobe Lightroom Classic/Adobe Lightroom Classic.app" "/Applications/Adobe Lightroom Classic.app"
+fi
 
 apply_icon "/Applications/iTerm.app" "$ICONS_DIR/iterm2.png"
 apply_icon "/Applications/Notion.app" "$ICONS_DIR/notion.png"
