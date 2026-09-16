@@ -79,32 +79,44 @@ brewfile_entries() {
   case "$kind" in
     formula) sed -n 's/^brew "\([^"]*\)".*/\1/p' "$BREWFILE" | sort ;;
     cask) sed -n 's/^cask "\([^"]*\)".*/\1/p' "$BREWFILE" | sort ;;
-    vscode) sed -n 's/^vscode "\([^"]*\)".*/\1/p' "$BREWFILE" | sort ;;
+    vscode) { cat "$DOTFILES/vscode/local-extensions.txt" 2>/dev/null || true; sed -n 's/^vscode "\([^"]*\)".*/\1/p' "$BREWFILE"; } | sort -u ;;
     npm) sed -n 's/^npm "\([^"]*\)".*/\1/p' "$BREWFILE" | sort ;;
   esac
 }
 
 installed_formulas() {
-  brew leaves 2>/dev/null | sort || true
+  brew leaves | sort
 }
 
 installed_formulae_all() {
-  brew list --formula 2>/dev/null | sort || true
+  brew list --formula | sort
 }
 
 installed_casks() {
-  brew list --cask --full-name 2>/dev/null | sort || true
+  local tokens caskroom token tap
+  # Plain listing reads installed records without initializing Homebrew's Ruby
+  # runtime, which can fail after a macOS/Xcode update pending license acceptance.
+  tokens="$(brew list --cask)" || return 1
+  caskroom="$(brew --caskroom)" || return 1
+  while IFS= read -r token; do
+    [[ -n "$token" ]] || continue
+    tap="$(jq -er '.source.tap' "$caskroom/$token/.metadata/INSTALL_RECEIPT.json")" || return 1
+    case "$tap" in
+      homebrew/cask) printf '%s\n' "$token" ;;
+      *) printf '%s/%s\n' "$tap" "$token" ;;
+    esac
+  done <<< "$tokens" | sort
 }
 
 installed_vscode() {
-  NODE_NO_WARNINGS=1 code --list-extensions 2>/dev/null | sort || true
+  NODE_NO_WARNINGS=1 code --list-extensions | sort
 }
 
 installed_npm() {
-  NODE_NO_WARNINGS=1 npm list -g --depth=0 --parseable 2>/dev/null |
+  NODE_NO_WARNINGS=1 npm list -g --depth=0 --parseable |
     sed '1d; s#.*/node_modules/##' |
     sed '/^npm$/d' |
-    sort || true
+    sort
 }
 
 installed_apps() {
@@ -137,7 +149,11 @@ compare_set_report() {
   installed="$(mktemp)"
   expected="$(mktemp)"
 
-  eval "$installed_cmd" > "$installed"
+  if ! eval "$installed_cmd" > "$installed"; then
+    violation "Unable to read installed inventory ($installed_cmd); comparison skipped."
+    rm -f "$installed" "$expected"
+    return 0
+  fi
   eval "$expected_cmd" > "$expected"
 
   section "$title: installed but not in Brewfile"
@@ -155,12 +171,20 @@ formula_report() {
   installed="$(mktemp)"
   expected="$(mktemp)"
 
-  installed_formulas > "$installed"
+  if ! installed_formulas > "$installed"; then
+    violation "Unable to read installed formula inventory; comparison skipped."
+    rm -f "$installed" "$expected"
+    return 0
+  fi
   brewfile_entries formula > "$expected"
   section "Formula leaves: installed but not in Brewfile"
   comm -23 "$installed" "$expected" || true
 
-  installed_formulae_all > "$installed"
+  if ! installed_formulae_all > "$installed"; then
+    violation "Unable to read installed formula inventory; comparison skipped."
+    rm -f "$installed" "$expected"
+    return 0
+  fi
   section "Formulae: in Brewfile but not installed"
   comm -13 "$installed" "$expected" || true
 
@@ -173,7 +197,11 @@ check_formula_drift() {
   installed="$(mktemp)"
   expected="$(mktemp)"
 
-  installed_formulas > "$installed"
+  if ! installed_formulas > "$installed"; then
+    violation "Unable to read installed formula inventory; comparison skipped."
+    rm -f "$installed" "$expected"
+    return 0
+  fi
   brewfile_entries formula > "$expected"
   extra="$(comm -23 "$installed" "$expected" || true)"
 
@@ -183,7 +211,11 @@ check_formula_drift() {
     done <<< "$extra"
   fi
 
-  installed_formulae_all > "$installed"
+  if ! installed_formulae_all > "$installed"; then
+    violation "Unable to read installed formula inventory; comparison skipped."
+    rm -f "$installed" "$expected"
+    return 0
+  fi
   missing="$(comm -13 "$installed" "$expected" || true)"
 
   if [[ -n "$missing" ]]; then
@@ -204,7 +236,11 @@ check_set_drift() {
   installed="$(mktemp)"
   expected="$(mktemp)"
 
-  eval "$installed_cmd" > "$installed"
+  if ! eval "$installed_cmd" > "$installed"; then
+    violation "Unable to read installed inventory ($installed_cmd); comparison skipped."
+    rm -f "$installed" "$expected"
+    return 0
+  fi
   eval "$expected_cmd" > "$expected"
 
   extra="$(comm -23 "$installed" "$expected" || true)"
@@ -549,7 +585,7 @@ settings_audit() {
   check_default io.tailscale.ipn.macsys OnboardingFlow string hide || failures=$((failures + 1))
   check_default io.tailscale.ipn.macsys OccludedIconAlertSuppressed bool true || failures=$((failures + 1))
 
-  check_default com.apple.ActivityMonitor ShowCategory int 0 || failures=$((failures + 1))
+  # Activity Monitor process filters are temporary UI choices, not machine drift.
   check_default com.apple.ActivityMonitor SortColumn string CPUUsage || failures=$((failures + 1))
   check_default com.apple.ActivityMonitor SortDirection int 0 || failures=$((failures + 1))
 
@@ -976,7 +1012,11 @@ unmanaged_homebrew_formula_leaves() {
   installed="$(mktemp)"
   expected="$(mktemp)"
 
-  installed_formulas > "$installed"
+  if ! installed_formulas > "$installed"; then
+    violation "Unable to read installed formula inventory; comparison skipped."
+    rm -f "$installed" "$expected"
+    return 0
+  fi
   brewfile_entries formula > "$expected"
   comm -23 "$installed" "$expected" || true
 

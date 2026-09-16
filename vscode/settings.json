@@ -114,6 +114,7 @@
   "python.analysis.typeCheckingMode": "basic",
   "github.copilot.nextEditSuggestions.enabled": true,
   "cSpell.enabledSchemes": {
+    "chatSessionInput": true,
     "comment": true,
     "file": true,
     "gist": true,
@@ -152,5 +153,7 @@
   "window.autoDetectColorScheme": true,
   "http.systemCertificatesNode": true,
   "geminicodeassist.project": "gen-lang-client-0015677059",
-  "chat.sessionSync.enabled": true
+  "chat.sessionSync.enabled": true,
+  "claudeCode.hideOnboarding": true,
+  "window.newWindowProfile": "Lightweight"
 }

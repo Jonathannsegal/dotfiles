@@ -12,7 +12,7 @@ usage() {
 Usage: $(basename "$0") <command>
 
 Commands:
-  check      Run the daily health checks now.
+  check      Show cached health; --refresh runs checks now; --details shows logs.
   snapshot   Write a local state report under ~/CleanupStaging/state-snapshots.
   restore    Snapshot first, then converge the machine back to this repo.
 
@@ -43,13 +43,7 @@ run_report_command() {
 }
 
 check() {
-  local failed=false
-
-  run_report_command "Standards" bash "$DOTFILES/run/.standards.sh" audit || failed=true
-  run_report_command "Johnny.Decimal" bash "$DOTFILES/run/cleanup.sh" lint-personal || failed=true
-  run_report_command "Projects" bash "$DOTFILES/run/cleanup.sh" projects || failed=true
-
-  [[ "$failed" == false ]]
+  python3 "$DOTFILES/run/health.py" "$@"
 }
 
 snapshot() {
@@ -85,7 +79,7 @@ restore() {
   bash "$DOTFILES/run/setup.sh" --yes --hard
   echo
   echo "Post-restore check:"
-  check
+  check --refresh
 }
 
 main() {

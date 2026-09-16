@@ -433,8 +433,7 @@ write_sudo_default_or_skip "ambient light sensor setting" /Library/Preferences/c
 # Activity Monitor                                                            #
 ###############################################################################
 
-# Show all processes in Activity Monitor
-defaults write com.apple.ActivityMonitor ShowCategory -int 0
+# Leave the Activity Monitor process filter under user control.
 
 # Sort Activity Monitor results by CPU usage
 defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"

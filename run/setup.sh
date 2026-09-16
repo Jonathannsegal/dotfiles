@@ -723,6 +723,7 @@ main() {
     setup_shell_plugins
     setup_jdk
     setup_vscode
+    if is_macos; then bash "$DOTFILES/run/install-health.sh"; fi
     setup_terminal
     setup_python
     setup_macos

@@ -67,3 +67,5 @@ while IFS= read -r extension; do
 done < <(sed -n 's/^vscode "\([^"]*\)".*/\1/p' "$BREWFILE")
 
 print_success "VS Code extensions are up to date"
+
+python3 "$DOTFILES/vscode/install-profiles.py"

@@ -41,7 +41,9 @@ brew "node"
 brew "openjdk"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
-# Install and run Python applications in isolated environments
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
+# Execute binaries from Python packages in isolated environments
 brew "pipx"
 # Fast, disk space efficient package manager
 brew "pnpm"
@@ -53,8 +55,6 @@ brew "prettier"
 brew "pydantic"
 # Interpreted, interactive, object-oriented programming language
 brew "python@3.12"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.14"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Rust toolchain installer
@@ -107,7 +107,7 @@ cask "microsoft-teams"
 # Customise and maintain app icons
 cask "pictogram"
 # Desktop controller and application manager for Reachy Mini
-cask "jsegal/local/reachy-mini-control"
+cask "jsegal/local/reachy-mini-control", trusted: true
 # Team communication and collaboration software
 cask "slack"
 # Mesh VPN based on WireGuard
@@ -142,6 +142,7 @@ vscode "github.vscode-pull-request-github"
 vscode "gruntfuggly.todo-tree"
 vscode "iamhyc.overleaf-workshop"
 vscode "jackiotyu.size-tree"
+vscode "james-yu.latex-workshop"
 vscode "janisdd.vscode-edit-csv"
 vscode "llvm-vs-code-extensions.lldb-dap"
 vscode "mathematic.vscode-latex"

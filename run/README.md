@@ -121,7 +121,9 @@ from `/Library/Application Support` and `/Library/Audio`. The `apps` and
 
 Shortcuts for keeping the current machine shape easy to preserve and recover.
 
-- `check`: run standards, Johnny.Decimal, and project-location checks now.
+- `check`: show the cached health report (`health`).
+- `check --refresh`: run the read-only health checks now (`health --refresh`).
+- `check --details`: include the full audit output (`health --details`).
 - `snapshot`: write a local state report under `~/CleanupStaging/state-snapshots`.
 - `restore`: snapshot first, then run `setup.sh --yes --hard` and recheck.
 
@@ -140,3 +142,44 @@ Common usage:
 ./run/actions.sh messages --dry-run
 ./run/actions.sh messages --apply --dest ~/CleanupStaging/messages
 ```
+
+### Background health and editor profiles
+
+`install-health.sh` removes the old periodic LaunchAgent. The first interactive
+terminal each local calendar day starts a detached, low-priority check. Later
+terminals use the cache. A manual refresh completed that day also counts.
+Startup announces newly appearing cached issues once; fresh results are available
+through `health` or the next terminal. No terminal means no scheduled check. Checks cover standards, Johnny.Decimal,
+disk space, broken managed links, caches, and local Git work. Git comparisons
+use the last-known upstream without fetching; cloud upload completeness is not
+inferred from file locations. Protected cache directories produce partial totals.
+
+VS Code setup installs the profiles documented in [vscode/README.md](../vscode/README.md).
+
+### JD inbox review
+
+`jd-review` (or `python3 ~/dotfiles/run/jd-review.py`) produces a read-only report
+for Downloads, Desktop, structural misplacements in Personal, and existing
+`.01` inboxes. It reports duplicate IDs, possible duplicate inbox filenames,
+and candidate destinations using explicit IDs or title hints. Suggestions always
+require review of the item's purpose; no content is read, moved, renamed or deleted.
+Linked/shared research trees are skipped. Hidden items are included except known
+Finder/Drive metadata. ID contents are not recursively scanned.
+
+The current local JDex is partial. IDs absent from it are marked unverified, not
+confirmed missing. `--details` lists those entries. A complete authoritative
+Markdown register (ID headings such as `## 17.11 Title`) can be supplied with
+`--index /path/to/register.md --index-complete` to flag missing entries. This
+report never assigns or reuses IDs. Use `--inbox /path` to override the external
+inbox defaults, repeating it for multiple folders.
+
+Chrome JD search can be added manually in Settings → Search engine → Manage
+search engines and site search → Site search → Add:
+
+- Name: `Johnny.Decimal — Drive`
+- Shortcut: `jd`
+- URL: `https://drive.google.com/drive/u/0/search?q=%s`
+
+Type `jd`, press Tab, enter `30.00`, and press Enter. The URL uses the first
+signed-in Google account; switch the account index if your Personal Drive uses
+another account. This searches Drive text/names; it is not a folder-ID lookup.

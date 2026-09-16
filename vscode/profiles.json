@@ -1,0 +1,9 @@
+{
+  "common": ["openai.chatgpt", "anthropic.claude-code", "github.github-vscode-theme", "davidanson.vscode-markdownlint", "esbenp.prettier-vscode"],
+  "profiles": {
+    "Lightweight": {"extensions": [], "settings": {}},
+    "Research/Python": {"extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-python.debugpy", "ms-python.black-formatter", "ms-toolsai.jupyter"], "settings": {"python.analysis.diagnosticMode": "openFilesOnly"}},
+    "Unity/C#": {"extensions": ["ms-dotnettools.csdevkit", "ms-dotnettools.csharp", "visualstudiotoolsforunity.vstuc", "ptd.vscode-unitymeta", "slevesque.shader"], "settings": {"files.watcherExclude": {"**/Library/**": true, "**/Temp/**": true, "**/Obj/**": true, "**/Logs/**": true}, "search.exclude": {"**/Library/**": true, "**/Temp/**": true, "**/Obj/**": true, "**/Logs/**": true}}},
+    "Writing/LaTeX": {"extensions": ["james-yu.latex-workshop", "iamhyc.overleaf-workshop", "streetsidesoftware.code-spell-checker", "tomoki1207.pdf"], "settings": {"latex-workshop.latex.autoBuild.run": "onSave"}}
+  }
+}

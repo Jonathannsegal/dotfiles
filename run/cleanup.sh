@@ -172,7 +172,19 @@ brewfile_mas_names() {
 }
 
 installed_casks() {
-  brew list --cask --full-name 2>/dev/null | sort || true
+  local tokens caskroom token tap
+  # Plain listing reads installed records without initializing Homebrew's Ruby
+  # runtime, which can fail after a macOS/Xcode update pending license acceptance.
+  tokens="$(brew list --cask)" || return 1
+  caskroom="$(brew --caskroom)" || return 1
+  while IFS= read -r token; do
+    [[ -n "$token" ]] || continue
+    tap="$(jq -er '.source.tap' "$caskroom/$token/.metadata/INSTALL_RECEIPT.json")" || return 1
+    case "$tap" in
+      homebrew/cask) printf '%s\n' "$token" ;;
+      *) printf '%s/%s\n' "$tap" "$token" ;;
+    esac
+  done <<< "$tokens" | sort
 }
 
 managed_cask_app_names() {
@@ -198,7 +210,7 @@ managed_cask_app_names() {
 
 managed_app_names() {
   {
-    managed_cask_app_names
+    managed_cask_app_names || return 1
     brewfile_mas_names
   } | sort -u
 }
@@ -260,7 +272,11 @@ unmanaged_app_paths() {
   local expected_names app_path
 
   expected_names="$(mktemp)"
-  managed_app_names > "$expected_names"
+  if ! managed_app_names > "$expected_names"; then
+    echo "Unable to read managed app metadata; app cleanup skipped." >&2
+    rm -f "$expected_names"
+    return 1
+  fi
 
   while IFS= read -r app_path; do
     if ! is_allowlisted_app "$app_path" "$expected_names"; then

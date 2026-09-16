@@ -43,6 +43,7 @@ alias maintain='$DOTFILES/run/maintain.sh'
 alias health="$DOTFILES/run/maintain.sh check"
 alias snapshot='$DOTFILES/run/maintain.sh snapshot'
 alias restore-dotfiles='$DOTFILES/run/maintain.sh restore'
+alias jd-review='python3 "$DOTFILES/run/jd-review.py"'
 alias project-report='$DOTFILES/run/cleanup.sh projects'
 
 # Homebrew shortcuts

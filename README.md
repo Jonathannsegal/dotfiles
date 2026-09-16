@@ -122,3 +122,8 @@ Interactive `git clone <url>` commands are wrapped by the shell config so new re
 ## Zotero
 
 Zotero is installed by `brew/Brewfile` with `cask "zotero"`. The old source-build setup was removed because it cloned and built Zotero plus stale extensions instead of configuring the installed app reliably.
+
+Health runs in the background on the first interactive terminal each day; `health` reads its cached report,
+`health --refresh` checks now, and `health --details` shows audit output. Terminal
+startup only announces new issues. See [project profiles](vscode/README.md) for
+automatic VS Code profiles that follow newly cloned projects.

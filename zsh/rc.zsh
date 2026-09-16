@@ -146,8 +146,10 @@ fi
 PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '$0!~/anaconda3/' | sed 's/:$//')
 
 # VS Code launches an interactive shell without a TTY to resolve its
-# environment.  The daily standards audit scans applications and can take
-# longer than VS Code's startup deadline, so only run it in a real terminal.
+# environment. Only trigger daily health checks and notifications in a real terminal.
 if [[ -o interactive && -t 1 ]]; then
     dotfiles_health_check
 fi
+
+# Unity CLI
+. "/Users/jsegal/.unity/env"
