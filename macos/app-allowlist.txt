@@ -9,7 +9,6 @@ Adobe Media Encoder */Adobe Media Encoder *.app
 Adobe Photoshop */Adobe Photoshop *.app
 Adobe Premiere Pro */Adobe Premiere Pro *.app
 Box.app
-ChatGPT.app
 Google Docs.app
 Google Drive.app
 Google Sheets.app

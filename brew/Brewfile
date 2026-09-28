@@ -63,8 +63,8 @@ brew "rustup"
 brew "starship"
 # Modernized, complete, self-contained TeX/LaTeX engine
 brew "tectonic"
-# Simplified and community-driven man pages
-brew "tldr"
+# Maintained official tldr client
+brew "tlrc"
 # Terminal multiplexer
 brew "tmux"
 # Bring your favorite shell wherever you go through the ssh
@@ -81,8 +81,8 @@ cask "box-drive"
 cask "clop"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
-# OpenAI's Codex desktop app for managing coding agents
-cask "codex-app"
+# ChatGPT desktop app (replaces the discontinued codex-app cask)
+cask "chatgpt"
 # Voice and text chat software
 cask "discord"
 cask "font-lexend"

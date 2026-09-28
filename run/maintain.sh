@@ -13,11 +13,13 @@ Usage: $(basename "$0") <command>
 
 Commands:
   check      Show cached health; --refresh runs checks now; --details shows logs.
+  update     Update managed apps and tools, clean unused dependencies, refresh health.
   snapshot   Write a local state report under ~/CleanupStaging/state-snapshots.
   restore    Snapshot first, then converge the machine back to this repo.
 
 Examples:
   $(basename "$0") check
+  $(basename "$0") update
   $(basename "$0") snapshot
   $(basename "$0") restore
 EOF
@@ -43,7 +45,35 @@ run_report_command() {
 }
 
 check() {
-  python3 "$DOTFILES/run/health.py" "$@"
+    python3 "$DOTFILES/run/health.py" "$@"
+}
+
+update() {
+    local failures=0
+    local profile
+    # Use executables directly, without shell wrappers that overwrite Brewfile.
+    bash "$DOTFILES/brew/setup-local-tap.sh" || return $?
+    brew update || return $?
+    run_report_command "Homebrew updates" brew upgrade --greedy --yes --no-quit || failures=$((failures + 1))
+    run_report_command "App Store updates" mas update || failures=$((failures + 1))
+    # npm 12 blocks lifecycle scripts by default. Allow only the installers
+    # required by these managed tools and their native dependencies.
+    run_report_command "Global npm tools" npm update --global \
+        --allow-scripts=@anthropic-ai/claude-code,agent-browser,esbuild,fsevents,core-js || failures=$((failures + 1))
+    run_report_command "Python apps" pipx upgrade-all || failures=$((failures + 1))
+    run_report_command "VS Code extensions" code --update-extensions || failures=$((failures + 1))
+    while IFS= read -r profile; do
+        run_report_command "VS Code profile: $profile" code --profile "$profile" --update-extensions || failures=$((failures + 1))
+    done < <(jq -r '.profiles | keys[]' "$DOTFILES/vscode/profiles.json")
+    run_report_command "Unused Homebrew dependencies" brew autoremove || failures=$((failures + 1))
+    run_report_command "Homebrew cleanup" brew cleanup || failures=$((failures + 1))
+    run_report_command "Available macOS updates" softwareupdate --list || failures=$((failures + 1))
+    check --refresh || failures=$((failures + 1))
+    echo "Restart updated apps when convenient. Adobe products, Cisco, and Unity editors use their vendor updaters."
+    if [[ "$failures" -gt 0 ]]; then
+        echo "$failures update step(s) need attention; see the errors above." >&2
+        return 1
+    fi
 }
 
 snapshot() {
@@ -92,6 +122,7 @@ main() {
 
   case "$command" in
     check) check "$@" ;;
+    update) update "$@" ;;
     snapshot) snapshot "$@" ;;
     restore) restore "$@" ;;
     --help|-h|help) usage ;;
@@ -99,4 +130,6 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

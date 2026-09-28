@@ -124,6 +124,10 @@ Shortcuts for keeping the current machine shape easy to preserve and recover.
 - `check`: show the cached health report (`health`).
 - `check --refresh`: run the read-only health checks now (`health --refresh`).
 - `check --details`: include the full audit output (`health --details`).
+- `update`: update Homebrew/casks, App Store, npm, pipx and VS Code extensions,
+  clean unused Homebrew dependencies, list macOS updates, and refresh health.
+  Failed steps are reported; the curated Brewfile is preserved. Vendor-managed
+  Adobe products, Cisco, and Unity editors need their own update checks.
 - `snapshot`: write a local state report under `~/CleanupStaging/state-snapshots`.
 - `restore`: snapshot first, then run `setup.sh --yes --hard` and recheck.
 

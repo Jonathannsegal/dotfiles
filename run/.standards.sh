@@ -1035,7 +1035,7 @@ disabled_launch_items() {
 
 check_unwanted_artifacts() {
   section "Unwanted App Artifacts"
-  local path formula cask found_any=0
+  local path found_any=0
 
   while IFS= read -r path; do
     if [[ "$path" == "$HOME/Library/Containers/com.docker.docker" ]] &&
@@ -1050,17 +1050,8 @@ check_unwanted_artifacts() {
     fi
   done < <(unwanted_paths)
 
-  while IFS= read -r formula; do
-    [[ -n "$formula" ]] || continue
-    found_any=1
-    violation "formula installed but not repo-managed: $formula"
-  done < <(unmanaged_homebrew_formula_leaves)
-
-  while IFS= read -r cask; do
-    [[ -n "$cask" ]] || continue
-    found_any=1
-    violation "cask installed but not repo-managed: $cask"
-  done < <(unmanaged_homebrew_casks)
+  # Package inventory is checked once by check_apps. This section only checks
+  # filesystem leftovers, so a single package cannot count as two violations.
 
   if [[ "$found_any" -eq 0 ]]; then
     echo "No unwanted app artifacts found."
@@ -1233,4 +1224,6 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

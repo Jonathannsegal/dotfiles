@@ -67,9 +67,10 @@ brew() {
     local exit_status=$?
     # Only proceed if brew command was successful
     if [ $exit_status -eq 0 ]; then
-        # Check if the command was install, uninstall, or upgrade
+        # Only intentional inventory changes rewrite the Brewfile. An upgrade
+        # can leave orphaned dependencies; do not adopt them as managed tools.
         case "$1" in
-            install|uninstall|upgrade)
+            install|uninstall)
                 echo "🍺 Updating Brewfile..."
                 command brew bundle dump --force --file=$HOME/.Brewfile
                 echo "✅ Brewfile updated!"

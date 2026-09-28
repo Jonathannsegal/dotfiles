@@ -65,6 +65,7 @@ See `run/README.md` for the full script map. The common commands are:
 ./run/cleanup.sh lint-personal
 ./run/cleanup.sh projects
 ./run/maintain.sh check
+./run/maintain.sh update
 ./run/maintain.sh snapshot
 ./run/maintain.sh restore
 ./run/actions.sh messages --dry-run
@@ -81,6 +82,14 @@ Cleanup moves are reversible by default when run with `--mode staging`; files ar
 Dock items are managed in `macos/dock-items.txt`. Startup/background items are audited against `macos/launchagents.tsv`; only entries marked `disable` are changed by `./run/setup.sh standards launchagents apply`.
 
 `./run/setup.sh standards apps` is the quickest way to see what is installed locally but no longer part of the repo-managed setup.
+
+`./run/maintain.sh update` refreshes Homebrew, upgrades managed apps (including
+auto-updating casks), App Store apps, npm tools, pipx apps, and VS Code extensions,
+removes unused Homebrew dependencies, and refreshes health. It preserves the
+curated Brewfile, reports failed steps, and lists macOS updates without restarting.
+Adobe products, Cisco, and Unity editor versions still use their vendor updaters.
+Lens Studio stays pinned for Spectacles compatibility. The `jsegal/local` tap is
+copied from `brew/Casks` by setup/update; its lack of a Git remote is intentional.
 
 `./run/setup.sh standards purge-unwanted` removes installed Homebrew casks and formula leaves that are not listed in `brew/Brewfile`, then runs `brew autoremove` and `brew cleanup`. Run it from Terminal when protected `/Applications` or `/Library` leftovers require the administrator prompt.
 

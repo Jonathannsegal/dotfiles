@@ -106,6 +106,10 @@ case ":$PATH:" in
     *":$PNPM_HOME:"*) ;;
     *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
+case ":$PATH:" in
+    *":$PNPM_HOME/bin:"*) ;;
+    *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
 
 # zoxide (if installed)
 if command -v zoxide >/dev/null 2>&1; then
@@ -152,4 +156,4 @@ if [[ -o interactive && -t 1 ]]; then
 fi
 
 # Unity CLI
-. "/Users/jsegal/.unity/env"
+source_if_exists "$HOME/.unity/env"
