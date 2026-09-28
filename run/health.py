@@ -160,10 +160,12 @@ def startup():
         save('daily.json', {'date': today})
 
 
-def show(report, details=False):
+def show(report, details=False, cached=True):
     if not report:
         print('No cached health report yet. Run health --refresh.'); return
     print('Health — ' + report.get('checked_at', 'check in progress'))
+    if cached:
+        print('  Cached report. Run health --refresh to recheck resolved issues now.')
     for line in report.get('summary', []):
         if line == 'Links: 0 broken' or (line.startswith('Cache ') and line.endswith(': 0.0 GiB')): continue
         print('  ' + line)
@@ -183,7 +185,7 @@ def main():
     if a.startup: startup(); return
     if a.notify: notify(read('latest.json', {})); return
     report = collect() if a.refresh or a.background else read('latest.json', {})
-    if not a.background: show(report, a.details)
+    if not a.background: show(report, a.details, cached=not a.refresh)
 
 
 if __name__ == '__main__': main()
