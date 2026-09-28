@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BREWFILE="$DOTFILES/brew/Brewfile"
 LAUNCH_CONFIG="$DOTFILES/macos/launchagents.tsv"
 HOME_DIR="$HOME"
@@ -1140,31 +1140,35 @@ purge_unwanted() {
   echo "Done."
 }
 
-run_audit_category() {
-  local before output_file
-
-  before="$VIOLATIONS"
-  output_file="$(mktemp)"
-
-  "$@" > "$output_file"
-
-  if [[ "$VIOLATIONS" -gt "$before" ]]; then
-    cat "$output_file"
-  fi
-
-  rm -f "$output_file"
-}
-
 full_audit() {
-  run_audit_category check_apps
-  run_audit_category check_settings
-  run_audit_category check_home
-  run_audit_category check_launchagents
-  run_audit_category check_installer_guard
-  run_audit_category check_adobe_app_bundles
-  run_audit_category check_desktop
-  run_audit_category check_downloads
-  run_audit_category check_unwanted_artifacts
+  local audit_tmp index count
+  local checks=(check_apps check_settings check_home check_launchagents
+    check_installer_guard check_adobe_app_bundles check_desktop check_downloads
+    check_unwanted_artifacts)
+  local pids=()
+  audit_tmp="$(mktemp -d)"
+
+  # These fixed, read-only categories are independent. Capture each separately
+  # and merge in the usual order so parallel output never interleaves.
+  for index in "${!checks[@]}"; do
+    (
+      VIOLATIONS=0
+      "${checks[$index]}" > "$audit_tmp/$index.out" 2>&1
+      printf '%s\n' "$VIOLATIONS" > "$audit_tmp/$index.count"
+    ) &
+    pids[$index]=$!
+  done
+  for index in "${!checks[@]}"; do
+    if wait "${pids[$index]}" && [[ -f "$audit_tmp/$index.count" ]]; then
+      count="$(cat "$audit_tmp/$index.count")"
+      VIOLATIONS=$((VIOLATIONS + count))
+      if [[ "$count" -gt 0 ]]; then cat "$audit_tmp/$index.out"; fi
+    else
+      cat "$audit_tmp/$index.out"
+      violation "audit check failed: ${checks[$index]}"
+    fi
+  done
+  rm -rf "$audit_tmp"
 
   section "Result"
   if [[ "$VIOLATIONS" -eq 0 ]]; then

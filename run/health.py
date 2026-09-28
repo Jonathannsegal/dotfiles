@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read-only health checks; terminal startup only reads the cached result."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import datetime as dt
 import fcntl
 import hashlib
@@ -54,78 +55,82 @@ def collect(wait=True):
             fcntl.flock(lock, fcntl.LOCK_EX | (0 if wait else fcntl.LOCK_NB))
         except BlockingIOError:
             return read('latest.json', {'issues': [], 'summary': ['Health check already running.']})
-        report = {'checked_at': dt.datetime.now(dt.timezone.utc).isoformat(), 'issues': [], 'summary': [], 'details': {}}
-        checks = [('Standards', ['bash', str(ROOT / 'run/.standards.sh'), 'audit']),
-                  ('Johnny.Decimal', ['bash', str(ROOT / 'run/cleanup.sh'), 'lint-personal'])]
-        for label, args in checks:
-            code, out, err = run(args, timeout=180)
-            report['details'][label] = '\n'.join(filter(None, [out, err]))
-            if code:
-                lines = [l.strip() for l in out.splitlines() if l.startswith(('VIOLATION', 'DIFF', 'ERROR'))]
-                if not lines:
-                    add(report, label, 'CHECK' if code != 127 else 'UNAVAILABLE', f'{label}: check needs review (health --details).')
-                for line in lines:
-                    category = 'PREFERENCE' if line.startswith('DIFF') else 'STANDARD'
-                    if 'inventory' in line.lower() or 'unable to' in line.lower(): category = 'UNAVAILABLE'
-                    elif 'repo-managed but not installed' in line: category = 'MISSING'
-                    add(report, hashlib.sha256(line.encode()).hexdigest()[:16], category, line.split('\t', 1)[-1])
-            else:
-                report['summary'].append(f'{label}: OK')
-        disk = shutil.disk_usage(HOME)
-        report['summary'].append(f'Disk: {disk.free / 2**30:.1f} GiB free ({disk.free / disk.total:.0%})')
-        if disk.free < 30 * 2**30:
-            add(report, 'disk-space', 'STORAGE', 'Less than 30 GiB free.')
-        # Check existing links only. Never walk cloud trees or download files.
-        links = [HOME / '.zshrc', HOME / '.zprofile', HOME / '.gitconfig', HOME / '.Brewfile',
-                 HOME / 'Library/Application Support/Code/User/settings.json']
-        caskroom = Path('/opt/homebrew/Caskroom')
-        if caskroom.exists():
-            for cask in caskroom.iterdir():
-                if cask.is_dir():
-                    for version in cask.iterdir():
-                        if version.is_dir() and not version.is_symlink() and not version.name.startswith('.'):
-                            links.extend(version.iterdir())
-        broken = [str(p) for p in links if p.is_symlink() and not p.exists()]
-        for p in broken: add(report, 'link:' + p, 'LINK', f'Broken link: {p}')
-        if broken: report['summary'].append(f'Links: {len(broken)} broken')
-        # Local-only Git checks: no fetch, push, network, or recursive project search.
-        repos = [ROOT]
-        dev = HOME / 'Developer'
-        if dev.exists(): repos += [p for p in dev.iterdir() if p.is_dir() and (p / '.git').exists()]
-        protected = 0
-        for p in repos:
-            code, out, err = run(['git', '-C', str(p), 'status', '--porcelain', '--untracked-files=normal'], 20)
-            if code:
-                add(report, 'git-unavailable:' + str(p), 'UNAVAILABLE', f'{p.name}: Git status unavailable.')
-                continue
-            if out:
-                add(report, 'git-dirty:' + str(p), 'LOCAL WORK', f'{p.name}: uncommitted or untracked work is not in GitHub yet.')
-            code, upstream, _ = run(['git', '-C', str(p), 'rev-parse', '--abbrev-ref', '@{upstream}'], 10)
-            if code:
-                add(report, 'git-upstream:' + str(p), 'LOCAL WORK', f'{p.name}: branch has no upstream; remote copy is unverified.')
-                continue
-            code, ahead, _ = run(['git', '-C', str(p), 'rev-list', '--count', '@{upstream}..HEAD'], 10)
-            if code:
-                add(report, 'git-ahead-unavailable:' + str(p), 'UNAVAILABLE', f'{p.name}: could not compare with the last-known upstream.')
-            elif int(ahead or 0):
-                add(report, 'git-ahead:' + str(p), 'LOCAL WORK', f'{p.name}: local commits are ahead of the last-known upstream.')
-            elif not out: protected += 1
-        report['summary'].append(f'Git: {protected}/{len(repos)} repositories clean and aligned with last-known upstream (no network fetch)')
-        caches = [HOME / 'Library/Caches', HOME / '.npm/_cacache', HOME / '.cache/uv', HOME / 'Library/pnpm/store']
-        for p in caches:
-            if not p.exists(): continue
-            code, out, err = run(['du', '-sk', str(p)], 45)
-            if code:
-                add(report, 'cache-unavailable:' + str(p), 'UNAVAILABLE', f'Cannot fully measure {p}; some paths may be protected.')
-            if not out or not out.split()[0].isdigit(): continue
-            size = int(out.split()[0]) / 1024**2
-            if round(size, 1) == 0: continue
-            qualifier = 'at least ' if code else ''
-            report['summary'].append(f'Cache {str(p).replace(str(HOME), "~")}: {qualifier}{size:.1f} GiB')
-            if size >= 10:
-                add(report, 'cache:' + str(p), 'CACHE', f'{str(p).replace(str(HOME), "~")} exceeds 10 GiB; review before cleaning.')
-        save('latest.json', report)
-        return report
+        # Each invocation starts fresh work; only independent read-only checks overlap.
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            report = {'checked_at': dt.datetime.now(dt.timezone.utc).isoformat(), 'issues': [], 'summary': [], 'details': {}}
+            checks = [('Standards', ['bash', str(ROOT / 'run/.standards.sh'), 'audit']),
+                      ('Johnny.Decimal', ['bash', str(ROOT / 'run/cleanup.sh'), 'lint-personal'])]
+            audits = [(label, pool.submit(run, args, timeout=180)) for label, args in checks]
+            disk_check = pool.submit(shutil.disk_usage, HOME)
+            caches = [HOME / 'Library/Caches', HOME / '.npm/_cacache', HOME / '.cache/uv', HOME / 'Library/pnpm/store']
+            cache_checks = [(p, pool.submit(run, ['du', '-sk', str(p)], 45)) for p in caches if p.exists()]
+            for label, future in audits:
+                code, out, err = future.result()
+                report['details'][label] = '\n'.join(filter(None, [out, err]))
+                if code:
+                    lines = [l.strip() for l in out.splitlines() if l.startswith(('VIOLATION', 'DIFF', 'ERROR'))]
+                    if not lines:
+                        add(report, label, 'CHECK' if code != 127 else 'UNAVAILABLE', f'{label}: check needs review (health --details).')
+                    for line in lines:
+                        category = 'PREFERENCE' if line.startswith('DIFF') else 'STANDARD'
+                        if 'inventory' in line.lower() or 'unable to' in line.lower(): category = 'UNAVAILABLE'
+                        elif 'repo-managed but not installed' in line: category = 'MISSING'
+                        add(report, hashlib.sha256(line.encode()).hexdigest()[:16], category, line.split('\t', 1)[-1])
+                else:
+                    report['summary'].append(f'{label}: OK')
+            disk = disk_check.result()
+            report['summary'].append(f'Disk: {disk.free / 2**30:.1f} GiB free ({disk.free / disk.total:.0%})')
+            if disk.free < 30 * 2**30:
+                add(report, 'disk-space', 'STORAGE', 'Less than 30 GiB free.')
+            # Check existing links only. Never walk cloud trees or download files.
+            links = [HOME / '.zshrc', HOME / '.zprofile', HOME / '.gitconfig', HOME / '.Brewfile',
+                     HOME / 'Library/Application Support/Code/User/settings.json']
+            caskroom = Path('/opt/homebrew/Caskroom')
+            if caskroom.exists():
+                for cask in caskroom.iterdir():
+                    if cask.is_dir():
+                        for version in cask.iterdir():
+                            if version.is_dir() and not version.is_symlink() and not version.name.startswith('.'):
+                                links.extend(version.iterdir())
+            broken = [str(p) for p in links if p.is_symlink() and not p.exists()]
+            for p in broken: add(report, 'link:' + p, 'LINK', f'Broken link: {p}')
+            if broken: report['summary'].append(f'Links: {len(broken)} broken')
+            # Local-only Git checks: no fetch, push, network, or recursive project search.
+            repos = [ROOT]
+            dev = HOME / 'Developer'
+            if dev.exists(): repos += [p for p in dev.iterdir() if p.is_dir() and (p / '.git').exists()]
+            protected = 0
+            for p in repos:
+                code, out, err = run(['git', '-C', str(p), 'status', '--porcelain', '--untracked-files=normal'], 20)
+                if code:
+                    add(report, 'git-unavailable:' + str(p), 'UNAVAILABLE', f'{p.name}: Git status unavailable.')
+                    continue
+                if out:
+                    add(report, 'git-dirty:' + str(p), 'LOCAL WORK', f'{p.name}: uncommitted or untracked work is not in GitHub yet.')
+                code, upstream, _ = run(['git', '-C', str(p), 'rev-parse', '--abbrev-ref', '@{upstream}'], 10)
+                if code:
+                    add(report, 'git-upstream:' + str(p), 'LOCAL WORK', f'{p.name}: branch has no upstream; remote copy is unverified.')
+                    continue
+                code, ahead, _ = run(['git', '-C', str(p), 'rev-list', '--count', '@{upstream}..HEAD'], 10)
+                if code:
+                    add(report, 'git-ahead-unavailable:' + str(p), 'UNAVAILABLE', f'{p.name}: could not compare with the last-known upstream.')
+                elif int(ahead or 0):
+                    add(report, 'git-ahead:' + str(p), 'LOCAL WORK', f'{p.name}: local commits are ahead of the last-known upstream.')
+                elif not out: protected += 1
+            report['summary'].append(f'Git: {protected}/{len(repos)} repositories clean and aligned with last-known upstream (no network fetch)')
+            for p, future in cache_checks:
+                code, out, err = future.result()
+                if code:
+                    add(report, 'cache-unavailable:' + str(p), 'UNAVAILABLE', f'Cannot fully measure {p}; some paths may be protected.')
+                if not out or not out.split()[0].isdigit(): continue
+                size = int(out.split()[0]) / 1024**2
+                if round(size, 1) == 0: continue
+                qualifier = 'at least ' if code else ''
+                report['summary'].append(f'Cache {str(p).replace(str(HOME), "~")}: {qualifier}{size:.1f} GiB')
+                if size >= 10:
+                    add(report, 'cache:' + str(p), 'CACHE', f'{str(p).replace(str(HOME), "~")} exceeds 10 GiB; review before cleaning.')
+            save('latest.json', report)
+            return report
 
 
 def notify(report):

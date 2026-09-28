@@ -154,6 +154,8 @@ terminal each local calendar day starts a detached, low-priority check. Later
 terminals use the cache. A manual refresh completed that day also counts.
 Startup announces newly appearing cached issues once. Explicit `health` commands
 always recheck, waiting for any active check before collecting fresh results.
+Independent audit categories, disk usage, and cache measurements run concurrently;
+results are displayed in a stable order without reusing prior check results.
 No terminal means no scheduled check. Checks cover standards, Johnny.Decimal,
 disk space, broken managed links, caches, and local Git work. Git comparisons
 use the last-known upstream without fetching; cloud upload completeness is not

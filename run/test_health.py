@@ -3,6 +3,8 @@ import importlib.util
 import io
 from pathlib import Path
 import tempfile
+import threading
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -11,6 +13,36 @@ health = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(health)
 
 class HealthTests(unittest.TestCase):
+    def test_fresh_audits_overlap_and_keep_failures_and_partial_cache_sizes(self):
+        barrier = threading.Barrier(2, timeout=3)
+        calls = []
+
+        def fake_run(args, timeout=60):
+            calls.append(args)
+            if args[0] == 'bash':
+                barrier.wait()  # Both audits must start before either can finish.
+                if args[1].endswith('.standards.sh'):
+                    return 1, 'DIFF\tcom.apple.finder\tSidebarWidth2', ''
+                return 0, 'Everything looks good!', ''
+            if args[0] == 'du':
+                return 1, f'12582912\t{args[-1]}', 'Permission denied'
+            return 127, '', 'Git unavailable'
+
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp)
+            (home / 'Library/Caches').mkdir(parents=True)
+            with patch.object(health, 'HOME', home), patch.object(health, 'ROOT', home / 'repo'), \
+                    patch.object(health, 'STATE', home / 'state'), patch.object(health, 'run', side_effect=fake_run), \
+                    patch.object(health.shutil, 'disk_usage', return_value=SimpleNamespace(total=100 * 2**30, free=50 * 2**30)):
+                first = health.collect()
+                second = health.collect()
+            self.assertEqual(sum(args[0] == 'bash' for args in calls), 4)
+            self.assertEqual(first['issues'], second['issues'])
+            self.assertEqual(list(first['details']), ['Standards', 'Johnny.Decimal'])
+            self.assertEqual([i['category'] for i in first['issues']],
+                             ['PREFERENCE', 'UNAVAILABLE', 'UNAVAILABLE', 'CACHE'])
+            self.assertIn('Cache ~/Library/Caches: at least 12.0 GiB', first['summary'])
+
     def test_manual_commands_always_collect_without_reading_cached_report(self):
         report = {'checked_at': 'now', 'issues': []}
         for args in ([], ['--details'], ['--refresh']):
