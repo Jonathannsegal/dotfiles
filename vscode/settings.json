@@ -39,7 +39,7 @@
     "*": true,
     "plaintext": true,
     "markdown": true,
-    "scminput": false,
+    "scminput": true,
     "yaml": false
   },
   "[typescriptreact]": {

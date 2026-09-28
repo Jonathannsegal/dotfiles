@@ -1,5 +1,5 @@
 {
-  "common": ["openai.chatgpt", "anthropic.claude-code", "github.github-vscode-theme", "davidanson.vscode-markdownlint", "esbenp.prettier-vscode"],
+  "common": ["github.copilot-chat", "openai.chatgpt", "anthropic.claude-code", "github.github-vscode-theme", "davidanson.vscode-markdownlint", "esbenp.prettier-vscode"],
   "profiles": {
     "Lightweight": {"extensions": [], "settings": {}},
     "Research/Python": {"extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-python.debugpy", "ms-python.black-formatter", "ms-toolsai.jupyter"], "settings": {"python.analysis.diagnosticMode": "openFilesOnly"}},
