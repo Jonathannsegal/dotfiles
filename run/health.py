@@ -45,11 +45,13 @@ def add(report, key, category, message):
     report['issues'].append(dict(id=key, category=category, message=message))
 
 
-def collect():
+def collect(wait=True):
     STATE.mkdir(parents=True, exist_ok=True)
     with (STATE / 'run.lock').open('a') as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            # Explicit checks wait their turn and collect fresh results. Only
+            # background jobs may skip a run when another check holds the lock.
+            fcntl.flock(lock, fcntl.LOCK_EX | (0 if wait else fcntl.LOCK_NB))
         except BlockingIOError:
             return read('latest.json', {'issues': [], 'summary': ['Health check already running.']})
         report = {'checked_at': dt.datetime.now(dt.timezone.utc).isoformat(), 'issues': [], 'summary': [], 'details': {}}
@@ -160,12 +162,10 @@ def startup():
         save('daily.json', {'date': today})
 
 
-def show(report, details=False, cached=True):
+def show(report, details=False):
     if not report:
-        print('No cached health report yet. Run health --refresh.'); return
+        print('No health report available.'); return
     print('Health — ' + report.get('checked_at', 'check in progress'))
-    if cached:
-        print('  Cached report. Run health --refresh to recheck resolved issues now.')
     for line in report.get('summary', []):
         if line == 'Links: 0 broken' or (line.startswith('Cache ') and line.endswith(': 0.0 GiB')): continue
         print('  ' + line)
@@ -176,7 +176,7 @@ def show(report, details=False, cached=True):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('--refresh', action='store_true')
+    p.add_argument('--refresh', action='store_true', help='Compatibility flag; checks are always fresh.')
     p.add_argument('--background', action='store_true')
     p.add_argument('--notify', action='store_true')
     p.add_argument('--startup', action='store_true')
@@ -184,8 +184,9 @@ def main():
     a = p.parse_args()
     if a.startup: startup(); return
     if a.notify: notify(read('latest.json', {})); return
-    report = collect() if a.refresh or a.background else read('latest.json', {})
-    if not a.background: show(report, a.details, cached=not a.refresh)
+    if not a.background: print('Checking health...', flush=True)
+    report = collect(wait=not a.background)
+    if not a.background: show(report, a.details)
 
 
 if __name__ == '__main__': main()

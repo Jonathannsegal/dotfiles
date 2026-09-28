@@ -121,9 +121,9 @@ from `/Library/Application Support` and `/Library/Audio`. The `apps` and
 
 Shortcuts for keeping the current machine shape easy to preserve and recover.
 
-- `check`: show the cached health report (`health`).
-- `check --refresh`: run the read-only health checks now (`health --refresh`).
-- `check --details`: include the full audit output (`health --details`).
+- `check`: run fresh read-only health checks (`health`).
+- `check --refresh`: compatibility alias for `check`; no longer required.
+- `check --details`: run fresh checks and include full audit output (`health --details`).
 - `update`: update Homebrew/casks, App Store, npm, pipx and VS Code extensions,
   clean unused Homebrew dependencies, list macOS updates, and refresh health.
   Failed steps are reported; the curated Brewfile is preserved. Vendor-managed
@@ -152,8 +152,9 @@ Common usage:
 `install-health.sh` removes the old periodic LaunchAgent. The first interactive
 terminal each local calendar day starts a detached, low-priority check. Later
 terminals use the cache. A manual refresh completed that day also counts.
-Startup announces newly appearing cached issues once; fresh results are available
-through `health` or the next terminal. No terminal means no scheduled check. Checks cover standards, Johnny.Decimal,
+Startup announces newly appearing cached issues once. Explicit `health` commands
+always recheck, waiting for any active check before collecting fresh results.
+No terminal means no scheduled check. Checks cover standards, Johnny.Decimal,
 disk space, broken managed links, caches, and local Git work. Git comparisons
 use the last-known upstream without fetching; cloud upload completeness is not
 inferred from file locations. Protected cache directories produce partial totals.

@@ -12,7 +12,7 @@ usage() {
 Usage: $(basename "$0") <command>
 
 Commands:
-  check      Show cached health; --refresh runs checks now; --details shows logs.
+  check      Run fresh health checks; --details includes audit logs.
   update     Update managed apps and tools, clean unused dependencies, refresh health.
   snapshot   Write a local state report under ~/CleanupStaging/state-snapshots.
   restore    Snapshot first, then converge the machine back to this repo.

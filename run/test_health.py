@@ -11,6 +11,28 @@ health = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(health)
 
 class HealthTests(unittest.TestCase):
+    def test_manual_commands_always_collect_without_reading_cached_report(self):
+        report = {'checked_at': 'now', 'issues': []}
+        for args in ([], ['--details'], ['--refresh']):
+            with self.subTest(args=args), patch.object(health.sys, 'argv', ['health', *args]), \
+                    patch.object(health, 'collect', return_value=report) as collect, \
+                    patch.object(health, 'read') as read, \
+                    contextlib.redirect_stdout(io.StringIO()) as output:
+                health.main()
+                health.main()
+                self.assertEqual(collect.call_count, 2)
+                collect.assert_called_with(wait=True)
+                read.assert_not_called()
+                self.assertNotIn('Cached report', output.getvalue())
+
+    def test_background_checks_do_not_wait_or_print(self):
+        with patch.object(health.sys, 'argv', ['health', '--background']), \
+                patch.object(health, 'collect') as collect, \
+                contextlib.redirect_stdout(io.StringIO()) as output:
+            health.main()
+            collect.assert_called_once_with(wait=False)
+            self.assertEqual(output.getvalue(), '')
+
     def test_only_new_issues_notify_and_resolved_issues_can_recur(self):
         with tempfile.TemporaryDirectory() as temp:
             previous = health.STATE
