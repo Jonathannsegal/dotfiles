@@ -109,7 +109,7 @@ This repo is the source of truth for the machine. The standard is intentionally 
 - Review scattered code with `./run/cleanup.sh projects`; active repositories should live under `~/Developer`.
 - Manage Dock order through `macos/dock-items.txt`.
 - Manage startup/background items through `macos/launchagents.tsv`; any `review` or unmanaged item fails the strict audit until it is classified.
-- Manage macOS preferences through `macos/settings.sh`; unapplied differences fail the strict audit.
+- Manage macOS preferences through `macos/settings.sh`; unapplied differences fail the strict audit. Finder's `SidebarWidth2` targets 160 pixels and accepts 156–164 pixels to tolerate minor UI drift.
 - Keep apps and CLI tools off the machine unless they are intentionally added back to `brew/Brewfile`, MAS entries, or the app allowlist.
 
 Run `./run/setup.sh standards audit` when you want the full cleanliness check.

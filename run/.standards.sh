@@ -323,6 +323,18 @@ check_nvram() {
   fi
 }
 
+check_default_int_tolerance() {
+  local domain="$1" key="$2" expected="$3" tolerance="$4" current
+  current="$(read_default "$domain" "$key")"
+  if [[ "$current" =~ ^[0-9]+$ ]] &&
+     (( 10#$current >= expected - tolerance && 10#$current <= expected + tolerance )); then
+    printf "OK\t%s\t%s\t%s\n" "$domain" "$key" "$current"
+  else
+    printf "DIFF\t%s\t%s\texpected=%s+/-%s\tcurrent=%s\n" "$domain" "$key" "$expected" "$tolerance" "$current"
+    return 1
+  fi
+}
+
 check_default() {
   local domain="$1"
   local key="$2"
@@ -509,7 +521,8 @@ settings_audit() {
   check_default com.apple.finder NewWindowTarget string PfAF || failures=$((failures + 1))
   check_default com.apple.finder ShowRecentTags bool true || failures=$((failures + 1))
   check_default com.apple.finder SidebarWidth int 132 || failures=$((failures + 1))
-  check_default com.apple.finder SidebarWidth2 int 160 || failures=$((failures + 1))
+  # Finder frequently rewrites this UI geometry by a few pixels.
+  check_default_int_tolerance com.apple.finder SidebarWidth2 160 4 || failures=$((failures + 1))
   check_default com.apple.finder SidebarDevicesSectionDisclosedState bool true || failures=$((failures + 1))
   check_default com.apple.finder SidebarMediaBrowserSectionDisclosedState bool true || failures=$((failures + 1))
   check_default com.apple.finder SidebarPlacesSectionDisclosedState bool true || failures=$((failures + 1))

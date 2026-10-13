@@ -213,6 +213,7 @@ chflags nohidden ~/Library
 # Finder sidebar layout
 defaults write com.apple.finder ShowRecentTags -bool true
 defaults write com.apple.finder SidebarWidth -int 132
+# Target 160px; the standards audit allows 156–164px for minor Finder UI drift.
 defaults write com.apple.finder SidebarWidth2 -int 160
 defaults write com.apple.finder SidebarDevicesSectionDisclosedState -bool true
 defaults write com.apple.finder SidebarMediaBrowserSectionDisclosedState -bool true

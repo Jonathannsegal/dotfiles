@@ -1,9 +1,23 @@
+import os
 import pathlib
 import subprocess
 import unittest
 
 
 class StandardsTests(unittest.TestCase):
+    def test_sidebar_width_tolerance_rejects_large_drift_and_invalid_values(self):
+        for value in ('156', '158', '160', '164', '155', '165', '<unset>', 'abc', '158.5'):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    ['bash', '-c', 'source "$1"; '
+                     'read_default() { echo "$TEST_WIDTH"; }; '
+                     'check_default_int_tolerance com.apple.finder SidebarWidth2 160 4',
+                     '--', str(pathlib.Path(__file__).with_name('.standards.sh'))],
+                    env={**os.environ, 'TEST_WIDTH': value},
+                    capture_output=True, text=True, check=False)
+                self.assertEqual(result.returncode, 0 if value in ('156', '158', '160', '164') else 1,
+                                 result.stderr)
+
     def test_parallel_audit_preserves_order_and_reports_crashed_check(self):
         script = r'''
 source "$1"
